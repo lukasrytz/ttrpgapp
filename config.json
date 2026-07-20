@@ -1,0 +1,8 @@
+{
+  "musicFolders": ["./music"],
+  "notesVault": "./vault",
+  "dataDir": "./data",
+  "plugins": {
+    "dnd5e": true
+  }
+}

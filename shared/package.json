@@ -1,0 +1,19 @@
+{
+  "name": "@ttrpgapp/shared",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "exports": {
+    ".": "./src/index.ts",
+    "./plugin-server": "./src/plugin-server.ts",
+    "./plugin-client": "./src/plugin-client.ts"
+  },
+  "scripts": {
+    "typecheck": "tsc -p tsconfig.json"
+  },
+  "devDependencies": {
+    "@types/better-sqlite3": "^7.6.12",
+    "@types/react": "^19.0.8",
+    "fastify": "^5.2.1"
+  }
+}

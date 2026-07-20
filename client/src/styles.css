@@ -1,0 +1,147 @@
+/* Dark theme for dim game tables */
+:root {
+  --bg: #16161c;
+  --bg-panel: #1e1e26;
+  --bg-hover: #2a2a35;
+  --border: #33333f;
+  --text: #e6e2d8;
+  --text-muted: #8f8c84;
+  --accent: #c98f3d; /* candlelight amber */
+  --accent-soft: #c98f3d33;
+  --danger: #c0504d;
+  --ok: #6d9e63;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+body {
+  margin: 0;
+  background: var(--bg);
+  color: var(--text);
+  font-family:
+    system-ui,
+    -apple-system,
+    'Segoe UI',
+    sans-serif;
+  font-size: 15px;
+}
+
+#root,
+.app {
+  height: 100vh;
+}
+
+.app {
+  display: flex;
+}
+
+.sidebar {
+  width: 210px;
+  flex-shrink: 0;
+  background: var(--bg-panel);
+  border-right: 1px solid var(--border);
+  padding: 12px 8px;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  overflow-y: auto;
+}
+
+.sidebar-title {
+  font-weight: 700;
+  padding: 6px 10px 14px;
+  color: var(--accent);
+  letter-spacing: 0.02em;
+}
+
+.sidebar-section {
+  margin-top: 14px;
+  padding: 4px 10px;
+  font-size: 11px;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: var(--text-muted);
+}
+
+.nav-item {
+  display: block;
+  padding: 7px 10px;
+  border-radius: 6px;
+  color: var(--text);
+  text-decoration: none;
+}
+
+.nav-item:hover {
+  background: var(--bg-hover);
+}
+
+.nav-item.active {
+  background: var(--accent-soft);
+  color: var(--accent);
+}
+
+.nav-icon {
+  margin-right: 6px;
+}
+
+.main {
+  flex: 1;
+  overflow-y: auto;
+  display: flex;
+  flex-direction: column;
+}
+
+.page {
+  padding: 24px 28px;
+  max-width: 1100px;
+}
+
+h1 {
+  font-size: 22px;
+  margin: 0 0 16px;
+}
+
+.muted {
+  color: var(--text-muted);
+}
+
+button {
+  background: var(--bg-hover);
+  color: var(--text);
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  padding: 6px 12px;
+  cursor: pointer;
+  font-size: 14px;
+}
+
+button:hover {
+  border-color: var(--accent);
+}
+
+button.primary {
+  background: var(--accent);
+  border-color: var(--accent);
+  color: #16161c;
+  font-weight: 600;
+}
+
+input,
+select,
+textarea {
+  background: var(--bg);
+  color: var(--text);
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  padding: 6px 10px;
+  font-size: 14px;
+}
+
+input:focus,
+select:focus,
+textarea:focus {
+  outline: none;
+  border-color: var(--accent);
+}

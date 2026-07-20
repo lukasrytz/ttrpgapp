@@ -1,0 +1,27 @@
+{
+  "name": "@ttrpgapp/plugin-dnd5e",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "exports": {
+    "./server": "./src/server.ts",
+    "./client": "./src/client.tsx"
+  },
+  "scripts": {
+    "build-srd": "tsx scripts/build-srd.ts",
+    "test": "vitest run",
+    "typecheck": "tsc -p tsconfig.json"
+  },
+  "dependencies": {
+    "@ttrpgapp/shared": "*"
+  },
+  "devDependencies": {
+    "@types/node": "^22.10.10",
+    "@types/react": "^19.0.8",
+    "tsx": "^4.19.2",
+    "vitest": "^3.0.4"
+  },
+  "peerDependencies": {
+    "react": "^19.0.0"
+  }
+}
