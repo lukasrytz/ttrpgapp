@@ -40,6 +40,19 @@ const VAULT_BASE = 'vault';
 const TAGS_FILE = 'music-tags.json';
 const PATHS_FILE = 'music-paths.json';
 
+// Sync bookkeeping (Preferences).
+const SYNC_STATE_INDEX = 'sync.state.index'; // id -> updatedAt for plugin state docs
+const SYNC_META = 'sync.meta';
+const SYNC_TOMB = 'sync.tombstones';
+
+async function prefGet<T>(key: string, fallback: T): Promise<T> {
+  const { value } = await Preferences.get({ key });
+  return value ? (JSON.parse(value) as T) : fallback;
+}
+async function prefSet(key: string, value: unknown): Promise<void> {
+  await Preferences.set({ key, value: JSON.stringify(value) });
+}
+
 function emptyTags(): Record<TagDimension, string[]> {
   return { theme: [], mood: [], landscape: [] };
 }
@@ -219,6 +232,15 @@ export class CapacitorBackend implements Backend {
   }
 
   async deleteNote(path: string): Promise<void> {
+    await this.deleteNoteRaw(path);
+    // Record a tombstone so the deletion propagates to other devices.
+    const tomb = await this.getTombstones();
+    tomb[`notes/${path}`] = Date.now();
+    await this.setTombstones(tomb);
+  }
+
+  /** Delete without recording a tombstone (used when sync applies a remote delete). */
+  async deleteNoteRaw(path: string): Promise<void> {
     await Filesystem.deleteFile({ path: `${VAULT_BASE}/${path}`, directory: VAULT_DIR });
   }
 
@@ -260,6 +282,49 @@ export class CapacitorBackend implements Backend {
   }
 
   async kvSet(pluginId: string, key: string, value: string): Promise<void> {
+    await this.setStateRaw(pluginId, key, value, Date.now());
+  }
+
+  // --- sync support (used by CapacitorSyncStore; not part of the Backend interface) ---
+
+  /** Write plugin state with an explicit updatedAt (sync uses the remote's stamp). */
+  async setStateRaw(pluginId: string, key: string, value: string, updatedAt: number): Promise<void> {
     await Preferences.set({ key: `${pluginId}:${key}`, value });
+    const idx = await prefGet<Record<string, number>>(SYNC_STATE_INDEX, {});
+    idx[`state/${pluginId}/${key}`] = updatedAt;
+    await prefSet(SYNC_STATE_INDEX, idx);
+  }
+
+  /** Enumerate plugin-state docs with their content and updatedAt. */
+  async listStateDocs(): Promise<{ id: string; value: string; updatedAt: number }[]> {
+    const idx = await prefGet<Record<string, number>>(SYNC_STATE_INDEX, {});
+    const out: { id: string; value: string; updatedAt: number }[] = [];
+    for (const [id, updatedAt] of Object.entries(idx)) {
+      const [, pluginId, ...rest] = id.split('/');
+      const { value } = await Preferences.get({ key: `${pluginId}:${rest.join('/')}` });
+      if (value != null) out.push({ id, value, updatedAt });
+    }
+    return out;
+  }
+
+  async deleteStateRaw(id: string): Promise<void> {
+    const [, pluginId, ...rest] = id.split('/');
+    await Preferences.remove({ key: `${pluginId}:${rest.join('/')}` });
+    const idx = await prefGet<Record<string, number>>(SYNC_STATE_INDEX, {});
+    delete idx[id];
+    await prefSet(SYNC_STATE_INDEX, idx);
+  }
+
+  getSyncMeta() {
+    return prefGet<Record<string, { lastSyncedHash: string; lastSyncedAt: number }>>(SYNC_META, {});
+  }
+  setSyncMeta(meta: Record<string, { lastSyncedHash: string; lastSyncedAt: number }>) {
+    return prefSet(SYNC_META, meta);
+  }
+  getTombstones() {
+    return prefGet<Record<string, number>>(SYNC_TOMB, {});
+  }
+  setTombstones(t: Record<string, number>) {
+    return prefSet(SYNC_TOMB, t);
   }
 }

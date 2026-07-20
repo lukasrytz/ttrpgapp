@@ -32,6 +32,40 @@ cd android && ./gradlew assembleDebug
 
 CI builds this automatically (`.github/workflows/android.yml`).
 
+## Cross-device sync (Android, Google Drive)
+
+Prep notes and combat/tracker state sync across your devices through **your own
+Google Drive** — local-first, so the app keeps working fully offline and
+reconciles when it's online. Files land in a visible `TTRPG Companion` folder in
+your Drive (minimal `drive.file` scope: the app only ever sees files it created).
+Music files and tags don't sync (audio stays per-device).
+
+**How it reconciles:** two-way, last-write-wins by timestamp. If the same note is
+edited on both devices while offline, the loser is kept as
+`<name> (conflict <date>).md` so nothing is lost. Syncs on launch, on returning
+to the app, a few seconds after edits, periodically, and on **Sync now** in
+Settings.
+
+**One-time Google setup** (free, personal use), then enter the client ID in the
+app's Settings → *Cross-device sync*:
+
+1. In the [Google Cloud Console](https://console.cloud.google.com/): create a
+   project and **enable the Google Drive API**.
+2. Configure the **OAuth consent screen**: User type *External*, publishing
+   status *Testing*, and add your own Google account under *Test users* (no
+   Google verification review is needed in testing mode).
+3. Create an **OAuth client ID** → application type *Android*, package name
+   `ch.rytz.ttrpgapp`, and the signing certificate SHA-1 fingerprint
+   (`keytool -list -v -keystore <your.keystore>`; use the debug keystore's SHA-1
+   for the debug APK).
+4. Put the resulting client ID in **Settings → Connect Google Drive** (or bake it
+   in at build time via `VITE_GOOGLE_CLIENT_ID`), then tap **Connect**.
+
+Repeat step 4 on each device with the same Google account, and they'll converge.
+Other providers (Dropbox, self-hosted WebDAV) can be added later — the sync
+engine is provider-agnostic (`client/src/sync/`), Google Drive is the first
+`SyncTarget`.
+
 ## Local web app
 
 ```bash
@@ -72,6 +106,10 @@ and hit **Rescan library**.
   concentration, death saves, and add-monster-from-SRD with inline stat blocks.
   Encounter state survives reloads.
 
+- **Cross-device sync** (Android) — notes and combat state kept in step across
+  your phone and tablet through your own Google Drive, offline-first. See
+  [Cross-device sync](#cross-device-sync-android-google-drive).
+
 The UI is responsive: phones get a drawer nav, bottom sheets, and card-based
 tracker; tablets and desktop keep the wide side-by-side layout.
 
@@ -89,6 +127,16 @@ selected at startup (`client/src/backend/`):
 Compendium search runs entirely client-side over an in-memory index
 (`shared/src/compendiumSearch.ts`) fed by plugin-bundled packs, so it works
 identically in both modes and offline.
+
+### Sync (`client/src/sync/`)
+
+Sync is local-first and provider-agnostic. A `SyncEngine` (`engine.ts`)
+reconciles a `SyncStore` (the device's notes + plugin state) against a
+`SyncTarget` (Google Drive today) using two-way last-write-wins with conflict
+copies and tombstones — all pure logic, unit-tested against in-memory fakes. The
+`SyncManager` (`manager.ts`) drives it on the Android build (launch, app resume,
+post-edit debounce, periodic, manual) and refreshes open views via query
+invalidation. It's inert on web, where the server is already the shared store.
 
 ### Game-system plugins
 

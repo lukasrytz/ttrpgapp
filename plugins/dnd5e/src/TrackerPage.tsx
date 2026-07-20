@@ -26,10 +26,17 @@ export default function TrackerPage() {
   const saveTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
   const [editingConditions, setEditingConditions] = useState<string | null>(null);
 
-  useEffect(() => {
+  const load = () =>
     void getPluginRuntime()
       .kvGet('dnd5e', 'encounter')
       .then((v) => setEnc(v ? (JSON.parse(v) as Encounter) : EMPTY_ENCOUNTER));
+
+  useEffect(() => {
+    load();
+    // Refresh when a background sync pulled a newer encounter from another device.
+    const onSynced = () => load();
+    window.addEventListener('ttrpg-sync-updated', onSynced);
+    return () => window.removeEventListener('ttrpg-sync-updated', onSynced);
   }, []);
 
   const update = (fn: (e: Encounter) => Encounter) => {
@@ -38,7 +45,9 @@ export default function TrackerPage() {
       const next = fn(prev);
       if (saveTimer.current) clearTimeout(saveTimer.current);
       saveTimer.current = setTimeout(() => {
-        void getPluginRuntime().kvSet('dnd5e', 'encounter', JSON.stringify(next));
+        void getPluginRuntime()
+          .kvSet('dnd5e', 'encounter', JSON.stringify(next))
+          .then(() => window.dispatchEvent(new Event('ttrpg-local-changed')));
       }, 300);
       return next;
     });

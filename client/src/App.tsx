@@ -7,11 +7,28 @@ import PlayerBar from './player/PlayerBar';
 import CommandPalette from './components/CommandPalette';
 import MusicPage from './pages/MusicPage';
 import NotesPage from './pages/NotesPage';
+import SettingsPage, { SyncBadge } from './pages/SettingsPage';
+import { syncManager, type SyncState } from './sync/manager';
 
 const CORE_NAV = [
   { path: '/', label: 'Music', icon: '🎵' },
   { path: '/notes', label: 'Prep Notes', icon: '📓' },
 ];
+
+function SyncIndicator() {
+  const [state, setState] = useState<SyncState>(syncManager.state);
+  useEffect(() => {
+    const onStatus = (e: Event) => setState((e as CustomEvent<SyncState>).detail);
+    window.addEventListener('ttrpg-sync-status', onStatus);
+    return () => window.removeEventListener('ttrpg-sync-status', onStatus);
+  }, []);
+  if (state.status === 'disconnected') return null;
+  return (
+    <NavLink to="/settings" className="sync-indicator">
+      <SyncBadge status={state.status} />
+    </NavLink>
+  );
+}
 
 function openPalette() {
   window.dispatchEvent(new CustomEvent('open-command-palette'));
@@ -51,6 +68,9 @@ export default function App({ config }: { config: ClientConfig }) {
             <span className="nav-icon">🔎</span> Rules search
             <span className="muted small kbd-hint"> ⌘K</span>
           </button>
+          <NavLink to="/settings" className="nav-item">
+            <span className="nav-icon">⚙️</span> Settings
+          </NavLink>
           {activePlugins.map((plugin) => (
             <div key={plugin.id}>
               <div className="sidebar-section">{plugin.name}</div>
@@ -61,6 +81,8 @@ export default function App({ config }: { config: ClientConfig }) {
               ))}
             </div>
           ))}
+          <div className="sidebar-spacer" />
+          <SyncIndicator />
         </nav>
 
         <main className="main">
@@ -68,6 +90,7 @@ export default function App({ config }: { config: ClientConfig }) {
             <Routes>
               <Route path="/" element={<MusicPage />} />
               <Route path="/notes/*" element={<NotesPage />} />
+              <Route path="/settings" element={<SettingsPage />} />
               {activePlugins.flatMap((plugin) =>
                 plugin.routes.map((r) => (
                   <Route

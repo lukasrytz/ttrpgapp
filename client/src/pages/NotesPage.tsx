@@ -168,6 +168,7 @@ function NoteEditor({
       setDirty(false);
       void qc.invalidateQueries({ queryKey: ['note', path] });
       void qc.invalidateQueries({ queryKey: ['notes'] });
+      window.dispatchEvent(new Event('ttrpg-local-changed'));
     },
   });
 

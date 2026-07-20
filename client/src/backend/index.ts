@@ -1,8 +1,10 @@
 import { Capacitor } from '@capacitor/core';
 import type { Backend } from './types';
 import { HttpBackend } from './http';
+import type { CapacitorBackend } from './capacitor';
 
 let instance: Backend = new HttpBackend();
+let capacitorInstance: CapacitorBackend | null = null;
 
 export function setBackend(b: Backend) {
   instance = b;
@@ -12,12 +14,18 @@ export function setBackend(b: Backend) {
 export async function initBackend(): Promise<void> {
   if (Capacitor.isNativePlatform()) {
     const { CapacitorBackend } = await import('./capacitor');
-    instance = new CapacitorBackend();
+    capacitorInstance = new CapacitorBackend();
+    instance = capacitorInstance;
   }
 }
 
 export function backend(): Backend {
   return instance;
+}
+
+/** The concrete on-device backend (for the sync layer), or null on web. */
+export function getCapacitorBackend(): CapacitorBackend | null {
+  return capacitorInstance;
 }
 
 export type { Backend, TrackUpdate } from './types';
