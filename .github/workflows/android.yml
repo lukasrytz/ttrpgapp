@@ -1,0 +1,55 @@
+name: Android debug APK
+
+on:
+  push:
+    branches: [main, claude/**]
+    paths:
+      - 'client/**'
+      - 'shared/**'
+      - 'plugins/**'
+      - 'package.json'
+      - 'package-lock.json'
+      - '.github/workflows/android.yml'
+  workflow_dispatch:
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+
+      - name: Set up JDK
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: 21
+
+      - name: Set up Android SDK
+        uses: android-actions/setup-android@v3
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Build web assets
+        run: npm run build -w client
+
+      - name: Sync Capacitor Android project
+        working-directory: client
+        run: npx cap sync android
+
+      - name: Build debug APK
+        working-directory: client/android
+        run: ./gradlew assembleDebug --no-daemon
+
+      - name: Upload APK
+        uses: actions/upload-artifact@v4
+        with:
+          name: ttrpg-companion-debug
+          path: client/android/app/build/outputs/apk/debug/app-debug.apk
+          if-no-files-found: error
