@@ -5,6 +5,7 @@ import { openDb } from './db.js';
 import { availablePlugins, registerPlugins } from './pluginHost.js';
 import { search, getEntry } from './compendium.js';
 import { registerMusicRoutes } from './music.js';
+import { registerNotesRoutes } from './notes.js';
 
 const config = loadConfig();
 const db = openDb(resolvePath(config.dataDir));
@@ -36,6 +37,7 @@ app.get<{ Params: { packId: string; entryId: string } }>(
 );
 
 registerMusicRoutes(app, db, config);
+registerNotesRoutes(app, config);
 
 await registerPlugins(app, db, config);
 

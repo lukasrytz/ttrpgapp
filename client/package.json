@@ -10,12 +10,17 @@
     "typecheck": "tsc -p tsconfig.json"
   },
   "dependencies": {
+    "@codemirror/autocomplete": "^6.20.3",
+    "@codemirror/lang-markdown": "^6.5.1",
     "@tanstack/react-query": "^5.66.0",
     "@ttrpgapp/plugin-dnd5e": "*",
     "@ttrpgapp/shared": "*",
+    "@uiw/react-codemirror": "^4.25.11",
     "react": "^19.0.0",
     "react-dom": "^19.0.0",
-    "react-router-dom": "^7.1.5"
+    "react-markdown": "^10.1.0",
+    "react-router-dom": "^7.1.5",
+    "remark-gfm": "^4.0.1"
   },
   "devDependencies": {
     "@types/react": "^19.0.8",
