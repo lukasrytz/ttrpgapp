@@ -1,10 +1,17 @@
 import type {
   ClientConfig,
+  MusicFolder,
   MusicScanResult,
   Note,
   NoteMeta,
   Track,
 } from '@ttrpgapp/shared';
+import {
+  filterByFolders,
+  foldersOf,
+  getFolderSelection,
+  setFolderSelection,
+} from '../music/folders';
 import type { Backend, TrackUpdate } from './types';
 
 async function get<T>(url: string): Promise<T> {
@@ -28,12 +35,28 @@ export class HttpBackend implements Backend {
     return get<ClientConfig>('/api/config');
   }
 
-  async listTracks() {
+  private async allTracks() {
     return (await get<{ tracks: Track[] }>('/api/music/tracks')).tracks;
   }
 
-  scanMusic() {
-    return send<MusicScanResult>('POST', '/api/music/scan');
+  async listTracks() {
+    return filterByFolders(await this.allTracks(), await getFolderSelection());
+  }
+
+  async listMusicFolders(): Promise<MusicFolder[]> {
+    return foldersOf(await this.allTracks(), await getFolderSelection());
+  }
+
+  async setMusicFolders(paths: string[] | null): Promise<void> {
+    await setFolderSelection(paths);
+  }
+
+  async scanMusic() {
+    const result = await send<MusicScanResult>('POST', '/api/music/scan');
+    // The server counts every configured folder; report the library's size.
+    const selection = await getFolderSelection();
+    if (!selection) return result;
+    return { ...result, total: (await this.listTracks()).length };
   }
 
   async updateTrack(id: number, update: TrackUpdate) {

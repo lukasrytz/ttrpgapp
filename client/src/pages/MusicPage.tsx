@@ -1,6 +1,6 @@
 import { useMemo, useState } from 'react';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
-import type { MusicScanResult, TagDimension, Track } from '@ttrpgapp/shared';
+import type { MusicFolder, MusicScanResult, TagDimension, Track } from '@ttrpgapp/shared';
 import { DEFAULT_TAG_VOCAB, TAG_DIMENSIONS } from '@ttrpgapp/shared';
 import { backend, type TrackUpdate } from '../backend';
 import { usePlayer, shuffleTracks } from '../player/PlayerProvider';
@@ -18,6 +18,7 @@ export default function MusicPage() {
   const player = usePlayer();
   const [filter, setFilter] = useState<Filter>(EMPTY_FILTER);
   const [selectedId, setSelectedId] = useState<number | null>(null);
+  const [pickingFolders, setPickingFolders] = useState(false);
 
   const { data } = useQuery({
     queryKey: ['tracks'],
@@ -25,9 +26,18 @@ export default function MusicPage() {
   });
   const tracks = useMemo(() => data ?? [], [data]);
 
+  const folders = useQuery({
+    queryKey: ['musicFolders'],
+    queryFn: () => backend().listMusicFolders(),
+  });
+  const enabledFolders = folders.data?.filter((f) => f.enabled).length ?? 0;
+
   const scan = useMutation({
     mutationFn: (): Promise<MusicScanResult> => backend().scanMusic(),
-    onSuccess: () => qc.invalidateQueries({ queryKey: ['tracks'] }),
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ['tracks'] });
+      qc.invalidateQueries({ queryKey: ['musicFolders'] });
+    },
   });
 
   const vocab = useMemo(() => {
@@ -58,6 +68,13 @@ export default function MusicPage() {
         <div className="page-header">
           <h1>Music</h1>
           <div className="header-actions">
+            <button
+              onClick={() => setPickingFolders(true)}
+              disabled={!folders.data}
+              title="Choose which folders make up your library"
+            >
+              📁 Folders{folders.data ? ` (${enabledFolders}/${folders.data.length})` : ''}
+            </button>
             <button onClick={() => scan.mutate()} disabled={scan.isPending}>
               {scan.isPending ? 'Scanning…' : 'Rescan library'}
             </button>
@@ -117,8 +134,8 @@ export default function MusicPage() {
 
         {tracks.length === 0 ? (
           <p className="muted">
-            No tracks yet. Put audio files into your configured music folder(s) and hit
-            “Rescan library”.
+            No tracks in your library. Pick the folders holding your game music under
+            “📁 Folders”, then hit “Rescan library”.
           </p>
         ) : (
           <table className="track-table">
@@ -171,6 +188,99 @@ export default function MusicPage() {
           onClose={() => setSelectedId(null)}
         />
       )}
+
+      {pickingFolders && folders.data && (
+        <FolderPicker folders={folders.data} onClose={() => setPickingFolders(false)} />
+      )}
+    </div>
+  );
+}
+
+/**
+ * Folder selection: the device's audio library is mostly not game music, so
+ * the user ticks the folders that are. Everything else stays out of the app.
+ */
+function FolderPicker({ folders, onClose }: { folders: MusicFolder[]; onClose: () => void }) {
+  const qc = useQueryClient();
+  const [enabled, setEnabled] = useState(
+    () => new Set(folders.filter((f) => f.enabled).map((f) => f.path)),
+  );
+  const [search, setSearch] = useState('');
+
+  const shown = useMemo(() => {
+    const q = search.trim().toLowerCase();
+    return q ? folders.filter((f) => f.path.toLowerCase().includes(q)) : folders;
+  }, [folders, search]);
+
+  const save = useMutation({
+    // All folders selected is the same as "no restriction" — store it as such,
+    // so folders added to the device later come along.
+    mutationFn: () =>
+      backend().setMusicFolders(enabled.size === folders.length ? null : [...enabled]),
+    onSuccess: async () => {
+      await Promise.all([
+        qc.invalidateQueries({ queryKey: ['tracks'] }),
+        qc.invalidateQueries({ queryKey: ['musicFolders'] }),
+      ]);
+      onClose();
+    },
+  });
+
+  const toggle = (path: string) =>
+    setEnabled((prev) => {
+      const next = new Set(prev);
+      if (!next.delete(path)) next.add(path);
+      return next;
+    });
+
+  const trackCount = folders
+    .filter((f) => enabled.has(f.path))
+    .reduce((n, f) => n + f.trackCount, 0);
+
+  return (
+    <div className="palette-backdrop" onClick={onClose}>
+      <div className="folder-picker" onClick={(e) => e.stopPropagation()}>
+        <div className="folder-picker-head">
+          <strong>Music folders</strong>
+          <button onClick={onClose} aria-label="Close">
+            ✕
+          </button>
+        </div>
+        <p className="muted small folder-picker-hint">
+          Only the ticked folders make up your library — {trackCount} track
+          {trackCount === 1 ? '' : 's'} from {enabled.size} folder
+          {enabled.size === 1 ? '' : 's'}.
+        </p>
+        <input
+          placeholder="Filter folders…"
+          value={search}
+          onChange={(e) => setSearch(e.target.value)}
+        />
+        <div className="folder-list">
+          {shown.map((f) => (
+            <label key={f.path} className="folder-row">
+              <input
+                type="checkbox"
+                checked={enabled.has(f.path)}
+                onChange={() => toggle(f.path)}
+              />
+              <span className="folder-name">
+                {f.label}
+                <span className="muted small folder-path">{f.path}</span>
+              </span>
+              <span className="muted small">{f.trackCount}</span>
+            </label>
+          ))}
+          {shown.length === 0 && <p className="muted folder-empty">No folders match.</p>}
+        </div>
+        <div className="folder-picker-foot">
+          <button onClick={() => setEnabled(new Set(folders.map((f) => f.path)))}>All</button>
+          <button onClick={() => setEnabled(new Set())}>None</button>
+          <button className="primary" onClick={() => save.mutate()} disabled={save.isPending}>
+            {save.isPending ? 'Saving…' : 'Save'}
+          </button>
+        </div>
+      </div>
     </div>
   );
 }

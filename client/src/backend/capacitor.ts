@@ -3,6 +3,7 @@ import { Directory, Encoding, Filesystem } from '@capacitor/filesystem';
 import { Preferences } from '@capacitor/preferences';
 import type {
   ClientConfig,
+  MusicFolder,
   MusicScanResult,
   Note,
   NoteMeta,
@@ -16,6 +17,12 @@ import {
   STARTER_TEMPLATE,
   TAG_DIMENSIONS,
 } from '@ttrpgapp/shared';
+import {
+  filterByFolders,
+  foldersOf,
+  getFolderSelection,
+  setFolderSelection,
+} from '../music/folders';
 import type { Backend, TrackUpdate } from './types';
 
 interface DeviceTrack {
@@ -87,7 +94,11 @@ export class CapacitorBackend implements Backend {
     };
   }
 
-  async listTracks(): Promise<Track[]> {
+  /**
+   * Everything MediaStore knows about, before folder selection. Ids are
+   * assigned over this full list so they stay stable as the selection changes.
+   */
+  private async listDeviceTracks(): Promise<Track[]> {
     const [{ tracks }, tagStore] = await Promise.all([
       MusicLibrary.list(),
       readJson<TagStore>(TAGS_FILE, {}),
@@ -108,6 +119,26 @@ export class CapacitorBackend implements Backend {
         tags: saved ? { ...emptyTags(), ...saved.tags } : emptyTags(),
       };
     });
+  }
+
+  async listTracks(): Promise<Track[]> {
+    const [tracks, selection] = await Promise.all([
+      this.listDeviceTracks(),
+      getFolderSelection(),
+    ]);
+    return filterByFolders(tracks, selection);
+  }
+
+  async listMusicFolders(): Promise<MusicFolder[]> {
+    const [tracks, selection] = await Promise.all([
+      this.listDeviceTracks(),
+      getFolderSelection(),
+    ]);
+    return foldersOf(tracks, selection);
+  }
+
+  async setMusicFolders(paths: string[] | null): Promise<void> {
+    await setFolderSelection(paths);
   }
 
   async scanMusic(): Promise<MusicScanResult> {

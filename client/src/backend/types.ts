@@ -1,5 +1,6 @@
 import type {
   ClientConfig,
+  MusicFolder,
   MusicScanResult,
   Note,
   NoteMeta,
@@ -20,8 +21,13 @@ export interface TrackUpdate {
 export interface Backend {
   getConfig(): Promise<ClientConfig>;
 
+  /** Tracks in the library, i.e. only from folders the user selected. */
   listTracks(): Promise<Track[]>;
   scanMusic(): Promise<MusicScanResult>;
+  /** Every folder holding audio, selected or not, so the user can choose. */
+  listMusicFolders(): Promise<MusicFolder[]>;
+  /** Restrict the library to these folders; null = every folder. */
+  setMusicFolders(paths: string[] | null): Promise<void>;
   updateTrack(id: number, update: TrackUpdate): Promise<void>;
   /** Playable URL for a track (sync; used by the crossfade engine). */
   trackUrl(track: Track): string;

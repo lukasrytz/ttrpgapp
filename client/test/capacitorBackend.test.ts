@@ -35,6 +35,9 @@ vi.mock('@capacitor/preferences', () => ({
     set: async ({ key, value }: { key: string; value: string }) => {
       prefs.set(key, value);
     },
+    remove: async ({ key }: { key: string }) => {
+      prefs.delete(key);
+    },
   },
 }));
 
@@ -121,6 +124,51 @@ describe('CapacitorBackend music', () => {
     tracks = await b.listTracks();
     const tavern = tracks.find((t) => t.title === 'Tavern')!;
     expect(tavern.tags.mood).toEqual(['calm']);
+  });
+
+  it('lists folders with counts, all enabled until a selection is made', async () => {
+    state.deviceTracks.push({ path: '/sd/ttrpg/Dungeon.mp3', title: 'Dungeon', artist: null, durationSec: 30 });
+    const b = new CapacitorBackend();
+    expect(await b.listMusicFolders()).toEqual([
+      { path: '/sd', label: 'sd', trackCount: 2, enabled: true },
+      { path: '/sd/ttrpg', label: 'ttrpg', trackCount: 1, enabled: true },
+    ]);
+  });
+
+  it('restricts the library to selected folders', async () => {
+    state.deviceTracks.push({ path: '/sd/ttrpg/Dungeon.mp3', title: 'Dungeon', artist: null, durationSec: 30 });
+    const b = new CapacitorBackend();
+    await b.setMusicFolders(['/sd/ttrpg']);
+    expect((await b.listTracks()).map((t) => t.title)).toEqual(['Dungeon']);
+    // The picker still sees every folder, with the selection reflected.
+    expect((await b.listMusicFolders()).map((f) => [f.path, f.enabled])).toEqual([
+      ['/sd', false],
+      ['/sd/ttrpg', true],
+    ]);
+    // Clearing the selection brings everything back.
+    await b.setMusicFolders(null);
+    expect((await b.listTracks()).length).toBe(3);
+  });
+
+  it('keeps tags across a folder selection change', async () => {
+    state.deviceTracks.push({ path: '/sd/ttrpg/Dungeon.mp3', title: 'Dungeon', artist: null, durationSec: 30 });
+    const b = new CapacitorBackend();
+    const all = await b.listTracks();
+    const dungeon = all.find((t) => t.title === 'Dungeon')!;
+    await b.updateTrack(dungeon.id, { intensity: 3 });
+    await b.setMusicFolders(['/sd/ttrpg']);
+    const [only] = await b.listTracks();
+    expect(only!.intensity).toBe(3);
+  });
+
+  it('counts a scan against the selected folders only', async () => {
+    state.deviceTracks.push({ path: '/sd/ttrpg/Dungeon.mp3', title: 'Dungeon', artist: null, durationSec: 30 });
+    const b = new CapacitorBackend();
+    await b.setMusicFolders(['/sd/ttrpg']);
+    expect(await b.scanMusic()).toEqual({ added: 1, removed: 0, total: 1 });
+    // Enabling another folder shows up as newly added tracks.
+    await b.setMusicFolders(['/sd/ttrpg', '/sd']);
+    expect(await b.scanMusic()).toEqual({ added: 2, removed: 0, total: 3 });
   });
 
   it('computes scan added/removed against saved paths', async () => {

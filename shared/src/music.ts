@@ -32,6 +32,20 @@ export interface TrackFilter {
   search?: string;
 }
 
+/**
+ * A directory holding audio, offered for inclusion in the library. Device
+ * libraries mix TTRPG music with everything else, so the user picks which
+ * folders count.
+ */
+export interface MusicFolder {
+  /** Grouping key: the track's containing directory. */
+  path: string;
+  /** Last path segment, for display. */
+  label: string;
+  trackCount: number;
+  enabled: boolean;
+}
+
 export interface MusicScanResult {
   added: number;
   removed: number;
