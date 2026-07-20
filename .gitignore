@@ -1,8 +1,8 @@
 node_modules/
 dist/
-data/
-vault/
-music/
+/data/
+/vault/
+/music/
 *.log
 .DS_Store
 config.local.json

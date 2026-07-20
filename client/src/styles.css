@@ -506,3 +506,127 @@ a {
   flex-wrap: wrap;
 }
 
+/* --- command palette & compendium --- */
+.sidebar-hint {
+  padding: 6px 10px;
+}
+
+.palette-backdrop {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.55);
+  z-index: 100;
+  display: flex;
+  justify-content: center;
+  align-items: flex-start;
+  padding-top: 12vh;
+}
+
+.palette {
+  width: 560px;
+  max-width: 90vw;
+  background: var(--bg-panel);
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  overflow: hidden;
+  box-shadow: 0 12px 40px rgba(0, 0, 0, 0.6);
+}
+
+.palette input {
+  width: 100%;
+  border: none;
+  border-bottom: 1px solid var(--border);
+  border-radius: 0;
+  padding: 14px 16px;
+  font-size: 16px;
+  background: var(--bg-panel);
+}
+
+.palette-hits {
+  max-height: 50vh;
+  overflow-y: auto;
+}
+
+.palette-hit {
+  display: flex;
+  width: 100%;
+  justify-content: space-between;
+  align-items: center;
+  gap: 10px;
+  background: none;
+  border: none;
+  border-radius: 0;
+  padding: 9px 16px;
+  text-align: left;
+}
+
+.palette-hit-active {
+  background: var(--accent-soft);
+}
+
+.palette-hit-name {
+  font-weight: 600;
+}
+
+.palette-hit-type {
+  font-size: 12px;
+  color: var(--text-muted);
+}
+
+.entry-panel {
+  position: fixed;
+  top: 0;
+  right: 0;
+  bottom: 0;
+  width: 440px;
+  max-width: 92vw;
+  background: var(--bg-panel);
+  border-left: 1px solid var(--border);
+  z-index: 90;
+  display: flex;
+  flex-direction: column;
+  box-shadow: -8px 0 30px rgba(0, 0, 0, 0.45);
+}
+
+.entry-panel-head {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  padding: 14px 16px;
+  border-bottom: 1px solid var(--border);
+}
+
+.entry-panel-head h2 {
+  margin: 0;
+  font-size: 19px;
+}
+
+.entry-panel-body {
+  padding: 12px 16px;
+  overflow-y: auto;
+  font-size: 14px;
+}
+
+.entry-panel-body table {
+  border-collapse: collapse;
+  width: 100%;
+}
+
+.entry-panel-body th,
+.entry-panel-body td {
+  border: 1px solid var(--border);
+  padding: 4px 8px;
+  text-align: center;
+}
+
+.compendium-hits {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.compendium-hit {
+  text-align: left;
+  padding: 8px 12px;
+}
+

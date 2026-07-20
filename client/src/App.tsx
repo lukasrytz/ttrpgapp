@@ -5,6 +5,7 @@ import { apiGet } from './api';
 import { availableClientPlugins } from './plugins';
 import { PlayerProvider } from './player/PlayerProvider';
 import PlayerBar from './player/PlayerBar';
+import CommandPalette from './components/CommandPalette';
 import MusicPage from './pages/MusicPage';
 import NotesPage from './pages/NotesPage';
 
@@ -34,6 +35,7 @@ export default function App() {
             <span className="nav-icon">{item.icon}</span> {item.label}
           </NavLink>
         ))}
+        <div className="sidebar-hint muted small">⌘K / Ctrl+K: rules search</div>
         {activePlugins.map((plugin) => (
           <div key={plugin.id}>
             <div className="sidebar-section">{plugin.name}</div>
@@ -63,6 +65,7 @@ export default function App() {
         </div>
         <PlayerBar />
       </main>
+      <CommandPalette />
     </div>
     </PlayerProvider>
   );
