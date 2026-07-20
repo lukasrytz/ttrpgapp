@@ -3,6 +3,8 @@ import { useQuery } from '@tanstack/react-query';
 import type { ClientConfig } from '@ttrpgapp/shared';
 import { apiGet } from './api';
 import { availableClientPlugins } from './plugins';
+import { PlayerProvider } from './player/PlayerProvider';
+import PlayerBar from './player/PlayerBar';
 import MusicPage from './pages/MusicPage';
 import NotesPage from './pages/NotesPage';
 
@@ -23,6 +25,7 @@ export default function App() {
   const activePlugins = availableClientPlugins.filter((p) => enabledIds.has(p.id));
 
   return (
+    <PlayerProvider>
     <div className="app">
       <nav className="sidebar">
         <div className="sidebar-title">TTRPG Companion</div>
@@ -43,6 +46,7 @@ export default function App() {
         ))}
       </nav>
       <main className="main">
+        <div className="main-content">
         <Routes>
           <Route path="/" element={<MusicPage />} />
           <Route path="/notes/*" element={<NotesPage />} />
@@ -56,7 +60,10 @@ export default function App() {
             )),
           )}
         </Routes>
+        </div>
+        <PlayerBar />
       </main>
     </div>
+    </PlayerProvider>
   );
 }

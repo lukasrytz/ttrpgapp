@@ -4,6 +4,7 @@ import { loadConfig, resolvePath } from './config.js';
 import { openDb } from './db.js';
 import { availablePlugins, registerPlugins } from './pluginHost.js';
 import { search, getEntry } from './compendium.js';
+import { registerMusicRoutes } from './music.js';
 
 const config = loadConfig();
 const db = openDb(resolvePath(config.dataDir));
@@ -33,6 +34,8 @@ app.get<{ Params: { packId: string; entryId: string } }>(
     return entry;
   },
 );
+
+registerMusicRoutes(app, db, config);
 
 await registerPlugins(app, db, config);
 
