@@ -57,11 +57,21 @@ app's Settings → *Cross-device sync*:
 3. Create an **OAuth client ID** → application type *Android*, package name
    `ch.rytz.ttrpgapp`, and the signing certificate SHA-1 fingerprint
    (`keytool -list -v -keystore <your.keystore>`; use the debug keystore's SHA-1
-   for the debug APK).
+   for the debug APK). Then open the client's **Advanced settings** and enable
+   **Custom URI scheme** — it is off by default on new Android clients, and the
+   app's `ch.rytz.ttrpgapp:/oauth` redirect needs it (without it Google answers
+   the sign-in with *Error 400: invalid_request*).
 4. Put the resulting client ID in **Settings → Connect Google Drive** (or bake it
    in at build time via `VITE_GOOGLE_CLIENT_ID`), then tap **Connect**.
 
 Repeat step 4 on each device with the same Google account, and they'll converge.
+Two gotchas worth knowing: the SHA-1 ties the client to *one* signing key, so an
+APK built on another machine (or by CI, which generates a throwaway debug
+keystore per run) needs its own SHA-1 added to the client; and while publishing
+status is *Testing*, Google expires refresh tokens after 7 days, so sync stops
+until you reconnect. Publishing the app avoids that — with only the
+non-sensitive `drive.file` scope this should not need a verification review.
+
 Other providers (Dropbox, self-hosted WebDAV) can be added later — the sync
 engine is provider-agnostic (`client/src/sync/`), Google Drive is the first
 `SyncTarget`.

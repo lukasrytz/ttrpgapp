@@ -19,6 +19,16 @@ const CLIENT_ID_KEY = 'sync.google.clientId';
 const PERIODIC_MS = 90_000;
 
 /**
+ * Client IDs get pasted from the Cloud Console, which is easy to do with a
+ * trailing slash or stray whitespace. Google answers those with a bare
+ * `invalid_client`, so normalise instead of passing them on. Applied on read
+ * too, so an already-stored bad value fixes itself.
+ */
+export function normalizeClientId(id: string): string {
+  return id.trim().replace(/^["']|["']$/g, '').replace(/\/+$/, '').trim();
+}
+
+/**
  * Owns the local-first sync loop for the Android build: reconciles the device
  * store with Google Drive on launch, on app resume, periodically, after edits
  * (debounced), and on demand. Emits `ttrpg-sync-status` for the UI and
@@ -52,7 +62,8 @@ class SyncManager {
 
   private async clientId(): Promise<string | null> {
     const override = (await Preferences.get({ key: CLIENT_ID_KEY })).value;
-    return override || (import.meta.env.VITE_GOOGLE_CLIENT_ID as string | undefined) || null;
+    const id = override || (import.meta.env.VITE_GOOGLE_CLIENT_ID as string | undefined) || null;
+    return id ? normalizeClientId(id) || null : null;
   }
 
   private async buildTarget(): Promise<boolean> {
@@ -64,7 +75,7 @@ class SyncManager {
   }
 
   async setClientId(id: string): Promise<void> {
-    await Preferences.set({ key: CLIENT_ID_KEY, value: id.trim() });
+    await Preferences.set({ key: CLIENT_ID_KEY, value: normalizeClientId(id) });
     await this.buildTarget();
   }
 
