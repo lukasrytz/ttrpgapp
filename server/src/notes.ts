@@ -2,35 +2,8 @@ import fs from 'node:fs';
 import path from 'node:path';
 import type { FastifyInstance } from 'fastify';
 import type { AppConfig, Note, NoteMeta } from '@ttrpgapp/shared';
-import { extractLinks } from '@ttrpgapp/shared';
+import { extractLinks, renderTemplate, sanitizeNoteName, STARTER_TEMPLATE } from '@ttrpgapp/shared';
 import { resolvePath } from './config.js';
-
-const STARTER_TEMPLATE = `# {{title}}
-
-*Prepared {{date}}*
-
-## Recap
-
--
-
-## Strong start
-
--
-
-## Scenes
-
-### Scene 1
-
--
-
-## NPCs & places
-
--
-
-## Treasure & clues
-
--
-`;
 
 function ensureVault(vault: string) {
   fs.mkdirSync(path.join(vault, 'sessions'), { recursive: true });
@@ -98,10 +71,6 @@ function readNote(vault: string, rel: string): Note | null {
   };
 }
 
-function sanitizeName(name: string): string {
-  return name.replace(/[/\\:*?"<>|]/g, '-').trim();
-}
-
 export function registerNotesRoutes(app: FastifyInstance, config: AppConfig) {
   const vault = resolvePath(config.notesVault);
   ensureVault(vault);
@@ -134,7 +103,7 @@ export function registerNotesRoutes(app: FastifyInstance, config: AppConfig) {
 
   /** Create a supporting note (NPCs, locations, …) at the vault root. */
   app.post<{ Body: { title: string } }>('/api/notes/create', (req, reply) => {
-    const name = sanitizeName(req.body.title);
+    const name = sanitizeNoteName(req.body.title);
     if (!name) return reply.code(400).send({ error: 'bad title' });
     const rel = `${name}.md`;
     const abs = safePath(vault, rel);
@@ -147,16 +116,14 @@ export function registerNotesRoutes(app: FastifyInstance, config: AppConfig) {
   /** Create a session note from template.md, filling {{title}} and {{date}}. */
   app.post<{ Body: { title: string } }>('/api/notes/session', (req, reply) => {
     ensureVault(vault);
-    const name = sanitizeName(req.body.title);
+    const name = sanitizeNoteName(req.body.title);
     if (!name) return reply.code(400).send({ error: 'bad title' });
     const rel = `sessions/${name}.md`;
     const abs = safePath(vault, rel);
     if (!abs) return reply.code(400).send({ error: 'bad title' });
     if (fs.existsSync(abs)) return reply.code(409).send({ error: 'exists' });
     const template = fs.readFileSync(path.join(vault, 'template.md'), 'utf-8');
-    const date = new Date().toISOString().slice(0, 10);
-    const content = template.replaceAll('{{title}}', name).replaceAll('{{date}}', date);
-    fs.writeFileSync(abs, content);
+    fs.writeFileSync(abs, renderTemplate(template, name));
     return { path: rel };
   });
 }

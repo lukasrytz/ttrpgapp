@@ -1,11 +1,19 @@
+import { Capacitor } from '@capacitor/core';
 import type { Backend } from './types';
 import { HttpBackend } from './http';
 
-// The Android build swaps this for CapacitorBackend at bootstrap (see main.tsx).
 let instance: Backend = new HttpBackend();
 
 export function setBackend(b: Backend) {
   instance = b;
+}
+
+/** Picks the on-device backend on Android, else keeps the HTTP backend. */
+export async function initBackend(): Promise<void> {
+  if (Capacitor.isNativePlatform()) {
+    const { CapacitorBackend } = await import('./capacitor');
+    instance = new CapacitorBackend();
+  }
 }
 
 export function backend(): Backend {
