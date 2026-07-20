@@ -53,7 +53,7 @@ export default function NotesPage() {
   );
 
   return (
-    <div className="notes-page">
+    <div className={`notes-page ${selectedPath ? 'has-selection' : ''}`}>
       <aside className="notes-list">
         <div className="notes-list-head">
           <button
@@ -112,6 +112,7 @@ export default function NotesPage() {
           noteTitles={notes.map((n) => n.title)}
           onOpenByTitle={openByTitle}
           onOpenPath={setSelectedPath}
+          onBack={() => setSelectedPath(null)}
           onDeleted={() => {
             setSelectedPath(null);
             invalidate();
@@ -138,6 +139,7 @@ function NoteEditor({
   noteTitles,
   onOpenByTitle,
   onOpenPath,
+  onBack,
   onDeleted,
 }: {
   path: string;
@@ -146,6 +148,7 @@ function NoteEditor({
   noteTitles: string[];
   onOpenByTitle: (title: string) => void;
   onOpenPath: (path: string) => void;
+  onBack: () => void;
   onDeleted: () => void;
 }) {
   const qc = useQueryClient();
@@ -208,6 +211,9 @@ function NoteEditor({
   return (
     <div className="note-editor">
       <div className="note-toolbar">
+        <button className="icon-btn back-btn" aria-label="Back to list" onClick={onBack}>
+          ‹
+        </button>
         <strong className="note-title">{note.title}</strong>
         <span className="muted small">
           {dirty ? 'unsaved…' : save.isPending ? 'saving…' : 'saved'}

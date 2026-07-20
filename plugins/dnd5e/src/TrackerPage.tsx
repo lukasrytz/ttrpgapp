@@ -268,7 +268,7 @@ function CombatantRow({
         </tr>
       )}
       {editingConditions && (
-        <tr>
+        <tr className="row-conditions-editor">
           <td></td>
           <td colSpan={5}>
             <div className="chip-row condition-editor">

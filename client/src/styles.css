@@ -37,6 +37,48 @@ body {
   display: flex;
 }
 
+/* Mobile top bar — hidden on tablet/desktop, shown under 760px. */
+.topbar {
+  display: none;
+  align-items: center;
+  gap: 8px;
+  padding: calc(env(safe-area-inset-top) + 6px) 10px 6px;
+  background: var(--bg-panel);
+  border-bottom: 1px solid var(--border);
+}
+
+.topbar-title {
+  flex: 1;
+  font-weight: 700;
+  color: var(--accent);
+}
+
+.icon-btn {
+  background: none;
+  border: none;
+  font-size: 20px;
+  padding: 6px 10px;
+  min-width: 44px;
+  min-height: 44px;
+  line-height: 1;
+}
+
+.drawer-backdrop {
+  display: none;
+}
+
+.nav-search {
+  background: none;
+  border: none;
+  width: 100%;
+  text-align: left;
+  font-size: 15px;
+}
+
+.kbd-hint {
+  float: right;
+}
+
 .sidebar {
   width: 210px;
   flex-shrink: 0;
@@ -757,3 +799,198 @@ a {
   position: relative;
 }
 
+
+/* ============================================================
+   Phone layout (< 760px). Tablet/desktop keep the wide layout.
+   ============================================================ */
+@media (max-width: 759px) {
+  .app {
+    flex-direction: column;
+  }
+
+  .topbar {
+    display: flex;
+  }
+
+  /* Sidebar becomes a slide-in drawer. */
+  .sidebar {
+    position: fixed;
+    top: 0;
+    left: 0;
+    bottom: 0;
+    width: 82vw;
+    max-width: 300px;
+    z-index: 120;
+    transform: translateX(-100%);
+    transition: transform 0.2s ease;
+    padding-top: calc(env(safe-area-inset-top) + 12px);
+  }
+
+  .sidebar-open {
+    transform: translateX(0);
+  }
+
+  .drawer-backdrop {
+    display: block;
+    position: fixed;
+    inset: 0;
+    z-index: 110;
+    background: rgba(0, 0, 0, 0.5);
+  }
+
+  .main {
+    min-height: 0;
+  }
+
+  .page {
+    padding: 14px 14px 20px;
+  }
+
+  /* Bigger tap targets and no iOS focus-zoom. */
+  button {
+    padding: 8px 12px;
+  }
+
+  input,
+  select,
+  textarea {
+    font-size: 16px;
+    padding: 8px 10px;
+  }
+
+  .player-bar {
+    padding-bottom: calc(env(safe-area-inset-bottom) + 10px);
+  }
+
+  /* --- music --- */
+  .page-header {
+    align-items: flex-start;
+  }
+
+  .music-page {
+    flex-direction: column;
+  }
+
+  .cell-tags {
+    display: none;
+  }
+
+  /* Track tag editor becomes a bottom sheet. */
+  .tag-editor {
+    position: fixed;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    width: auto;
+    max-height: 72vh;
+    overflow-y: auto;
+    z-index: 95;
+    border-radius: 14px 14px 0 0;
+    padding-bottom: calc(env(safe-area-inset-bottom) + 12px);
+    box-shadow: 0 -8px 30px rgba(0, 0, 0, 0.5);
+  }
+
+  /* --- notes: master/detail --- */
+  .notes-list {
+    width: 100%;
+    border-right: none;
+  }
+
+  .notes-page.has-selection .notes-list {
+    display: none;
+  }
+
+  .notes-page:not(.has-selection) .note-editor {
+    display: none;
+  }
+
+  /* Edit mode shows just the editor; the Play view is the rendered read. */
+  .note-preview {
+    display: none;
+  }
+
+  .back-btn {
+    display: inline-flex;
+    font-size: 26px;
+    min-width: 36px;
+  }
+
+  /* --- compendium entry panel becomes full-screen sheet --- */
+  .entry-panel {
+    width: 100%;
+    max-width: 100%;
+    padding-top: env(safe-area-inset-top);
+  }
+
+  .palette {
+    width: 94vw;
+  }
+
+  /* --- combat tracker: table reflows to cards --- */
+  .tracker-table,
+  .tracker-table tbody,
+  .tracker-table tr,
+  .tracker-table td {
+    display: block;
+  }
+
+  .tracker-table thead {
+    display: none;
+  }
+
+  .tracker-table tr {
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    margin-bottom: 10px;
+    padding: 8px 10px;
+    background: var(--bg-panel);
+  }
+
+  .tracker-table tr.row-active-turn {
+    border-left: 3px solid var(--accent);
+  }
+
+  .tracker-table td {
+    border-bottom: none;
+    padding: 4px 0;
+  }
+
+  .cell-init {
+    width: auto;
+  }
+
+  .init-input {
+    width: 56px;
+  }
+
+  /* death-save and condition-editor sub-rows sit inside the card flow */
+  .tracker-table tr.row-death-saves,
+  .tracker-table tr.row-conditions-editor {
+    border: none;
+    background: none;
+    padding: 0;
+    margin: 0;
+  }
+
+  .add-combatant .filter-row {
+    flex-wrap: wrap;
+  }
+
+  .add-combatant input {
+    flex: 1;
+    min-width: 120px;
+  }
+
+  .w-narrow {
+    width: 64px;
+    flex: 0 0 auto;
+    min-width: 0;
+  }
+}
+
+/* Hide the desktop-only keyboard hint on touch devices. */
+@media (hover: none) {
+  .kbd-hint {
+    display: none;
+  }
+}
