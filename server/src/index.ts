@@ -2,8 +2,7 @@ import Fastify from 'fastify';
 import type { ClientConfig } from '@ttrpgapp/shared';
 import { loadConfig, resolvePath } from './config.js';
 import { openDb } from './db.js';
-import { availablePlugins, registerPlugins } from './pluginHost.js';
-import { search, getEntry } from './compendium.js';
+import { availablePlugins } from './pluginHost.js';
 import { registerMusicRoutes } from './music.js';
 import { registerNotesRoutes } from './notes.js';
 
@@ -22,24 +21,30 @@ app.get('/api/config', (): ClientConfig => {
   };
 });
 
-app.get<{ Querystring: { q?: string } }>('/api/compendium/search', (req) => {
-  const q = req.query.q ?? '';
-  return { hits: search(db, q) };
-});
+const kvGet = db.prepare('SELECT value FROM plugin_state WHERE plugin_id = ? AND key = ?');
+const kvPut = db.prepare(
+  'INSERT INTO plugin_state (plugin_id, key, value) VALUES (?, ?, ?) ' +
+    'ON CONFLICT (plugin_id, key) DO UPDATE SET value = excluded.value',
+);
 
-app.get<{ Params: { packId: string; entryId: string } }>(
-  '/api/compendium/entry/:packId/:entryId',
-  (req, reply) => {
-    const entry = getEntry(req.params.packId, req.params.entryId);
-    if (!entry) return reply.code(404).send({ error: 'not found' });
-    return entry;
+app.get<{ Params: { pluginId: string; key: string } }>(
+  '/api/plugin-state/:pluginId/:key',
+  (req) => {
+    const row = kvGet.get(req.params.pluginId, req.params.key) as { value: string } | undefined;
+    return { value: row?.value ?? null };
+  },
+);
+
+app.put<{ Params: { pluginId: string; key: string }; Body: { value: string } }>(
+  '/api/plugin-state/:pluginId/:key',
+  (req) => {
+    kvPut.run(req.params.pluginId, req.params.key, req.body.value);
+    return { ok: true };
   },
 );
 
 registerMusicRoutes(app, db, config);
 registerNotesRoutes(app, config);
-
-await registerPlugins(app, db, config);
 
 const port = Number(process.env.PORT ?? 8787);
 await app.listen({ port, host: '127.0.0.1' });

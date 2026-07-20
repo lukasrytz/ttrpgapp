@@ -1,5 +1,6 @@
 import { useEffect, useRef, useState } from 'react';
-import type { CompendiumEntry, CompendiumSearchHit } from '@ttrpgapp/shared';
+import type { CompendiumSearchHit } from '@ttrpgapp/shared';
+import { getPluginRuntime } from '@ttrpgapp/shared/plugin-client';
 import {
   CONDITIONS,
   EMPTY_ENCOUNTER,
@@ -9,7 +10,7 @@ import {
 } from './trackerTypes';
 
 function openEntry(packId: string, entryId: string) {
-  window.dispatchEvent(new CustomEvent('open-compendium-entry', { detail: { packId, entryId } }));
+  getPluginRuntime().openCompendiumEntry(packId, entryId);
 }
 
 function newId(): string {
@@ -26,9 +27,9 @@ export default function TrackerPage() {
   const [editingConditions, setEditingConditions] = useState<string | null>(null);
 
   useEffect(() => {
-    void fetch('/api/plugins/dnd5e/encounter')
-      .then((r) => r.json())
-      .then((e: Encounter) => setEnc(e));
+    void getPluginRuntime()
+      .kvGet('dnd5e', 'encounter')
+      .then((v) => setEnc(v ? (JSON.parse(v) as Encounter) : EMPTY_ENCOUNTER));
   }, []);
 
   const update = (fn: (e: Encounter) => Encounter) => {
@@ -37,11 +38,7 @@ export default function TrackerPage() {
       const next = fn(prev);
       if (saveTimer.current) clearTimeout(saveTimer.current);
       saveTimer.current = setTimeout(() => {
-        void fetch('/api/plugins/dnd5e/encounter', {
-          method: 'PUT',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify(next),
-        });
+        void getPluginRuntime().kvSet('dnd5e', 'encounter', JSON.stringify(next));
       }, 300);
       return next;
     });
@@ -367,14 +364,12 @@ function AddCombatant({
       setMonsterHits([]);
       return;
     }
-    const t = setTimeout(() => {
-      void fetch(`/api/compendium/search?q=${encodeURIComponent(monsterQuery)}`)
-        .then((r) => r.json())
-        .then((r: { hits: CompendiumSearchHit[] }) =>
-          setMonsterHits(r.hits.filter((h) => h.type === 'monster').slice(0, 6)),
-        );
-    }, 150);
-    return () => clearTimeout(t);
+    setMonsterHits(
+      getPluginRuntime()
+        .searchCompendium(monsterQuery, 50)
+        .filter((h) => h.type === 'monster')
+        .slice(0, 6),
+    );
   }, [monsterQuery]);
 
   const uniqueName = (base: string) => {
@@ -384,12 +379,9 @@ function AddCombatant({
     return `${base} ${i}`;
   };
 
-  const addMonster = async (hit: CompendiumSearchHit) => {
-    const entry: CompendiumEntry = await (
-      await fetch(
-        `/api/compendium/entry/${encodeURIComponent(hit.packId)}/${encodeURIComponent(hit.entryId)}`,
-      )
-    ).json();
+  const addMonster = (hit: CompendiumSearchHit) => {
+    const entry = getPluginRuntime().getCompendiumEntry(hit.packId, hit.entryId);
+    if (!entry) return;
     const f = (entry.fields ?? {}) as { hp?: number; ac?: number; dexMod?: number };
     const maxHp = f.hp ?? 1;
     onAdd({
@@ -467,7 +459,7 @@ function AddCombatant({
         />
         <div className="chip-row">
           {monsterHits.map((h) => (
-            <button key={h.entryId} className="chip" onClick={() => void addMonster(h)}>
+            <button key={h.entryId} className="chip" onClick={() => addMonster(h)}>
               + {h.name}
             </button>
           ))}

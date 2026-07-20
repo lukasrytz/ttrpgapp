@@ -2,6 +2,7 @@ import fs from 'node:fs';
 import path from 'node:path';
 import type { FastifyInstance } from 'fastify';
 import type { AppConfig, Note, NoteMeta } from '@ttrpgapp/shared';
+import { extractLinks } from '@ttrpgapp/shared';
 import { resolvePath } from './config.js';
 
 const STARTER_TEMPLATE = `# {{title}}
@@ -30,8 +31,6 @@ const STARTER_TEMPLATE = `# {{title}}
 
 -
 `;
-
-const WIKI_LINK = /\[\[([^\]|]+)(?:\|[^\]]*)?\]\]/g;
 
 function ensureVault(vault: string) {
   fs.mkdirSync(path.join(vault, 'sessions'), { recursive: true });
@@ -72,15 +71,6 @@ function listNotes(vault: string): NoteMeta[] {
     });
   }
   return notes.sort((a, b) => a.path.localeCompare(b.path));
-}
-
-export function extractLinks(content: string): string[] {
-  const links: string[] = [];
-  for (const m of content.matchAll(WIKI_LINK)) {
-    const target = m[1]!.trim();
-    if (target && !links.includes(target)) links.push(target);
-  }
-  return links;
 }
 
 function readNote(vault: string, rel: string): Note | null {

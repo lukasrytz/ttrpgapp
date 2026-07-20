@@ -38,14 +38,5 @@ function migrate(db: Database.Database) {
       value TEXT NOT NULL,
       PRIMARY KEY (plugin_id, key)
     );
-
-    CREATE VIRTUAL TABLE IF NOT EXISTS compendium_fts USING fts5(
-      pack_id UNINDEXED,
-      plugin_id UNINDEXED,
-      entry_id UNINDEXED,
-      type UNINDEXED,
-      name,
-      body
-    );
   `);
 }

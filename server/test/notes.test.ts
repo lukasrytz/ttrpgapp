@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { extractLinks } from '../src/notes.js';
+import { extractLinks } from '@ttrpgapp/shared';
 
 describe('extractLinks', () => {
   it('finds wiki links', () => {

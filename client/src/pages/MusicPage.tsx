@@ -2,7 +2,7 @@ import { useMemo, useState } from 'react';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import type { MusicScanResult, TagDimension, Track } from '@ttrpgapp/shared';
 import { DEFAULT_TAG_VOCAB, TAG_DIMENSIONS } from '@ttrpgapp/shared';
-import { apiGet, apiSend } from '../api';
+import { backend, type TrackUpdate } from '../backend';
 import { usePlayer, shuffleTracks } from '../player/PlayerProvider';
 import { EMPTY_FILTER, matches, type Filter } from '../music/filter';
 
@@ -21,12 +21,12 @@ export default function MusicPage() {
 
   const { data } = useQuery({
     queryKey: ['tracks'],
-    queryFn: () => apiGet<{ tracks: Track[] }>('/api/music/tracks'),
+    queryFn: () => backend().listTracks(),
   });
-  const tracks = useMemo(() => data?.tracks ?? [], [data]);
+  const tracks = useMemo(() => data ?? [], [data]);
 
   const scan = useMutation({
-    mutationFn: () => apiSend<MusicScanResult>('POST', '/api/music/scan'),
+    mutationFn: (): Promise<MusicScanResult> => backend().scanMusic(),
     onSuccess: () => qc.invalidateQueries({ queryKey: ['tracks'] }),
   });
 
@@ -192,8 +192,7 @@ function TagEditor({
   });
 
   const update = useMutation({
-    mutationFn: (body: { intensity?: number | null; tags?: Partial<Record<TagDimension, string[]>> }) =>
-      apiSend('PATCH', `/api/music/tracks/${track.id}`, body),
+    mutationFn: (body: TrackUpdate) => backend().updateTrack(track.id, body),
     onSuccess: () => qc.invalidateQueries({ queryKey: ['tracks'] }),
   });
 

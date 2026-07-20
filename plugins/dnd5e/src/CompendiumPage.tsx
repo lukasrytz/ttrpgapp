@@ -1,31 +1,16 @@
-import { useEffect, useState } from 'react';
-import type { CompendiumSearchHit } from '@ttrpgapp/shared';
+import { useMemo, useState } from 'react';
+import { getPluginRuntime } from '@ttrpgapp/shared/plugin-client';
 
 const TYPES = ['spell', 'monster', 'condition', 'equipment', 'magic-item', 'rule', 'skill'];
-
-/** Opens the core entry slide-over (same event the command palette uses). */
-function openEntry(packId: string, entryId: string) {
-  window.dispatchEvent(new CustomEvent('open-compendium-entry', { detail: { packId, entryId } }));
-}
 
 export default function CompendiumPage() {
   const [query, setQuery] = useState('');
   const [type, setType] = useState<string | null>(null);
-  const [hits, setHits] = useState<CompendiumSearchHit[]>([]);
 
-  useEffect(() => {
-    if (!query.trim()) {
-      setHits([]);
-      return;
-    }
-    const t = setTimeout(() => {
-      void fetch(`/api/compendium/search?q=${encodeURIComponent(query)}`)
-        .then((r) => r.json())
-        .then((r: { hits: CompendiumSearchHit[] }) => setHits(r.hits));
-    }, 150);
-    return () => clearTimeout(t);
-  }, [query]);
-
+  const hits = useMemo(
+    () => (query.trim() ? getPluginRuntime().searchCompendium(query, 50) : []),
+    [query],
+  );
   const shown = type ? hits.filter((h) => h.type === type) : hits;
 
   return (
@@ -61,7 +46,7 @@ export default function CompendiumPage() {
           <button
             key={`${h.packId}/${h.entryId}`}
             className="compendium-hit"
-            onClick={() => openEntry(h.packId, h.entryId)}
+            onClick={() => getPluginRuntime().openCompendiumEntry(h.packId, h.entryId)}
           >
             <div>
               <strong>{h.name}</strong> <span className="tag">{h.type}</span>

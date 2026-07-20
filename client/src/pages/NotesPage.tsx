@@ -3,8 +3,8 @@ import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import CodeMirror from '@uiw/react-codemirror';
 import { markdown } from '@codemirror/lang-markdown';
 import { autocompletion, type CompletionContext } from '@codemirror/autocomplete';
-import type { Note, NoteMeta } from '@ttrpgapp/shared';
-import { apiGet, apiSend } from '../api';
+import type { Note } from '@ttrpgapp/shared';
+import { backend } from '../backend';
 import Markdown, { splitSections } from '../components/Markdown';
 
 type Mode = 'edit' | 'play';
@@ -16,16 +16,16 @@ export default function NotesPage() {
 
   const { data: listData } = useQuery({
     queryKey: ['notes'],
-    queryFn: () => apiGet<{ notes: NoteMeta[] }>('/api/notes'),
+    queryFn: () => backend().listNotes(),
   });
-  const notes = useMemo(() => listData?.notes ?? [], [listData]);
+  const notes = useMemo(() => listData ?? [], [listData]);
   const sessions = notes.filter((n) => n.isSession);
   const others = notes.filter((n) => !n.isSession && n.path !== 'template.md');
 
   const invalidate = () => qc.invalidateQueries({ queryKey: ['notes'] });
 
   const newSession = useMutation({
-    mutationFn: (title: string) => apiSend<{ path: string }>('POST', '/api/notes/session', { title }),
+    mutationFn: (title: string) => backend().createSession(title),
     onSuccess: (r) => {
       invalidate();
       setSelectedPath(r.path);
@@ -33,7 +33,7 @@ export default function NotesPage() {
     },
   });
   const newNote = useMutation({
-    mutationFn: (title: string) => apiSend<{ path: string }>('POST', '/api/notes/create', { title }),
+    mutationFn: (title: string) => backend().createNote(title),
     onSuccess: (r) => {
       invalidate();
       setSelectedPath(r.path);
@@ -151,7 +151,7 @@ function NoteEditor({
   const qc = useQueryClient();
   const { data: note } = useQuery({
     queryKey: ['note', path],
-    queryFn: () => apiGet<Note>(`/api/notes/note?path=${encodeURIComponent(path)}`),
+    queryFn: (): Promise<Note> => backend().readNote(path),
   });
   const [draft, setDraft] = useState<string | null>(null);
   const [dirty, setDirty] = useState(false);
@@ -160,8 +160,7 @@ function NoteEditor({
   const content = draft ?? note?.content ?? '';
 
   const save = useMutation({
-    mutationFn: (c: string) =>
-      apiSend('PUT', `/api/notes/note?path=${encodeURIComponent(path)}`, { content: c }),
+    mutationFn: (c: string) => backend().writeNote(path, c),
     onSuccess: () => {
       setDirty(false);
       void qc.invalidateQueries({ queryKey: ['note', path] });
@@ -223,9 +222,7 @@ function NoteEditor({
           <button
             onClick={() => {
               if (window.confirm(`Delete "${note.title}"?`)) {
-                void apiSend('DELETE', `/api/notes/note?path=${encodeURIComponent(path)}`).then(
-                  onDeleted,
-                );
+                void backend().deleteNote(path).then(onDeleted);
               }
             }}
           >

@@ -1,7 +1,5 @@
 import { Routes, Route, NavLink } from 'react-router-dom';
-import { useQuery } from '@tanstack/react-query';
 import type { ClientConfig } from '@ttrpgapp/shared';
-import { apiGet } from './api';
 import { availableClientPlugins } from './plugins';
 import { PlayerProvider } from './player/PlayerProvider';
 import PlayerBar from './player/PlayerBar';
@@ -14,15 +12,8 @@ const CORE_NAV = [
   { path: '/notes', label: 'Prep Notes', icon: '📓' },
 ];
 
-export default function App() {
-  const { data: config } = useQuery({
-    queryKey: ['config'],
-    queryFn: () => apiGet<ClientConfig>('/api/config'),
-  });
-
-  const enabledIds = new Set(
-    (config?.plugins ?? []).filter((p) => p.enabled).map((p) => p.id),
-  );
+export default function App({ config }: { config: ClientConfig }) {
+  const enabledIds = new Set(config.plugins.filter((p) => p.enabled).map((p) => p.id));
   const activePlugins = availableClientPlugins.filter((p) => enabledIds.has(p.id));
 
   return (

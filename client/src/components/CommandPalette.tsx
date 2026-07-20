@@ -1,12 +1,7 @@
-import { useCallback, useEffect, useRef, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import type { CompendiumEntry, CompendiumSearchHit } from '@ttrpgapp/shared';
-import { apiGet } from '../api';
+import { compendiumIndex } from '../compendium';
 import Markdown from './Markdown';
-
-/** Other views (incl. plugin views) open a compendium entry via this event. */
-export function openCompendiumEntry(packId: string, entryId: string) {
-  window.dispatchEvent(new CustomEvent('open-compendium-entry', { detail: { packId, entryId } }));
-}
 
 export default function CommandPalette() {
   const [open, setOpen] = useState(false);
@@ -15,13 +10,6 @@ export default function CommandPalette() {
   const [cursor, setCursor] = useState(0);
   const [entry, setEntry] = useState<CompendiumEntry | null>(null);
   const inputRef = useRef<HTMLInputElement>(null);
-  const debounce = useRef<ReturnType<typeof setTimeout> | null>(null);
-
-  const showEntry = useCallback((packId: string, entryId: string) => {
-    void apiGet<CompendiumEntry>(
-      `/api/compendium/entry/${encodeURIComponent(packId)}/${encodeURIComponent(entryId)}`,
-    ).then(setEntry);
-  }, []);
 
   useEffect(() => {
     const onKey = (e: KeyboardEvent) => {
@@ -35,15 +23,18 @@ export default function CommandPalette() {
     };
     const onOpenEntry = (e: Event) => {
       const { packId, entryId } = (e as CustomEvent<{ packId: string; entryId: string }>).detail;
-      showEntry(packId, entryId);
+      setEntry(compendiumIndex.getEntry(packId, entryId));
     };
+    const onOpenPalette = () => setOpen(true);
     window.addEventListener('keydown', onKey);
     window.addEventListener('open-compendium-entry', onOpenEntry);
+    window.addEventListener('open-command-palette', onOpenPalette);
     return () => {
       window.removeEventListener('keydown', onKey);
       window.removeEventListener('open-compendium-entry', onOpenEntry);
+      window.removeEventListener('open-command-palette', onOpenPalette);
     };
-  }, [showEntry]);
+  }, []);
 
   useEffect(() => {
     if (open) {
@@ -56,24 +47,13 @@ export default function CommandPalette() {
 
   const onQuery = (q: string) => {
     setQuery(q);
-    if (debounce.current) clearTimeout(debounce.current);
-    debounce.current = setTimeout(() => {
-      if (!q.trim()) {
-        setHits([]);
-        return;
-      }
-      void apiGet<{ hits: CompendiumSearchHit[] }>(
-        `/api/compendium/search?q=${encodeURIComponent(q)}`,
-      ).then((r) => {
-        setHits(r.hits);
-        setCursor(0);
-      });
-    }, 120);
+    setHits(q.trim() ? compendiumIndex.search(q) : []);
+    setCursor(0);
   };
 
   const pick = (hit: CompendiumSearchHit) => {
     setOpen(false);
-    showEntry(hit.packId, hit.entryId);
+    setEntry(compendiumIndex.getEntry(hit.packId, hit.entryId));
   };
 
   return (

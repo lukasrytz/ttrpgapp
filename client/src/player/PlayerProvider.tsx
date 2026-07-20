@@ -8,6 +8,7 @@ import {
   type ReactNode,
 } from 'react';
 import type { Track } from '@ttrpgapp/shared';
+import { backend } from '../backend';
 import { CrossfadeEngine } from './crossfade';
 
 interface PlayerState {
@@ -76,7 +77,7 @@ export function PlayerProvider({ children }: { children: ReactNode }) {
   };
 
   const startTrack = useCallback((track: Track) => {
-    void engine().play(`/api/music/stream/${track.id}`);
+    void engine().play(backend().trackUrl(track));
     setState((s) => ({ ...s, current: track, playing: true, position: 0, duration: 0 }));
   }, []);
 
@@ -85,7 +86,7 @@ export function PlayerProvider({ children }: { children: ReactNode }) {
     if (s.queue.length === 0) return;
     const nextIndex = (s.queueIndex + 1) % s.queue.length;
     const track = s.queue[nextIndex]!;
-    void engine().play(`/api/music/stream/${track.id}`);
+    void engine().play(backend().trackUrl(track));
     setState((prev) => ({
       ...prev,
       current: track,
