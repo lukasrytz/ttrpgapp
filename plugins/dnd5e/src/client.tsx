@@ -2,6 +2,8 @@ import type { CompendiumPack } from '@ttrpgapp/shared';
 import type { ClientPlugin } from '@ttrpgapp/shared/plugin-client';
 import CompendiumPage from './CompendiumPage';
 import TrackerPage from './TrackerPage';
+import EncountersPage from './EncountersPage';
+import PartyPage from './PartyPage';
 
 // Resolved by Vite to an emitted asset URL (kept out of the JS bundle).
 const srdPackUrl = new URL('../data/srd-pack.json', import.meta.url).href;
@@ -11,10 +13,14 @@ export const dnd5eClientPlugin: ClientPlugin = {
   name: 'D&D 5e',
   nav: [
     { path: '/tracker', label: 'Combat Tracker', icon: '⚔️' },
+    { path: '/encounters', label: 'Encounters', icon: '📋' },
+    { path: '/party', label: 'Party', icon: '🛡️' },
     { path: '/compendium', label: 'Compendium', icon: '📖' },
   ],
   routes: [
     { path: '/tracker', component: TrackerPage },
+    { path: '/encounters', component: EncountersPage },
+    { path: '/party', component: PartyPage },
     { path: '/compendium', component: CompendiumPage },
   ],
   loadPacks: async () => {

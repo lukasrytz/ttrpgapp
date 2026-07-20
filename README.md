@@ -104,7 +104,10 @@ and hit **Rescan library**.
   [5e-bits/5e-database](https://github.com/5e-bits/5e-database)) and a combat
   tracker: initiative, HP, AC, the 5e conditions incl. exhaustion levels,
   concentration, death saves, and add-monster-from-SRD with inline stat blocks.
-  Encounter state survives reloads.
+  Encounter state survives reloads. A **Party** roster stores reusable PCs and
+  a **Encounters** library lets you pre-build fights from SRD monsters and
+  **Start** one — rolling initiative and loading the tracker with the chosen
+  party members. (Party and encounters sync across devices like everything else.)
 
 - **Cross-device sync** (Android) — notes and combat state kept in step across
   your phone and tablet through your own Google Drive, offline-first. See
