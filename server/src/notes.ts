@@ -74,7 +74,7 @@ function listNotes(vault: string): NoteMeta[] {
   return notes.sort((a, b) => a.path.localeCompare(b.path));
 }
 
-function extractLinks(content: string): string[] {
+export function extractLinks(content: string): string[] {
   const links: string[] = [];
   for (const m of content.matchAll(WIKI_LINK)) {
     const target = m[1]!.trim();

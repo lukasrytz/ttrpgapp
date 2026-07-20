@@ -630,3 +630,130 @@ a {
   padding: 8px 12px;
 }
 
+/* --- combat tracker --- */
+.round-badge {
+  background: var(--accent-soft);
+  color: var(--accent);
+  border-radius: 6px;
+  padding: 6px 12px;
+  font-weight: 600;
+}
+
+.tracker-table {
+  width: 100%;
+  border-collapse: collapse;
+}
+
+.tracker-table th {
+  text-align: left;
+  font-size: 11px;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: var(--text-muted);
+  padding: 6px 8px;
+  border-bottom: 1px solid var(--border);
+}
+
+.tracker-table td {
+  padding: 8px;
+  border-bottom: 1px solid var(--border);
+  vertical-align: middle;
+}
+
+.row-active-turn td {
+  background: var(--accent-soft);
+}
+
+.row-active-turn td:first-child {
+  border-left: 3px solid var(--accent);
+}
+
+.row-down {
+  opacity: 0.6;
+}
+
+.cell-init {
+  width: 60px;
+}
+
+.init-input {
+  width: 52px;
+  text-align: center;
+}
+
+.cell-hp {
+  white-space: nowrap;
+}
+
+.hp-low {
+  color: var(--danger);
+  font-weight: 700;
+}
+
+.hp-controls {
+  margin-left: 8px;
+  display: inline-flex;
+  gap: 3px;
+  align-items: center;
+}
+
+.hp-amount {
+  width: 44px;
+  text-align: center;
+}
+
+.cell-conditions {
+  max-width: 340px;
+}
+
+.cell-conditions .chip {
+  margin: 1px 2px;
+}
+
+.conc {
+  margin-left: 8px;
+  font-size: 11px;
+}
+
+.cell-remove {
+  width: 40px;
+}
+
+.linklike {
+  background: none;
+  border: none;
+  padding: 0;
+  color: var(--accent);
+  font-size: 15px;
+  text-decoration: underline dashed;
+  cursor: pointer;
+}
+
+.condition-editor {
+  padding: 4px 0 8px;
+  align-items: center;
+}
+
+.death-saves {
+  display: flex;
+  gap: 12px;
+  align-items: center;
+  padding: 2px 0 6px;
+}
+
+.w-narrow {
+  width: 70px;
+}
+
+.add-combatant .tag {
+  margin-left: 6px;
+}
+
+.tracker-table .tag {
+  margin-left: 6px;
+}
+
+.monster-search {
+  position: relative;
+}
+
