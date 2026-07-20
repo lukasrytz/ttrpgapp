@@ -22,13 +22,11 @@
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
 
-            <!-- OAuth redirect for Google Drive sync (ch.rytz.ttrpgapp:/oauth) -->
-            <intent-filter>
-                <action android:name="android.intent.action.VIEW" />
-                <category android:name="android.intent.category.DEFAULT" />
-                <category android:name="android.intent.category.BROWSABLE" />
-                <data android:scheme="ch.rytz.ttrpgapp" />
-            </intent-filter>
+            <!--
+              The OAuth redirect (scheme ch.rytz.ttrpgapp) is handled by AppAuth's
+              RedirectUriReceiverActivity, wired via the appAuthRedirectScheme
+              manifest placeholder in app/build.gradle — no intent-filter needed here.
+            -->
 
         </activity>
 
