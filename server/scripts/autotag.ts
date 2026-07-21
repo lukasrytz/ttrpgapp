@@ -100,6 +100,33 @@ async function buildInput(track: TrackRow): Promise<AutotagInput> {
   };
 }
 
+/**
+ * LM Studio only accepts `json_schema` or `text` here — `json_object` is an
+ * OpenAI-ism it rejects with a 400. Constraining each dimension to the vocab
+ * enum also keeps the model from inventing values parseLlmTags would drop.
+ */
+function tagResponseFormat(vocab: Vocab) {
+  const dim = (values: string[]) => ({ type: 'array', items: { type: 'string', enum: values } });
+  return {
+    type: 'json_schema',
+    json_schema: {
+      name: 'track_tags',
+      strict: true,
+      schema: {
+        type: 'object',
+        properties: {
+          theme: dim(vocab.theme),
+          mood: dim(vocab.mood),
+          landscape: dim(vocab.landscape),
+          intensity: { type: 'integer', minimum: 1, maximum: 5 },
+        },
+        required: ['theme', 'mood', 'landscape', 'intensity'],
+        additionalProperties: false,
+      },
+    },
+  };
+}
+
 async function callLlm(input: AutotagInput, vocab: Vocab, cfg: AutotagConfig): Promise<TagResult> {
   const system =
     'You tag fantasy tabletop-RPG background music. Choose ONLY from these values.\n' +
@@ -124,7 +151,7 @@ async function callLlm(input: AutotagInput, vocab: Vocab, cfg: AutotagConfig): P
         { role: 'system', content: system },
         { role: 'user', content: user },
       ],
-      response_format: { type: 'json_object' },
+      response_format: tagResponseFormat(vocab),
     }),
   });
   if (!res.ok) {
