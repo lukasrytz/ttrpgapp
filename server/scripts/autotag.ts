@@ -21,6 +21,7 @@ import {
   type Vocab,
 } from '@ttrpgapp/shared';
 import { openDb } from '../src/db.js';
+import { scan } from '../src/music.js';
 import { loadConfig, repoRoot, resolvePath } from '../src/config.js';
 
 interface AutotagConfig {
@@ -52,6 +53,7 @@ const doAll = has('--all');
 const dryRun = has('--dry-run');
 const noLlm = has('--no-llm');
 const testConn = has('--test');
+const doScan = has('--scan');
 const folderFilter = argVal('--folder')?.toLowerCase();
 
 interface TrackRow {
@@ -161,6 +163,12 @@ async function main() {
   }
 
   const db = openDb(resolvePath(cfg.dataDir));
+
+  if (doScan) {
+    console.log(`Scanning ${cfg.musicFolders.join(', ')} …`);
+    const r = await scan(db, cfg);
+    console.log(`Scan: ${r.added} added, ${r.removed} removed, ${r.total} total.`);
+  }
 
   const tracks = db
     .prepare('SELECT id, folder, path, title, artist, intensity FROM tracks ORDER BY folder, path')

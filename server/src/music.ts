@@ -29,7 +29,7 @@ function* walk(dir: string): Generator<string> {
   }
 }
 
-async function scan(db: Database, config: AppConfig): Promise<MusicScanResult> {
+export async function scan(db: Database, config: AppConfig): Promise<MusicScanResult> {
   const known = new Map<string, number>(); // "folder\0path" -> id
   for (const row of db.prepare('SELECT id, folder, path FROM tracks').all() as {
     id: number;

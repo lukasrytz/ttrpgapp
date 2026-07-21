@@ -188,16 +188,21 @@ Setup: in LM Studio, load a model (e.g. Gemma) and start its **local server**
 "autotag": { "endpoint": "http://localhost:1234/v1", "model": "google/gemma-4-12b", "useLlm": true }
 ```
 
-Then:
+Point `musicFolders` in `config.json` at your library (forward slashes on
+Windows, e.g. `"D:/DnD"`), then:
 
 ```bash
-npm run autotag -- --test        # check LM Studio is reachable + model loaded
-npm run autotag -- --dry-run     # preview tags for untagged tracks, write nothing
-npm run autotag                  # tag untagged tracks
-npm run autotag -- --all         # re-tag everything
+npm run autotag -- --test            # check LM Studio is reachable + model loaded
+npm run autotag -- --scan --dry-run  # index the library + preview tags, write nothing
+npm run autotag -- --scan            # index the library + tag untagged tracks
+npm run autotag                      # tag untagged tracks (library already scanned)
+npm run autotag -- --all             # re-tag everything
 npm run autotag -- --folder Combat   # limit to a folder
-npm run autotag -- --no-llm      # heuristics only (no model needed)
+npm run autotag -- --no-llm          # heuristics only (no model needed)
 ```
+
+`--scan` indexes `musicFolders` first, so you don't need to open the web app to
+populate the library. Omit it once the library is scanned.
 
 Writing is **additive** — it only adds tags to dimensions it has suggestions for
 and never wipes your manual tags. Getting these tags onto the Android device is a
