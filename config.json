@@ -4,5 +4,10 @@
   "dataDir": "./data",
   "plugins": {
     "dnd5e": true
+  },
+  "autotag": {
+    "endpoint": "http://localhost:1234/v1",
+    "model": "google/gemma-4-12b",
+    "useLlm": true
   }
 }

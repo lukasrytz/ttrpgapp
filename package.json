@@ -12,7 +12,8 @@
     "dev": "concurrently -n server,client -c blue,magenta \"npm run dev -w server\" \"npm run dev -w client\"",
     "test": "npm run test -ws --if-present",
     "typecheck": "npm run typecheck -ws --if-present",
-    "build-srd": "npm run build-srd -w @ttrpgapp/plugin-dnd5e"
+    "build-srd": "npm run build-srd -w @ttrpgapp/plugin-dnd5e",
+    "autotag": "npm run autotag -w @ttrpgapp/server --"
   },
   "devDependencies": {
     "concurrently": "^9.1.2",

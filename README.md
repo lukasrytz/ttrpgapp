@@ -164,6 +164,38 @@ the reference implementation.
 
 To rebuild the SRD pack from upstream: `npm run build-srd`.
 
+## Auto-tagging music (offline, local model)
+
+Tagging a large library by ear is slow, so `npm run autotag` does it in bulk. It
+runs on the computer (web/desktop mode) over the scanned library and writes tags
+straight into the same store the app reads — **the app itself is unchanged**;
+tags just appear in the Music view. It combines deterministic keyword/folder
+heuristics with a **local LLM in [LM Studio](https://lmstudio.ai/)** (nothing
+leaves your machine).
+
+Setup: in LM Studio, load a model (e.g. Gemma) and start its **local server**
+(Developer tab → Start Server, default `http://localhost:1234`). Point the
+`autotag` block in `config.json` at it:
+
+```json
+"autotag": { "endpoint": "http://localhost:1234/v1", "model": "google/gemma-4-12b", "useLlm": true }
+```
+
+Then:
+
+```bash
+npm run autotag -- --test        # check LM Studio is reachable + model loaded
+npm run autotag -- --dry-run     # preview tags for untagged tracks, write nothing
+npm run autotag                  # tag untagged tracks
+npm run autotag -- --all         # re-tag everything
+npm run autotag -- --folder Combat   # limit to a folder
+npm run autotag -- --no-llm      # heuristics only (no model needed)
+```
+
+Writing is **additive** — it only adds tags to dimensions it has suggestions for
+and never wipes your manual tags. Getting these tags onto the Android device is a
+separate future step (tags are per-device today).
+
 ## Development
 
 ```bash

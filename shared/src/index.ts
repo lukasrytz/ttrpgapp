@@ -4,3 +4,4 @@ export * from './compendiumSearch.js';
 export * from './music.js';
 export * from './notes.js';
 export * from './wikiLinks.js';
+export * from './autotag.js';
