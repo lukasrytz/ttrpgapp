@@ -52,6 +52,7 @@ const SYNONYMS: Record<TagDimension, Record<string, string[]>> = {
     underground: ['underground', 'cave', 'cavern', 'mine', 'underdark', 'grotto'],
     arctic: ['arctic', 'snow', 'ice', 'frozen', 'frost', 'tundra', 'winter', 'glacier'],
     plains: ['plains', 'field', 'meadow', 'grassland', 'prairie', 'steppe'],
+    urban: ['urban', 'city', 'town', 'village', 'street', 'settlement'],
   },
 };
 

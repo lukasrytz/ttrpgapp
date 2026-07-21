@@ -6,7 +6,7 @@ export type TagDimension = (typeof TAG_DIMENSIONS)[number];
 export const DEFAULT_TAG_VOCAB: Record<TagDimension, string[]> = {
   theme: ['dungeon', 'tavern', 'city', 'wilderness', 'battle', 'ritual', 'court'],
   mood: ['peaceful', 'tense', 'mysterious', 'joyful', 'somber', 'epic', 'creepy'],
-  landscape: ['forest', 'mountains', 'sea', 'desert', 'swamp', 'underground', 'arctic', 'plains'],
+  landscape: ['forest', 'mountains', 'sea', 'desert', 'swamp', 'underground', 'arctic', 'plains', 'urban'],
 };
 
 export interface Track {
