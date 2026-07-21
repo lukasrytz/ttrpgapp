@@ -26,33 +26,35 @@ export type Vocab = Record<TagDimension, string[]>;
  */
 const SYNONYMS: Record<TagDimension, Record<string, string[]>> = {
   theme: {
-    dungeon: ['dungeon', 'crypt', 'catacomb', 'tomb', 'lair', 'sewer', 'ruin'],
-    tavern: ['tavern', 'inn', 'pub', 'alehouse', 'bar'],
-    city: ['city', 'town', 'market', 'street', 'urban', 'village'],
-    wilderness: ['wilderness', 'wild', 'travel', 'journey', 'road', 'camp', 'wander', 'trail'],
-    battle: ['battle', 'combat', 'fight', 'war', 'clash', 'skirmish', 'boss', 'siege'],
-    ritual: ['ritual', 'ceremony', 'summon', 'occult', 'cult', 'temple', 'shrine'],
-    court: ['court', 'castle', 'throne', 'noble', 'royal', 'palace'],
+    battle: ['battle', 'combat', 'fight', 'war', 'clash', 'skirmish', 'boss', 'siege', 'duel', 'ambush'],
+    social: [
+      'social', 'tavern', 'inn', 'pub', 'alehouse', 'bar', 'court', 'castle', 'throne',
+      'noble', 'royal', 'palace', 'market', 'feast', 'festival', 'celebration', 'party', 'gathering',
+    ],
+    exploration: [
+      'exploration', 'explore', 'dungeon', 'crypt', 'catacomb', 'tomb', 'lair', 'ruin',
+      'travel', 'journey', 'wander', 'discovery', 'mystery', 'quest', 'expedition', 'delve',
+    ],
   },
   mood: {
-    peaceful: ['peaceful', 'calm', 'serene', 'gentle', 'relax', 'quiet', 'ambient', 'rest'],
-    tense: ['tense', 'suspense', 'danger', 'chase', 'stealth', 'dread', 'ominous'],
-    mysterious: ['mysterious', 'mystery', 'enigma', 'arcane', 'strange', 'curious'],
-    joyful: ['joyful', 'happy', 'merry', 'festive', 'celebration', 'cheer', 'jig', 'dance'],
-    somber: ['somber', 'sad', 'melancholy', 'mourn', 'grief', 'lament', 'sorrow'],
-    epic: ['epic', 'heroic', 'triumph', 'glory', 'grand', 'legend'],
-    creepy: ['creepy', 'horror', 'eerie', 'haunt', 'spooky', 'nightmare', 'undead', 'ghost'],
+    epic: ['epic', 'heroic', 'triumph', 'glory', 'grand', 'legend', 'victory', 'valiant'],
+    joyful: ['joyful', 'happy', 'merry', 'festive', 'celebration', 'cheer', 'jig', 'dance', 'lively', 'upbeat'],
+    tense: ['tense', 'suspense', 'danger', 'chase', 'stealth', 'dread', 'ominous', 'mystery', 'mysterious', 'pursuit', 'anxious'],
+    creepy: ['creepy', 'horror', 'eerie', 'haunt', 'spooky', 'nightmare', 'undead', 'ghost', 'sinister', 'macabre'],
+    peaceful: ['peaceful', 'calm', 'serene', 'gentle', 'relax', 'quiet', 'ambient', 'ambience', 'rest', 'tranquil', 'soft'],
+    sad: ['sad', 'somber', 'melancholy', 'mourn', 'grief', 'lament', 'sorrow', 'sorrowful', 'mournful'],
   },
   landscape: {
-    forest: ['forest', 'woods', 'woodland', 'jungle', 'grove'],
-    mountains: ['mountain', 'peak', 'cliff', 'highland'],
-    sea: ['sea', 'ocean', 'coast', 'harbor', 'ship', 'sail', 'port', 'nautical', 'tide'],
-    desert: ['desert', 'dune', 'sand', 'oasis'],
-    swamp: ['swamp', 'marsh', 'bog', 'fen', 'mire'],
-    underground: ['underground', 'cave', 'cavern', 'mine', 'underdark', 'grotto'],
-    arctic: ['arctic', 'snow', 'ice', 'frozen', 'frost', 'tundra', 'winter', 'glacier'],
-    plains: ['plains', 'field', 'meadow', 'grassland', 'prairie', 'steppe'],
-    urban: ['urban', 'city', 'town', 'village', 'street', 'settlement'],
+    wilderness: [
+      'wilderness', 'wild', 'forest', 'woods', 'woodland', 'jungle', 'grove',
+      'mountain', 'peak', 'cliff', 'highland', 'desert', 'dune', 'sand', 'oasis',
+      'swamp', 'marsh', 'bog', 'fen', 'mire', 'sea', 'ocean', 'coast', 'tide',
+      'arctic', 'snow', 'ice', 'frozen', 'frost', 'tundra', 'winter', 'glacier',
+      'plains', 'field', 'meadow', 'grassland', 'prairie', 'steppe',
+      'cave', 'cavern', 'grotto', 'underground', 'underdark',
+    ],
+    roads: ['road', 'roads', 'path', 'trail', 'travel', 'journey', 'caravan', 'crossroads', 'bridge', 'march'],
+    urban: ['urban', 'city', 'town', 'village', 'street', 'settlement', 'market', 'district'],
   },
 };
 

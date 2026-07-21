@@ -4,9 +4,9 @@ export type TagDimension = (typeof TAG_DIMENSIONS)[number];
 
 /** Seeded tag suggestions; users extend the vocabulary by tagging tracks with new values. */
 export const DEFAULT_TAG_VOCAB: Record<TagDimension, string[]> = {
-  theme: ['dungeon', 'tavern', 'city', 'wilderness', 'battle', 'ritual', 'court'],
-  mood: ['peaceful', 'tense', 'mysterious', 'joyful', 'somber', 'epic', 'creepy'],
-  landscape: ['forest', 'mountains', 'sea', 'desert', 'swamp', 'underground', 'arctic', 'plains', 'urban'],
+  theme: ['battle', 'social', 'exploration'],
+  mood: ['epic', 'joyful', 'tense', 'creepy', 'peaceful', 'sad'],
+  landscape: ['wilderness', 'roads', 'urban'],
 };
 
 export interface Track {

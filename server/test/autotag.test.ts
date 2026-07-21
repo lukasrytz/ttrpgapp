@@ -14,8 +14,8 @@ const base: AutotagInput = {
 describe('heuristicTags', () => {
   it('reads the folder name as a strong signal', () => {
     const t = heuristicTags({ ...base, folder: 'Taverns', filename: 'Merry Fiddle.mp3' });
-    expect(t.theme).toContain('tavern');
-    expect(t.mood).toContain('joyful'); // "fiddle"? no — from folder/file; check joyful via 'merry'
+    expect(t.theme).toContain('social'); // "tavern" → social
+    expect(t.mood).toContain('joyful'); // "merry"
   });
 
   it('tags a battle track with theme + mood + high intensity', () => {
@@ -26,16 +26,15 @@ describe('heuristicTags', () => {
   });
 
   it('picks landscape from the title', () => {
-    const t = heuristicTags({ ...base, title: 'Misty Forest Path', genre: 'Ambient' });
-    expect(t.landscape).toContain('forest');
+    const t = heuristicTags({ ...base, title: 'Misty Forest', genre: 'Ambient' });
+    expect(t.landscape).toContain('wilderness'); // "forest" → wilderness
     expect(t.mood).toContain('peaceful'); // "ambient"
-    expect(t.intensity).toBe(1);
+    expect(t.intensity).toBe(1); // "ambient"
   });
 
-  it('requires a left word boundary (no "disease" → sea)', () => {
+  it('requires a left word boundary (no "disease" → wilderness via "sea")', () => {
     const t = heuristicTags({ ...base, title: 'A curious disease' });
-    expect(t.landscape).not.toContain('sea');
-    expect(t.mood).toContain('mysterious'); // "curious"
+    expect(t.landscape).not.toContain('wilderness');
   });
 
   it('returns empty/null for signal-free input', () => {
@@ -46,16 +45,16 @@ describe('heuristicTags', () => {
 
 describe('parseLlmTags', () => {
   it('keeps only in-vocab values and clamps intensity', () => {
-    const raw = 'Sure!\n{"theme":["tavern","spaceship"],"mood":["joyful"],"landscape":[],"intensity":9}';
+    const raw = 'Sure!\n{"theme":["social","spaceship"],"mood":["joyful"],"landscape":[],"intensity":9}';
     const t = parseLlmTags(raw);
-    expect(t.theme).toEqual(['tavern']); // "spaceship" dropped (not in vocab)
+    expect(t.theme).toEqual(['social']); // "spaceship" dropped (not in vocab)
     expect(t.mood).toEqual(['joyful']);
     expect(t.intensity).toBe(5); // clamped from 9
   });
 
   it('lowercases/dedupes and tolerates missing fields', () => {
-    const t = parseLlmTags('{"theme":["Tavern","TAVERN"]}');
-    expect(t.theme).toEqual(['tavern']);
+    const t = parseLlmTags('{"theme":["Social","SOCIAL"]}');
+    expect(t.theme).toEqual(['social']);
     expect(t.intensity).toBeNull();
   });
 
@@ -75,7 +74,7 @@ describe('mergeTags', () => {
     const llm = parseLlmTags('{"mood":["tense"],"intensity":3}');
     const m = mergeTags(h, llm);
     expect(m.theme).toContain('battle');
-    expect(m.landscape).toContain('forest');
+    expect(m.landscape).toContain('wilderness'); // "forest" → wilderness
     expect(m.mood).toContain('tense');
     expect(m.intensity).toBe(3); // LLM wins over heuristic
   });
