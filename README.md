@@ -5,6 +5,25 @@ and optional game-system plugins (rules compendium, combat tracker). It runs
 two ways from one codebase — as an **Android app** (everything on-device) or as
 a **local web app** on a computer. Your music and notes never leave the device.
 
+## Repository layout
+
+An npm-workspaces monorepo. One codebase builds both the Android app and the
+local web app; shared logic lives in `shared/`.
+
+```
+shared/          types, plugin interfaces, compendium search, music-tag heuristics
+server/          Fastify API + SQLite — the web/desktop backend
+  scripts/       maintenance CLIs (music auto-tagger — see "Auto-tagging" below)
+client/          React + Vite UI, plus the Capacitor Android wrapper (client/android/)
+plugins/dnd5e/   the D&D 5e system plugin (SRD compendium + combat tracker)
+config.json      web/desktop config: music folders, notes vault, plugins, autotag
+```
+
+The **auto-tagger** is a server-side CLI (`server/scripts/autotag.ts`, with pure
+heuristics in `shared/src/autotag.ts`), not part of the app itself — it writes
+tags into the same store the app reads. See
+[Auto-tagging music](#auto-tagging-music-offline-local-model).
+
 ## Android app
 
 The Android build stores nothing on a server: notes are markdown files on the
