@@ -55,22 +55,29 @@ app's Settings → *Cross-device sync*:
    status *Testing*, and add your own Google account under *Test users* (no
    Google verification review is needed in testing mode).
 3. Create an **OAuth client ID** → application type *Android*, package name
-   `ch.rytz.ttrpgapp`, and the signing certificate SHA-1 fingerprint
-   (`keytool -list -v -keystore <your.keystore>`; use the debug keystore's SHA-1
-   for the debug APK). Then open the client's **Advanced settings** and enable
-   **Custom URI scheme** — it is off by default on new Android clients, and the
-   app's `ch.rytz.ttrpgapp:/oauth` redirect needs it (without it Google answers
-   the sign-in with *Error 400: invalid_request*).
+   `ch.rytz.ttrpgapp`, and the signing certificate **SHA-1 fingerprint**:
+
+   ```
+   D8:CC:78:83:45:E6:1A:41:D9:84:8E:55:E2:B7:CE:8A:3B:DD:C9:4F
+   ```
+
+   The debug APK is signed by a **fixed, committed keystore**
+   (`client/android/app/ttrpg-debug.keystore`, wired in `app/build.gradle`), so
+   this SHA-1 is stable across machines and CI — register it once. (Re-derive it
+   any time with
+   `keytool -list -v -keystore client/android/app/ttrpg-debug.keystore -storepass android -alias androiddebugkey`.)
+   Then open the client's **Advanced settings** and enable **Custom URI scheme**
+   — it is off by default on new Android clients, and the app's
+   `ch.rytz.ttrpgapp:/oauth` redirect needs it (without it Google answers the
+   sign-in with *Error 400: invalid_request*).
 4. Put the resulting client ID in **Settings → Connect Google Drive** (or bake it
    in at build time via `VITE_GOOGLE_CLIENT_ID`), then tap **Connect**.
 
 Repeat step 4 on each device with the same Google account, and they'll converge.
-Two gotchas worth knowing: the SHA-1 ties the client to *one* signing key, so an
-APK built on another machine (or by CI, which generates a throwaway debug
-keystore per run) needs its own SHA-1 added to the client; and while publishing
-status is *Testing*, Google expires refresh tokens after 7 days, so sync stops
-until you reconnect. Publishing the app avoids that — with only the
-non-sensitive `drive.file` scope this should not need a verification review.
+One gotcha worth knowing: while publishing status is *Testing*, Google expires
+refresh tokens after 7 days, so sync stops until you reconnect. Publishing the
+app (Testing → Production) avoids that — with only the non-sensitive
+`drive.file` scope it should not need a verification review.
 
 Other providers (Dropbox, self-hosted WebDAV) can be added later — the sync
 engine is provider-agnostic (`client/src/sync/`), Google Drive is the first

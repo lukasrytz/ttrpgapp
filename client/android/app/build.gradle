@@ -18,7 +18,22 @@ android {
             ignoreAssetsPattern = '!.svn:!.git:!.ds_store:!*.scc:.*:!CVS:!thumbs.db:!picasa.ini:!*~'
         }
     }
+    signingConfigs {
+        // A fixed, committed debug keystore so every build (any machine, or CI)
+        // produces the SAME signing SHA-1 — required for Google OAuth, which
+        // pins the Android client to one certificate fingerprint. Not secret:
+        // it's a debug key (password "android"), only used for the debug build.
+        debug {
+            storeFile file('ttrpg-debug.keystore')
+            storePassword 'android'
+            keyAlias 'androiddebugkey'
+            keyPassword 'android'
+        }
+    }
     buildTypes {
+        debug {
+            signingConfig signingConfigs.debug
+        }
         release {
             minifyEnabled false
             proguardFiles getDefaultProguardFile('proguard-android.txt'), 'proguard-rules.pro'
