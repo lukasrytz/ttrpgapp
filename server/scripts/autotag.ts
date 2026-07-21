@@ -127,7 +127,11 @@ async function callLlm(input: AutotagInput, vocab: Vocab, cfg: AutotagConfig): P
       response_format: { type: 'json_object' },
     }),
   });
-  if (!res.ok) throw new Error(`LM Studio ${res.status} ${res.statusText}`);
+  if (!res.ok) {
+    const body = await res.text().catch(() => '');
+    const detail = body ? ` — ${body.slice(0, 300)}` : '';
+    throw new Error(`LM Studio ${res.status} ${res.statusText}${detail}`);
+  }
   const data = (await res.json()) as { choices?: { message?: { content?: string } }[] };
   return parseLlmTags(data.choices?.[0]?.message?.content ?? '', vocab);
 }
