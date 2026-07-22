@@ -51,3 +51,31 @@ export interface MusicScanResult {
   removed: number;
   total: number;
 }
+
+/**
+ * Device-independent track identity. Tags are keyed by this signature rather
+ * than a file path, so they survive the different paths each device uses (the
+ * desktop's `folder`+relative `path` vs. Android MediaStore URIs) and match
+ * across copies of the same audio file. Derived only from data available on
+ * every platform: the file's base name (no directory, no extension) plus its
+ * duration rounded to the whole second. Duration disambiguates same-named
+ * tracks; rounding absorbs minor re-encode drift. Unknown duration collapses to
+ * 0 so both sides still agree.
+ */
+export function trackSignature(pathOrName: string, durationSec: number | null): string {
+  const base = (pathOrName.split(/[\\/]/).pop() ?? pathOrName)
+    .replace(/\.[^.]+$/, '')
+    .trim()
+    .toLowerCase();
+  const dur = durationSec != null && durationSec > 0 ? Math.round(durationSec) : 0;
+  return `${base}|${dur}`;
+}
+
+/** One track's portable tags, as stored in the synced catalog keyed by signature. */
+export interface TrackTagEntry {
+  intensity: number | null;
+  tags: Record<TagDimension, string[]>;
+}
+
+/** The synced music-tag catalog: signature -> tags. Seeded on desktop, synced to devices. */
+export type MusicTagCatalog = Record<string, TrackTagEntry>;

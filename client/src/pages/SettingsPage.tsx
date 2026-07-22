@@ -1,7 +1,10 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { Capacitor } from '@capacitor/core';
 import { Preferences } from '@capacitor/preferences';
+import { useQueryClient } from '@tanstack/react-query';
+import type { MusicTagCatalog } from '@ttrpgapp/shared';
 import { syncManager, type SyncState } from '../sync/manager';
+import { getCapacitorBackend } from '../backend';
 
 function ago(ts: number): string {
   if (!ts) return 'never';
@@ -13,9 +16,12 @@ function ago(ts: number): string {
 
 export default function SettingsPage() {
   const native = Capacitor.isNativePlatform();
+  const qc = useQueryClient();
   const [clientId, setClientId] = useState('');
   const [state, setState] = useState<SyncState>(syncManager.state);
   const [busy, setBusy] = useState(false);
+  const [importMsg, setImportMsg] = useState<string | null>(null);
+  const fileInput = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
     void Preferences.get({ key: 'sync.google.clientId' }).then(({ value }) => {
@@ -27,6 +33,26 @@ export default function SettingsPage() {
   }, []);
 
   const connected = state.status !== 'disconnected';
+
+  const importTags = async (file: File) => {
+    setImportMsg(null);
+    setBusy(true);
+    try {
+      const parsed = JSON.parse(await file.text()) as MusicTagCatalog;
+      if (typeof parsed !== 'object' || parsed === null || Array.isArray(parsed)) {
+        throw new Error('not a tag catalog');
+      }
+      const be = getCapacitorBackend();
+      if (!be) throw new Error('unavailable on this platform');
+      const n = await be.importMusicTags(parsed);
+      await qc.invalidateQueries({ queryKey: ['tracks'] });
+      setImportMsg(`Imported tags for ${n} tracks. They'll sync to your other devices.`);
+    } catch (e) {
+      setImportMsg(`Import failed: ${e instanceof Error ? e.message : String(e)}`);
+    } finally {
+      setBusy(false);
+    }
+  };
 
   const connect = async () => {
     setBusy(true);
@@ -97,6 +123,34 @@ export default function SettingsPage() {
           </>
         )}
       </section>
+
+      {native && (
+        <section className="settings-section">
+          <h2>Import music tags</h2>
+          <p className="muted">
+            Load a <code>music-tags.json</code> exported from the desktop
+            (<code>npm run export-tags</code>). Tags are matched to your device's tracks by
+            name and length, merged into your library, and synced to your other devices.
+          </p>
+          <div className="header-actions">
+            <button className="primary" disabled={busy} onClick={() => fileInput.current?.click()}>
+              Choose file…
+            </button>
+            <input
+              ref={fileInput}
+              type="file"
+              accept="application/json,.json"
+              style={{ display: 'none' }}
+              onChange={(e) => {
+                const f = e.target.files?.[0];
+                e.target.value = '';
+                if (f) void importTags(f);
+              }}
+            />
+          </div>
+          {importMsg && <p className="muted small">{importMsg}</p>}
+        </section>
+      )}
     </div>
   );
 }

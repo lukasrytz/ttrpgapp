@@ -13,7 +13,8 @@
     "test": "npm run test -ws --if-present",
     "typecheck": "npm run typecheck -ws --if-present",
     "build-srd": "npm run build-srd -w @ttrpgapp/plugin-dnd5e",
-    "autotag": "npm run autotag -w @ttrpgapp/server --"
+    "autotag": "npm run autotag -w @ttrpgapp/server --",
+  "export-tags": "npm run export-tags -w @ttrpgapp/server --"
   },
   "devDependencies": {
     "concurrently": "^9.1.2",

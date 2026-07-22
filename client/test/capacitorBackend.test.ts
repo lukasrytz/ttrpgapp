@@ -105,7 +105,7 @@ describe('CapacitorBackend music', () => {
     expect(b.trackUrl(tracks[0]!)).toBe('file-src:///sd/Battle.mp3');
   });
 
-  it('persists and merges tags keyed by device path', async () => {
+  it('persists and merges tags keyed by signature', async () => {
     const b = new CapacitorBackend();
     let tracks = await b.listTracks();
     await b.updateTrack(tracks[0]!.id, { intensity: 4, tags: { theme: ['Battle', 'battle', ' EPIC '] } });
@@ -113,6 +113,53 @@ describe('CapacitorBackend music', () => {
     expect(tracks[0]!.intensity).toBe(4);
     expect(tracks[0]!.tags.theme).toEqual(['battle', 'epic']);
     expect(tracks[1]!.intensity).toBeNull();
+  });
+
+  it('tags follow the signature across a different device path (phone vs tablet)', async () => {
+    const b = new CapacitorBackend();
+    let tracks = await b.listTracks();
+    await b.updateTrack(tracks[0]!.id, { intensity: 5, tags: { theme: ['battle'] } });
+    // Same audio, a path a different device would report; same name + duration.
+    state.deviceTracks = [
+      { path: '/storage/emulated/0/Music/Battle.mp3', title: 'Battle', artist: 'Bard', durationSec: 90 },
+    ];
+    tracks = await b.listTracks();
+    expect(tracks[0]!.intensity).toBe(5);
+    expect(tracks[0]!.tags.theme).toEqual(['battle']);
+  });
+
+  it('imports an exported catalog, merging by signature', async () => {
+    const b = new CapacitorBackend();
+    await b.listTracks(); // warm the id/signature maps
+    const n = await b.importMusicTags({
+      'battle|90': { intensity: 3, tags: { theme: ['battle'], mood: [], landscape: [] } },
+      'ghost|999': { intensity: 2, tags: { theme: ['ritual'], mood: [], landscape: [] } }, // no local track
+    });
+    expect(n).toBe(2);
+    const tracks = await b.listTracks();
+    const battle = tracks.find((t) => t.title === 'Battle')!;
+    expect(battle.intensity).toBe(3);
+    expect(battle.tags.theme).toEqual(['battle']);
+    // The unmatched entry stays in the catalog (it may match on another device).
+    const n2 = await b.importMusicTags({});
+    expect(n2).toBe(0);
+  });
+
+  it('migrates a legacy path-keyed tag file to signature keys', async () => {
+    // Simulate tags saved by an older build, keyed by device path.
+    files.set(
+      'DATA:music-tags.json',
+      JSON.stringify({
+        '/sd/Battle.mp3': { intensity: 4, tags: { theme: ['battle'], mood: [], landscape: [] } },
+      }),
+    );
+    const b = new CapacitorBackend();
+    const tracks = await b.listTracks();
+    const battle = tracks.find((t) => t.title === 'Battle')!;
+    expect(battle.intensity).toBe(4);
+    expect(battle.tags.theme).toEqual(['battle']);
+    // Migration persisted a signature-keyed catalog to Preferences.
+    expect(prefs.get('music:tags')).toContain('battle|90');
   });
 
   it('keeps tags stable when track order changes', async () => {

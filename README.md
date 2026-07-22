@@ -57,7 +57,9 @@ Prep notes and combat/tracker state sync across your devices through **your own
 Google Drive** — local-first, so the app keeps working fully offline and
 reconciles when it's online. Files land in a visible `TTRPG Companion` folder in
 your Drive (minimal `drive.file` scope: the app only ever sees files it created).
-Music files and tags don't sync (audio stays per-device).
+Music **tags** sync (keyed by a device-independent signature — see
+[Getting the tags onto your phone and tablet](#getting-the-tags-onto-your-phone-and-tablet));
+the audio **files** stay per-device.
 
 **How it reconciles:** two-way, last-write-wins by timestamp. If the same note is
 edited on both devices while offline, the loser is kept as
@@ -145,9 +147,9 @@ and hit **Rescan library**.
   **Start** one — rolling initiative and loading the tracker with the chosen
   party members. (Party and encounters sync across devices like everything else.)
 
-- **Cross-device sync** (Android) — notes and combat state kept in step across
-  your phone and tablet through your own Google Drive, offline-first. See
-  [Cross-device sync](#cross-device-sync-android-google-drive).
+- **Cross-device sync** (Android) — notes, combat state, and music tags kept in
+  step across your phone and tablet through your own Google Drive, offline-first.
+  See [Cross-device sync](#cross-device-sync-android-google-drive).
 
 The UI is responsive: phones get a drawer nav, bottom sheets, and card-based
 tracker; tablets and desktop keep the wide side-by-side layout.
@@ -224,8 +226,29 @@ npm run autotag -- --no-llm          # heuristics only (no model needed)
 populate the library. Omit it once the library is scanned.
 
 Writing is **additive** — it only adds tags to dimensions it has suggestions for
-and never wipes your manual tags. Getting these tags onto the Android device is a
-separate future step (tags are per-device today).
+and never wipes your manual tags.
+
+### Getting the tags onto your phone and tablet
+
+Tags are keyed by a **device-independent signature** (the file's base name plus
+its duration rounded to the second, `trackSignature` in `shared/src/music.ts`),
+not by file path — so the same audio file is recognised across devices even
+though every device stores it at a different path. On Android the tag catalog is
+a synced document, so once tags reach one device they propagate to the others
+through Drive like notes do.
+
+To seed the devices from the library you tagged on the computer:
+
+```bash
+npm run export-tags        # -> ./music-tags.json (signature-keyed; no model calls)
+```
+
+This just re-keys your existing tags — no re-tagging. Copy `music-tags.json` onto
+a device (USB, a Drive download, however), then in the app open
+**Settings → Import music tags** and pick the file. The tags merge into your
+library and sync to your other devices. (A raw copy of the desktop `.db` into
+Drive won't work: the phone doesn't read SQLite, and the sync engine only
+recognises files it wrote itself, tagged with `appProperties.syncId`.)
 
 ## Development
 

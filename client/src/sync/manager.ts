@@ -120,6 +120,7 @@ class SyncManager {
       if (res.localChanged) {
         this.qc?.invalidateQueries({ queryKey: ['notes'] });
         this.qc?.invalidateQueries({ queryKey: ['note'] });
+        this.qc?.invalidateQueries({ queryKey: ['tracks'] });
         window.dispatchEvent(new CustomEvent('ttrpg-sync-updated'));
       }
     } catch (e) {

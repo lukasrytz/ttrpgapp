@@ -5,10 +5,12 @@ import type {
   ClientConfig,
   MusicFolder,
   MusicScanResult,
+  MusicTagCatalog,
   Note,
   NoteMeta,
   TagDimension,
   Track,
+  TrackTagEntry,
 } from '@ttrpgapp/shared';
 import {
   extractLinks,
@@ -16,6 +18,7 @@ import {
   sanitizeNoteName,
   STARTER_TEMPLATE,
   TAG_DIMENSIONS,
+  trackSignature,
 } from '@ttrpgapp/shared';
 import {
   filterByFolders,
@@ -38,7 +41,8 @@ interface MusicLibraryPlugin {
 
 const MusicLibrary = registerPlugin<MusicLibraryPlugin>('MusicLibrary');
 
-type TagStore = Record<string, { intensity: number | null; tags: Record<TagDimension, string[]> }>;
+/** Legacy on-device tag store, keyed by device path (pre-signature). Migrated on read. */
+type LegacyTagStore = Record<string, TrackTagEntry>;
 
 /** App-scoped external storage: user-visible under Android/data, no permission needed. */
 const VAULT_DIR = Directory.External;
@@ -46,6 +50,12 @@ const DATA_DIR = Directory.Data;
 const VAULT_BASE = 'vault';
 const TAGS_FILE = 'music-tags.json';
 const PATHS_FILE = 'music-paths.json';
+
+// Music tags live as a synced plugin-state doc `state/music/tags` (Preferences
+// key `music:tags`), keyed by device-independent trackSignature so they carry
+// across devices via Drive sync. `music` is a synthetic plugin id for storage.
+const MUSIC_NS = 'music';
+const MUSIC_KEY = 'tags';
 
 // Sync bookkeeping (Preferences).
 const SYNC_STATE_INDEX = 'sync.state.index'; // id -> updatedAt for plugin state docs
@@ -62,6 +72,11 @@ async function prefSet(key: string, value: unknown): Promise<void> {
 
 function emptyTags(): Record<TagDimension, string[]> {
   return { theme: [], mood: [], landscape: [] };
+}
+
+/** Announce a local change so the sync loop pushes it (no-op without a DOM, e.g. tests). */
+function notifyLocalChanged(): void {
+  if (typeof window !== 'undefined') window.dispatchEvent(new Event('ttrpg-local-changed'));
 }
 
 async function readJson<T>(file: string, fallback: T): Promise<T> {
@@ -85,6 +100,8 @@ async function writeJson(file: string, value: unknown): Promise<void> {
 export class CapacitorBackend implements Backend {
   /** id -> device path for the most recent listTracks() result. */
   private idToPath = new Map<number, string>();
+  /** id -> device-independent signature (the tag catalog key) for the same result. */
+  private idToSig = new Map<number, string>();
 
   async getConfig(): Promise<ClientConfig> {
     // No config file on device; every compiled-in plugin is enabled.
@@ -95,19 +112,51 @@ export class CapacitorBackend implements Backend {
   }
 
   /**
+   * The signature-keyed music tag catalog (synced). On first read it migrates
+   * any legacy path-keyed `music-tags.json`, mapping each device path to its
+   * signature using the current track list (which carries durations).
+   */
+  private async readCatalog(): Promise<MusicTagCatalog> {
+    const raw = (await Preferences.get({ key: `${MUSIC_NS}:${MUSIC_KEY}` })).value;
+    return raw != null ? (JSON.parse(raw) as MusicTagCatalog) : {};
+  }
+
+  private async loadCatalog(deviceTracks: DeviceTrack[]): Promise<MusicTagCatalog> {
+    const raw = (await Preferences.get({ key: `${MUSIC_NS}:${MUSIC_KEY}` })).value;
+    if (raw != null) return JSON.parse(raw) as MusicTagCatalog;
+
+    // No synced catalog yet — migrate the legacy path-keyed file if present.
+    const legacy = await readJson<LegacyTagStore>(TAGS_FILE, {});
+    const catalog: MusicTagCatalog = {};
+    if (Object.keys(legacy).length > 0) {
+      for (const t of deviceTracks) {
+        const entry = legacy[t.path];
+        if (entry) catalog[trackSignature(t.path, t.durationSec || null)] = entry;
+      }
+      await this.saveCatalog(catalog); // persist + register for sync
+    }
+    return catalog;
+  }
+
+  private async saveCatalog(catalog: MusicTagCatalog): Promise<void> {
+    await this.setStateRaw(MUSIC_NS, MUSIC_KEY, JSON.stringify(catalog), Date.now());
+  }
+
+  /**
    * Everything MediaStore knows about, before folder selection. Ids are
    * assigned over this full list so they stay stable as the selection changes.
    */
   private async listDeviceTracks(): Promise<Track[]> {
-    const [{ tracks }, tagStore] = await Promise.all([
-      MusicLibrary.list(),
-      readJson<TagStore>(TAGS_FILE, {}),
-    ]);
+    const { tracks } = await MusicLibrary.list();
+    const catalog = await this.loadCatalog(tracks);
     this.idToPath.clear();
+    this.idToSig.clear();
     return tracks.map((t, i) => {
       const id = i + 1;
+      const sig = trackSignature(t.path, t.durationSec || null);
       this.idToPath.set(id, t.path);
-      const saved = tagStore[t.path];
+      this.idToSig.set(id, sig);
+      const saved = catalog[sig];
       return {
         id,
         path: t.path,
@@ -153,10 +202,10 @@ export class CapacitorBackend implements Backend {
   }
 
   async updateTrack(id: number, update: TrackUpdate): Promise<void> {
-    const path = this.idToPath.get(id);
-    if (!path) throw new Error(`unknown track id ${id}`);
-    const store = await readJson<TagStore>(TAGS_FILE, {});
-    const entry = store[path] ?? { intensity: null, tags: emptyTags() };
+    const sig = this.idToSig.get(id);
+    if (!sig) throw new Error(`unknown track id ${id}`);
+    const catalog = await this.readCatalog();
+    const entry = catalog[sig] ?? { intensity: null, tags: emptyTags() };
     if (update.intensity !== undefined) entry.intensity = update.intensity;
     if (update.tags) {
       for (const dim of TAG_DIMENSIONS) {
@@ -165,12 +214,41 @@ export class CapacitorBackend implements Backend {
         entry.tags[dim] = [...new Set(values.map((v) => v.trim().toLowerCase()).filter(Boolean))];
       }
     }
-    store[path] = entry;
-    await writeJson(TAGS_FILE, store);
+    catalog[sig] = entry;
+    await this.saveCatalog(catalog);
+    // Nudge the sync loop so tag edits propagate to other devices.
+    notifyLocalChanged();
   }
 
   trackUrl(track: Track): string {
     return Capacitor.convertFileSrc(track.path);
+  }
+
+  /**
+   * Merge a catalog exported from the desktop (`npm run export-tags`) into the
+   * synced store. Additive per signature: an imported dimension replaces that
+   * dimension, dimensions it omits are kept, and imported intensity wins when
+   * present. Registers for sync so the tags propagate to other devices.
+   * Returns the number of catalog entries touched.
+   */
+  async importMusicTags(incoming: MusicTagCatalog): Promise<number> {
+    const catalog = await this.readCatalog();
+    let touched = 0;
+    for (const [sig, entry] of Object.entries(incoming)) {
+      const cur = catalog[sig] ?? { intensity: null, tags: emptyTags() };
+      if (entry.intensity != null) cur.intensity = entry.intensity;
+      for (const dim of TAG_DIMENSIONS) {
+        const vals = entry.tags?.[dim];
+        if (vals && vals.length) {
+          cur.tags[dim] = [...new Set(vals.map((v) => v.trim().toLowerCase()).filter(Boolean))];
+        }
+      }
+      catalog[sig] = cur;
+      touched++;
+    }
+    await this.saveCatalog(catalog);
+    notifyLocalChanged();
+    return touched;
   }
 
   // --- notes ---
