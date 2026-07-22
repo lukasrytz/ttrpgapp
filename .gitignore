@@ -6,3 +6,4 @@ dist/
 *.log
 .DS_Store
 config.local.json
+music-tags.json
