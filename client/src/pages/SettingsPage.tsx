@@ -139,7 +139,9 @@ export default function SettingsPage() {
             <input
               ref={fileInput}
               type="file"
-              accept="application/json,.json"
+              // No `accept` filter: Android's document picker maps it to MIME types and
+              // greys out .json files it reports as text/plain or octet-stream (common for
+              // files copied via USB/Downloads/Drive). Content is validated on read instead.
               style={{ display: 'none' }}
               onChange={(e) => {
                 const f = e.target.files?.[0];
