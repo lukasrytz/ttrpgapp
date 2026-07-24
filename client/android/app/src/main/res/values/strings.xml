@@ -4,4 +4,10 @@
     <string name="title_activity_main">TTRPG Companion</string>
     <string name="package_name">ch.rytz.ttrpgapp</string>
     <string name="custom_url_scheme">ch.rytz.ttrpgapp</string>
+    <!--
+      Cast receiver application ID. Google's Default Media Receiver: plays one
+      track at a time, needs no registration. Replace with our own registered
+      receiver ID to get crossfade on the cast device.
+    -->
+    <string name="cast_app_id">CC1AD845</string>
 </resources>

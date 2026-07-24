@@ -13,4 +13,7 @@ ext {
     androidxJunitVersion = '1.3.0'
     androidxEspressoCoreVersion = '3.7.0'
     cordovaAndroidVersion = '14.0.1'
+    castFrameworkVersion = '22.1.0'
+    androidxMediaRouterVersion = '1.7.0'
+    nanohttpdVersion = '2.3.1'
 }

@@ -1,3 +1,4 @@
+import CastButton from './CastButton';
 import { usePlayer } from './PlayerProvider';
 
 function fmt(sec: number): string {
@@ -33,6 +34,7 @@ export default function PlayerBar() {
           <span className="muted">Nothing playing</span>
         )}
       </div>
+      <CastButton />
       <input
         className="player-volume"
         type="range"

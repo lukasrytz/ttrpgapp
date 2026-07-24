@@ -212,6 +212,7 @@ textarea:focus {
 
 /* --- player bar --- */
 .player-bar {
+  position: relative; /* anchors the cast picker popover */
   flex-shrink: 0;
   display: flex;
   align-items: center;
@@ -219,6 +220,33 @@ textarea:focus {
   padding: 10px 16px;
   background: var(--bg-panel);
   border-top: 1px solid var(--border);
+}
+
+/* Cast device picker: pops above the player bar, right-aligned to its button. */
+.cast-picker {
+  position: absolute;
+  right: 12px;
+  bottom: calc(100% + 8px);
+  z-index: 40;
+  min-width: 240px;
+  max-width: min(320px, calc(100vw - 24px));
+  max-height: 50vh;
+  overflow-y: auto;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  padding: 12px;
+  background: var(--bg-panel);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  box-shadow: 0 8px 24px rgb(0 0 0 / 45%);
+}
+
+.cast-picker-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
 }
 
 .player-info {
