@@ -51,6 +51,42 @@ cd android && ./gradlew assembleDebug
 
 CI builds this automatically (`.github/workflows/android.yml`).
 
+### Cutting a release
+
+Debug APKs are fine for your own devices, but they're signed with the throwaway
+committed debug key. For a proper versioned build, tag a commit:
+
+```bash
+git tag v1.0.0 && git push origin v1.0.0
+```
+
+`.github/workflows/release.yml` then builds a **signed release APK** and attaches
+it to a GitHub Release. `versionName` comes from the tag and `versionCode` is
+derived from it (`1.2.3` → `10203`), so it always increases.
+
+One-time setup — create a release keystore and add it as repository secrets
+(Settings → Secrets and variables → Actions). **Do not commit it**; unlike the
+debug keystore it is a real signing key, and losing it means never being able to
+update the app for anyone who installed it.
+
+```bash
+keytool -genkeypair -v -keystore release.keystore -alias ttrpg \
+  -keyalg RSA -keysize 2048 -validity 10000
+base64 -w0 release.keystore    # paste into RELEASE_KEYSTORE_BASE64
+```
+
+| Secret | Value |
+| --- | --- |
+| `RELEASE_KEYSTORE_BASE64` | base64 of `release.keystore` |
+| `RELEASE_KEYSTORE_PASSWORD` | the store password you chose |
+| `RELEASE_KEY_ALIAS` | `ttrpg` |
+| `RELEASE_KEY_PASSWORD` | the key password you chose |
+
+The workflow fails fast if the secrets are missing rather than shipping an
+unsigned APK, and verifies the signature with `apksigner` before publishing.
+Local builds are unaffected: without `RELEASE_KEYSTORE_PATH` in the environment,
+the release signing config simply isn't configured.
+
 ## Cross-device sync (Android, Google Drive)
 
 Prep notes and combat/tracker state sync across your devices through **your own

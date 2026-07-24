@@ -1,5 +1,12 @@
 apply plugin: 'com.android.application'
 
+// Release signing comes from the environment so the keystore never lives in the
+// repo (unlike the debug one, which is a deliberately throwaway fixed key).
+// When these aren't set — every local build, and CI's debug build — the release
+// config is simply absent and nothing changes.
+def releaseStore = System.getenv('RELEASE_KEYSTORE_PATH')
+def hasReleaseSigning = releaseStore != null && !releaseStore.isEmpty() && file(releaseStore).exists()
+
 android {
     namespace = "ch.rytz.ttrpgapp"
     compileSdk = rootProject.ext.compileSdkVersion
@@ -7,8 +14,10 @@ android {
         applicationId "ch.rytz.ttrpgapp"
         minSdkVersion rootProject.ext.minSdkVersion
         targetSdkVersion rootProject.ext.targetSdkVersion
-        versionCode 1
-        versionName "1.0"
+        // Overridden by the release workflow from the git tag
+        // (-PappVersionCode / -PappVersionName); defaults keep local builds working.
+        versionCode = ((project.findProperty('appVersionCode') ?: '1') as Integer)
+        versionName = (project.findProperty('appVersionName') ?: '1.0').toString()
         testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
         // Required by @capacitor-community/generic-oauth2 (AppAuth) for the OAuth redirect.
         manifestPlaceholders = [appAuthRedirectScheme: 'ch.rytz.ttrpgapp']
@@ -29,14 +38,28 @@ android {
             keyAlias 'androiddebugkey'
             keyPassword 'android'
         }
+        if (hasReleaseSigning) {
+            release {
+                storeFile file(releaseStore)
+                storePassword System.getenv('RELEASE_KEYSTORE_PASSWORD')
+                keyAlias System.getenv('RELEASE_KEY_ALIAS')
+                keyPassword System.getenv('RELEASE_KEY_PASSWORD')
+            }
+        }
     }
     buildTypes {
         debug {
             signingConfig signingConfigs.debug
         }
         release {
+            // Left off deliberately: Capacitor and the Cast SDK resolve plugins and
+            // callbacks reflectively, and R8 stripping them fails only at runtime.
+            // Not worth the size saving for a sideloaded app.
             minifyEnabled false
             proguardFiles getDefaultProguardFile('proguard-android.txt'), 'proguard-rules.pro'
+            if (hasReleaseSigning) {
+                signingConfig signingConfigs.release
+            }
         }
     }
 }
