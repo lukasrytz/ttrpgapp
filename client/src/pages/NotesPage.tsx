@@ -172,18 +172,52 @@ function NoteEditor({
     },
   });
 
+  // Keep the latest unsaved text reachable from the unmount/flush handlers,
+  // which can't read the newest render's closure.
+  const unsaved = useRef<string | null>(null);
+
+  const flush = useCallback(() => {
+    if (saveTimer.current) {
+      clearTimeout(saveTimer.current);
+      saveTimer.current = null;
+    }
+    if (unsaved.current !== null) {
+      const c = unsaved.current;
+      unsaved.current = null;
+      // Write directly (not via the mutation) so it still lands if we're
+      // unmounting — otherwise edits made within the debounce window are lost.
+      void backend()
+        .writeNote(path, c)
+        .then(() => {
+          window.dispatchEvent(new Event('ttrpg-local-changed'));
+          void qc.invalidateQueries({ queryKey: ['notes'] });
+        });
+    }
+  }, [path]);
+
   const onChange = (value: string) => {
     setDraft(value);
     setDirty(true);
+    unsaved.current = value;
     if (saveTimer.current) clearTimeout(saveTimer.current);
-    saveTimer.current = setTimeout(() => save.mutate(value), 1200);
+    saveTimer.current = setTimeout(() => {
+      unsaved.current = null;
+      save.mutate(value);
+    }, 1200);
   };
 
+  // Flush pending edits when leaving the note (unmount) or backgrounding the
+  // app, so nothing typed in the last second is dropped.
   useEffect(() => {
-    return () => {
-      if (saveTimer.current) clearTimeout(saveTimer.current);
+    const onHide = () => {
+      if (document.visibilityState === 'hidden') flush();
     };
-  }, []);
+    document.addEventListener('visibilitychange', onHide);
+    return () => {
+      document.removeEventListener('visibilitychange', onHide);
+      flush();
+    };
+  }, [flush]);
 
   const titlesRef = useRef(noteTitles);
   titlesRef.current = noteTitles;
@@ -206,6 +240,11 @@ function NoteEditor({
       }),
     [],
   );
+
+  // Stable identity: a fresh array (or a new markdown() instance) each render
+  // makes react-codemirror reconfigure and snap the cursor to the top on every
+  // keystroke. Build it once.
+  const extensions = useMemo(() => [markdown(), wikiCompletion], [wikiCompletion]);
 
   if (!note) return <div className="page muted">Loading…</div>;
 
@@ -243,7 +282,7 @@ function NoteEditor({
             className="note-cm"
             value={content}
             onChange={onChange}
-            extensions={[markdown(), wikiCompletion]}
+            extensions={extensions}
             theme="dark"
             basicSetup={{ lineNumbers: false, foldGutter: false }}
           />
