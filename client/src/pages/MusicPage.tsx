@@ -95,6 +95,12 @@ export default function MusicPage() {
         )}
 
         <div className="filter-panel">
+          <div className="filter-row" style={{ justifyContent: 'space-between', marginBottom: '4px' }}>
+            <span className="filter-label">filters</span>
+            <button className="chip" onClick={() => setFilter(EMPTY_FILTER)}>
+              Reset filters
+            </button>
+          </div>
           {TAG_DIMENSIONS.map((dim) => (
             <div className="filter-row" key={dim}>
               <span className="filter-label">{dim}</span>

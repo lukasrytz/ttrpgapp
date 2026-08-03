@@ -36,10 +36,27 @@ function listNotes(vault: string): NoteMeta[] {
   const notes: NoteMeta[] = [];
   for (const rel of walkMd(vault, vault)) {
     const stat = fs.statSync(path.join(vault, rel));
+    const normalized = rel.replace(/\\/g, '/');
+    const parts = normalized.split('/');
+    let isSession = false;
+    let campaign: string | undefined = undefined;
+
+    if (parts.length > 1) {
+      if (parts[0] === 'sessions') {
+        isSession = true;
+      } else {
+        campaign = parts[0];
+        if (parts[1] === 'sessions') {
+          isSession = true;
+        }
+      }
+    }
+
     notes.push({
-      path: rel.split(path.sep).join('/'),
+      path: normalized,
       title: titleOf(rel),
-      isSession: rel.split(path.sep)[0] === 'sessions',
+      isSession,
+      campaign,
       modifiedAt: stat.mtimeMs,
     });
   }
@@ -68,6 +85,7 @@ function readNote(vault: string, rel: string): Note | null {
     content,
     links: extractLinks(content),
     backlinks,
+    campaign: meta?.campaign,
   };
 }
 
@@ -101,29 +119,74 @@ export function registerNotesRoutes(app: FastifyInstance, config: AppConfig) {
     return { ok: true };
   });
 
-  /** Create a supporting note (NPCs, locations, …) at the vault root. */
-  app.post<{ Body: { title: string } }>('/api/notes/create', (req, reply) => {
+  /** Create a supporting note (NPCs, locations, …) at the vault root or in a campaign. */
+  app.post<{ Body: { title: string; campaign?: string } }>('/api/notes/create', (req, reply) => {
     const name = sanitizeNoteName(req.body.title);
     if (!name) return reply.code(400).send({ error: 'bad title' });
-    const rel = `${name}.md`;
+    const cname = req.body.campaign ? sanitizeNoteName(req.body.campaign) : undefined;
+    const rel = cname ? `${cname}/${name}.md` : `${name}.md`;
     const abs = safePath(vault, rel);
     if (!abs) return reply.code(400).send({ error: 'bad title' });
     if (fs.existsSync(abs)) return reply.code(409).send({ error: 'exists' });
+    fs.mkdirSync(path.dirname(abs), { recursive: true });
     fs.writeFileSync(abs, `# ${name}\n\n`);
     return { path: rel };
   });
 
   /** Create a session note from template.md, filling {{title}} and {{date}}. */
-  app.post<{ Body: { title: string } }>('/api/notes/session', (req, reply) => {
+  app.post<{ Body: { title: string; campaign?: string } }>('/api/notes/session', (req, reply) => {
     ensureVault(vault);
     const name = sanitizeNoteName(req.body.title);
     if (!name) return reply.code(400).send({ error: 'bad title' });
-    const rel = `sessions/${name}.md`;
+    const cname = req.body.campaign ? sanitizeNoteName(req.body.campaign) : undefined;
+    const rel = cname ? `${cname}/sessions/${name}.md` : `sessions/${name}.md`;
     const abs = safePath(vault, rel);
     if (!abs) return reply.code(400).send({ error: 'bad title' });
     if (fs.existsSync(abs)) return reply.code(409).send({ error: 'exists' });
-    const template = fs.readFileSync(path.join(vault, 'template.md'), 'utf-8');
+    fs.mkdirSync(path.dirname(abs), { recursive: true });
+
+    let templatePath = cname ? path.join(vault, cname, 'template.md') : path.join(vault, 'template.md');
+    if (!fs.existsSync(templatePath)) {
+      templatePath = path.join(vault, 'template.md');
+    }
+    const template = fs.readFileSync(templatePath, 'utf-8');
+
     fs.writeFileSync(abs, renderTemplate(template, name));
     return { path: rel };
+  });
+
+  /** Create a new campaign directory and seed template.md */
+  app.post<{ Body: { name: string } }>('/api/notes/campaign', (req, reply) => {
+    const name = sanitizeNoteName(req.body.name);
+    if (!name) return reply.code(400).send({ error: 'bad name' });
+    
+    const abs = path.join(vault, name);
+    if (fs.existsSync(abs)) return reply.code(409).send({ error: 'exists' });
+    
+    fs.mkdirSync(path.join(abs, 'sessions'), { recursive: true });
+    const globalTemplate = fs.readFileSync(path.join(vault, 'template.md'), 'utf-8');
+    fs.writeFileSync(path.join(abs, 'template.md'), globalTemplate);
+    
+    return { ok: true };
+  });
+
+  app.delete<{ Querystring: { name: string } }>('/api/notes/campaign', (req, reply) => {
+    const name = sanitizeNoteName(req.query.name);
+    if (!name) return reply.code(400).send({ error: 'bad name' });
+    const abs = path.join(vault, name);
+    if (!fs.existsSync(abs)) return reply.code(404).send({ error: 'not found' });
+    fs.rmSync(abs, { recursive: true, force: true });
+    return { ok: true };
+  });
+
+  app.post<{ Body: { path: string; newPath: string } }>('/api/notes/rename', (req, reply) => {
+    const oldAbs = safePath(vault, req.body.path);
+    const newAbs = safePath(vault, req.body.newPath);
+    if (!oldAbs || !newAbs) return reply.code(400).send({ error: 'bad path' });
+    if (!fs.existsSync(oldAbs)) return reply.code(404).send({ error: 'not found' });
+    if (fs.existsSync(newAbs)) return reply.code(409).send({ error: 'exists' });
+    fs.mkdirSync(path.dirname(newAbs), { recursive: true });
+    fs.renameSync(oldAbs, newAbs);
+    return { path: req.body.newPath };
   });
 }

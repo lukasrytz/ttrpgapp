@@ -100,8 +100,8 @@ export default function EncountersPage() {
           enc={starting}
           party={party}
           onCancel={() => setStarting(null)}
-          onConfirm={(chosen) => {
-            const live = { ...EMPTY_ENCOUNTER, combatants: instantiate(starting, chosen) };
+          onConfirm={(chosen, randomizeHp) => {
+            const live = { ...EMPTY_ENCOUNTER, combatants: instantiate(starting, chosen, Math.random, randomizeHp) };
             void rt()
               .kvSet('dnd5e', 'encounter', JSON.stringify(live))
               .then(() => {
@@ -140,6 +140,8 @@ function EncounterEditor({
     } else {
       const entry = rt().getCompendiumEntry(hit.packId, hit.entryId);
       const f = (entry?.fields ?? {}) as { hp?: number; ac?: number; dexMod?: number };
+      const hitDiceMatch = entry?.body ? /\*\*HP\*\*\s+\d+\s+\(([^)]+)\)/i.exec(entry.body) : null;
+      const hitDice = hitDiceMatch ? hitDiceMatch[1] : undefined;
       const group: EncounterGroup = {
         packId: hit.packId,
         entryId: hit.entryId,
@@ -148,6 +150,7 @@ function EncounterEditor({
         hp: f.hp ?? 1,
         ac: f.ac ?? null,
         dexMod: f.dexMod ?? 0,
+        hitDice,
       };
       onChange({ groups: [...enc.groups, group] });
     }
@@ -213,7 +216,7 @@ function EncounterEditor({
                   >
                     {g.name}
                   </button>
-                  <span className="muted small"> HP {g.hp} · AC {g.ac ?? '—'}</span>
+                  <span className="muted small"> HP {g.hp}{g.hitDice ? ` (${g.hitDice})` : ''} · AC {g.ac ?? '—'}</span>
                 </td>
                 <td className="count-cell">
                   <button onClick={() => setCount(g.entryId, g.count - 1)}>−</button>
@@ -241,9 +244,10 @@ function StartDialog({
   enc: SavedEncounter;
   party: PartyMember[];
   onCancel: () => void;
-  onConfirm: (chosen: PartyMember[]) => void;
+  onConfirm: (chosen: PartyMember[], randomizeHp: boolean) => void;
 }) {
   const [chosen, setChosen] = useState<Set<string>>(new Set(party.map((p) => p.id)));
+  const [randomizeHp, setRandomizeHp] = useState(true);
   const toggle = (id: string) =>
     setChosen((prev) => {
       const next = new Set(prev);
@@ -274,8 +278,18 @@ function StartDialog({
             ))}
           </div>
         )}
+
+        <label className="hp-random-opt" style={{ display: 'flex', alignItems: 'center', gap: 8, margin: '12px 0' }}>
+          <input
+            type="checkbox"
+            checked={randomizeHp}
+            onChange={(e) => setRandomizeHp(e.target.checked)}
+          />
+          <span>🎲 Roll random Monster HP (e.g. <code>8d8 + 16</code>)</span>
+        </label>
+
         <div className="header-actions">
-          <button className="primary" onClick={() => onConfirm(party.filter((p) => chosen.has(p.id)))}>
+          <button className="primary" onClick={() => onConfirm(party.filter((p) => chosen.has(p.id)), randomizeHp)}>
             ▶ Start encounter
           </button>
           <button onClick={onCancel}>Cancel</button>

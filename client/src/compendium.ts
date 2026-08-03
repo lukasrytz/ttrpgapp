@@ -25,6 +25,7 @@ export function installPluginRuntime() {
     searchCompendium: (query, limit) => compendiumIndex.search(query, limit),
     getCompendiumEntry: (packId, entryId) => compendiumIndex.getEntry(packId, entryId),
     openCompendiumEntry,
+    getBackend: () => backend(),
   };
   window.__ttrpgappRuntime = runtime;
 }

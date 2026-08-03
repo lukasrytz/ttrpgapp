@@ -14,7 +14,8 @@
     "typecheck": "npm run typecheck -ws --if-present",
     "build-srd": "npm run build-srd -w @ttrpgapp/plugin-dnd5e",
     "autotag": "npm run autotag -w @ttrpgapp/server --",
-  "export-tags": "npm run export-tags -w @ttrpgapp/server --"
+    "export-tags": "npm run export-tags -w @ttrpgapp/server --",
+    "build:apk": "npm run build -w client && cd client && npx cap sync android && cd android && gradlew.bat assembleDebug"
   },
   "devDependencies": {
     "concurrently": "^9.1.2",
