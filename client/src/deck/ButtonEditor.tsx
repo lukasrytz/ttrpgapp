@@ -142,8 +142,8 @@ export default function ButtonEditor({ button, onSave, onDelete, onClose }: Butt
   };
 
   return (
-    <div className="palette-backdrop" onClick={onClose}>
-      <div className="palette-modal button-editor-modal" onClick={(e) => e.stopPropagation()}>
+    <div className="modal-backdrop" onClick={onClose}>
+      <div className="modal-content button-editor-modal" onClick={(e) => e.stopPropagation()}>
         <div className="modal-header">
           <h2>Edit Button</h2>
           <button type="button" className="icon-btn" onClick={onClose}>

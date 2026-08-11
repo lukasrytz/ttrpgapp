@@ -280,7 +280,7 @@ function StartDialog({
     });
 
   return (
-    <div className="palette-backdrop" onClick={onCancel}>
+    <div className="modal-backdrop" onClick={onCancel}>
       <div className="start-dialog" onClick={(e) => e.stopPropagation()}>
         <h2>Start “{enc.name}”</h2>
         <p className="muted small">

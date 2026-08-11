@@ -87,12 +87,18 @@ export default function App({ config }: { config: ClientConfig }) {
           <nav className={`sidebar ${drawerOpen ? 'sidebar-open' : ''}`}>
             <div className="sidebar-title">TTRPG Companion</div>
             {CORE_NAV.map((item) => (
-              <NavLink key={item.path} to={item.path} end={item.path === '/'} className="nav-item">
+              <NavLink
+                key={item.path}
+                to={item.path}
+                end={item.path === '/'}
+                className="nav-item"
+                onClick={() => setDrawerOpen(false)}
+              >
                 <span className="nav-icon">{getGenreIcon(item, theme)}</span> {item.label}
               </NavLink>
             ))}
 
-            <NavLink to="/settings" className="nav-item">
+            <NavLink to="/settings" className="nav-item" onClick={() => setDrawerOpen(false)}>
               <span className="nav-icon">⚙️</span> Settings
             </NavLink>
             {activePlugins.map((plugin) => (
