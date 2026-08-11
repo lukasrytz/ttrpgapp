@@ -4,6 +4,7 @@ import type { PlayerApi } from '../player/PlayerProvider';
 import { shuffleTracks } from '../player/PlayerProvider';
 import type { SfxApi } from '../player/SfxProvider';
 import { fromSerializable, matches } from '../music/filter';
+import { showToast } from '../toast';
 
 export interface DeckActionDeps {
   tracks: Track[];
@@ -20,6 +21,9 @@ function runLeafAction(action: LeafDeckAction, deps: DeckActionDeps): void {
       const filtered = deps.tracks.filter((t) => matches(t, filter));
       if (filtered.length > 0) {
         deps.player.playQueue(shuffleTracks(filtered));
+        showToast(`${filtered.length} tracks queued`, '🎵');
+      } else {
+        showToast('No tracks matched filter', '⚠️');
       }
       break;
     }
@@ -32,20 +36,27 @@ function runLeafAction(action: LeafDeckAction, deps: DeckActionDeps): void {
     }
     case 'sfxOneShot': {
       const found = deps.clips.find((c) => trackSignature(c.path, c.durationSec) === action.sig);
+      const name = found ? found.name : action.name || 'SFX';
       if (found) {
         deps.sfx.fire(found, action.volume);
       }
+      showToast(`Playing ${name}`, '🔊');
       break;
     }
     case 'sfxLoop': {
       const found = deps.clips.find((c) => trackSignature(c.path, c.durationSec) === action.sig);
+      const name = found ? found.name : action.name || 'Ambience';
       if (action.mode === 'stop') {
         deps.sfx.stopLoop(action.sig);
+        showToast(`Stopped ${name}`, '🌊');
       } else if (found) {
         if (action.mode === 'start') {
           deps.sfx.startLoop(found, action.volume);
+          showToast(`Started ${name}`, '🌊');
         } else {
           deps.sfx.toggleLoop(found, action.volume);
+          const isNowActive = deps.sfx.activeLoops?.includes(action.sig) ?? true;
+          showToast(`${isNowActive ? 'Started' : 'Stopped'} ${name}`, '🌊');
         }
       }
       break;
@@ -66,6 +77,7 @@ function runLeafAction(action: LeafDeckAction, deps: DeckActionDeps): void {
           }),
         );
       }
+      showToast(`Opened ${action.entryId}`, '📚');
       break;
     }
   }

@@ -38,7 +38,7 @@ describe('runDeckAction', () => {
     const navigate = vi.fn();
 
     const player = { playQueue, playTrack } as unknown as PlayerApi;
-    const sfx = { fire, toggleLoop, startLoop, stopLoop } as unknown as SfxApi;
+    const sfx = { fire, toggleLoop, startLoop, stopLoop, activeLoops: [] } as unknown as SfxApi;
 
     const deps: DeckActionDeps = {
       tracks: [testTrack],

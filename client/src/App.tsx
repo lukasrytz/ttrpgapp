@@ -6,6 +6,7 @@ import { PlayerProvider } from './player/PlayerProvider';
 import { SfxProvider } from './player/SfxProvider';
 import PlayerBar from './player/PlayerBar';
 import CommandPalette from './components/CommandPalette';
+import ToastHost from './components/ToastHost';
 import DeckPage from './pages/DeckPage';
 import MusicPage from './pages/MusicPage';
 import NotesPage from './pages/NotesPage';
@@ -130,6 +131,7 @@ export default function App({ config }: { config: ClientConfig }) {
             <PlayerBar />
           </main>
           <CommandPalette />
+          <ToastHost />
         </div>
       </SfxProvider>
     </PlayerProvider>
