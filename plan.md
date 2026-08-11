@@ -170,6 +170,11 @@ nothing outside `plugins/dnd5e` SRD data (which legitimately contains spellcasti
 A second audio library, deliberately much thinner than the music one: no tags, no
 intensity, no editor. A clip is a file with a name.
 
+> **Design assumption:** this library is small and hand-curated — tens of clips, not
+> thousands. Every SFX button is bound by hand to one specific clip, so the picker in
+> commit 5 should be built for browsing a curated set, not for searching a bulk import.
+> See `sfx_sourcing.md` for where the clips come from and how they must be prepared.
+
 ### Shared types — new `shared/src/sfx.ts`, re-exported from `shared/src/index.ts`
 
 ```ts
@@ -616,9 +621,9 @@ meaningless — last would simply win), and a cap of 8 actions so the form stays
   after the existing `/* --- party roster & encounters --- */` block. Add deck rules to the
   `max-width: 759px` block: fewer, larger columns on phones.
 - `README.md` — a "Stream deck" bullet under Features and a short section explaining pages,
-  edit mode, and the three button kinds; `sfxFolders` in the config example plus a line on
-  pointing it at a sound-effects folder; the MediaStore `IS_MUSIC` caveat; and a note that the
-  deck syncs across Android devices like notes do.
+  edit mode, and the button kinds; `sfxFolders` in the config example plus a line on
+  pointing it at a sound-effects folder, **linking to `sfx_sourcing.md`**; the MediaStore
+  `IS_MUSIC` caveat; and a note that the deck syncs across Android devices like notes do.
 
 ---
 
