@@ -1,4 +1,5 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import { useSearchParams } from 'react-router-dom';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import CodeMirror from '@uiw/react-codemirror';
 import { markdown } from '@codemirror/lang-markdown';
@@ -21,9 +22,17 @@ interface WikiPreview {
 
 export default function NotesPage() {
   const qc = useQueryClient();
-  const [selectedPath, setSelectedPath] = useState<string | null>(null);
+  const [searchParams] = useSearchParams();
+  const urlPath = searchParams.get('path');
+  const [selectedPath, setSelectedPath] = useState<string | null>(urlPath);
   const [mode, setMode] = useState<Mode>('edit');
   const [preview, setPreview] = useState<WikiPreview | null>(null);
+
+  useEffect(() => {
+    if (urlPath) {
+      setSelectedPath(urlPath);
+    }
+  }, [urlPath]);
 
   const { data: listData } = useQuery({
     queryKey: ['notes'],
