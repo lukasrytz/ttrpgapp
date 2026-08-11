@@ -24,7 +24,8 @@ export type LeafDeckAction =
   | { kind: 'sfxLoop'; sig: string; name: string; volume: number; mode: 'toggle' | 'start' | 'stop' }
   | { kind: 'navigate'; to: string }
   | { kind: 'openNote'; path: string }
-  | { kind: 'openEntry'; packId: string; entryId: string };
+  | { kind: 'openEntry'; packId: string; entryId: string }
+  | { kind: 'counter'; counterId: string; name: string; max?: number; delta: number };
 
 export type DeckAction = LeafDeckAction | { kind: 'macro'; actions: LeafDeckAction[] };
 
@@ -106,6 +107,13 @@ function migrateLeafAction(raw: unknown): LeafDeckAction | null {
   if (kind === 'openEntry') {
     if (typeof a['packId'] !== 'string' || typeof a['entryId'] !== 'string') return null;
     return { kind: 'openEntry', packId: a['packId'], entryId: a['entryId'] };
+  }
+
+  if (kind === 'counter') {
+    if (typeof a['counterId'] !== 'string' || typeof a['name'] !== 'string') return null;
+    const max = typeof a['max'] === 'number' ? a['max'] : undefined;
+    const delta = typeof a['delta'] === 'number' ? a['delta'] : 1;
+    return { kind: 'counter', counterId: a['counterId'], name: a['name'], max, delta };
   }
 
   return null;

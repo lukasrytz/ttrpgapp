@@ -5,6 +5,7 @@ import { shuffleTracks } from '../player/PlayerProvider';
 import type { SfxApi } from '../player/SfxProvider';
 import { fromSerializable, matches } from '../music/filter';
 import { showToast } from '../toast';
+import { modifyCounter } from './counterStore';
 
 export interface DeckActionDeps {
   tracks: Track[];
@@ -78,6 +79,12 @@ function runLeafAction(action: LeafDeckAction, deps: DeckActionDeps): void {
         );
       }
       showToast(`Opened ${action.entryId}`, '📚');
+      break;
+    }
+    case 'counter': {
+      const newVal = modifyCounter(action.counterId, action.delta, action.max);
+      const display = action.max !== undefined ? `${newVal}/${action.max}` : `${newVal}`;
+      showToast(`${action.name}: ${display}`, '🔢');
       break;
     }
   }

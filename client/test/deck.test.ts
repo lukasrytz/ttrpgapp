@@ -71,6 +71,34 @@ describe('migrateDeck', () => {
       });
     }
   });
+
+  it('migrates valid counter actions', () => {
+    const raw = {
+      pages: [
+        {
+          id: 'p1',
+          name: 'CounterPage',
+          buttons: [
+            {
+              id: 'c1',
+              label: '+1 Segment',
+              action: { kind: 'counter', counterId: 'clock-1', name: 'Tension', max: 6, delta: 1 },
+            },
+          ],
+        },
+      ],
+    };
+
+    const migrated = migrateDeck(raw);
+    const btn = migrated.pages[0]!.buttons[0]!;
+    expect(btn.action).toEqual({
+      kind: 'counter',
+      counterId: 'clock-1',
+      name: 'Tension',
+      max: 6,
+      delta: 1,
+    });
+  });
 });
 
 describe('starterDeck', () => {

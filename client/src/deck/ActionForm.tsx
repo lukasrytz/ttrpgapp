@@ -48,6 +48,8 @@ export function defaultLeafAction(kind: LeafDeckAction['kind'], isMacroRow = fal
       return { kind: 'openNote', path: '' };
     case 'openEntry':
       return { kind: 'openEntry', packId: 'spells', entryId: '' };
+    case 'counter':
+      return { kind: 'counter', counterId: 'counter-1', name: 'Counter', delta: 1 };
   }
 }
 
@@ -129,6 +131,9 @@ export default function ActionForm({
           </option>
           <option value="openEntry" disabled={disabledKinds?.has('openEntry')}>
             Open Compendium Entry
+          </option>
+          <option value="counter" disabled={disabledKinds?.has('counter')}>
+            Counter / Clock
           </option>
         </select>
         {onRemove && (
@@ -366,6 +371,62 @@ export default function ActionForm({
                 Selected: <strong>{value.entryId}</strong> ({value.packId})
               </p>
             )}
+          </div>
+        )}
+
+        {value.kind === 'counter' && (
+          <div className="form-group" style={{ marginTop: '8px' }}>
+            <div style={{ display: 'flex', gap: '8px' }}>
+              <div style={{ flex: 1 }}>
+                <label className="small muted">Counter ID (grouping key)</label>
+                <input
+                  type="text"
+                  value={value.counterId}
+                  placeholder="e.g. tension-clock"
+                  onChange={(e) => onChange({ ...value, counterId: e.target.value })}
+                />
+              </div>
+              <div style={{ flex: 1 }}>
+                <label className="small muted">Label Name</label>
+                <input
+                  type="text"
+                  value={value.name}
+                  placeholder="e.g. Tension Clock"
+                  onChange={(e) => onChange({ ...value, name: e.target.value })}
+                />
+              </div>
+            </div>
+
+            <div style={{ display: 'flex', gap: '8px', marginTop: '8px' }}>
+              <div style={{ flex: 1 }}>
+                <label className="small muted">Delta (Change per tap)</label>
+                <select
+                  value={value.delta}
+                  onChange={(e) => onChange({ ...value, delta: Number(e.target.value) })}
+                >
+                  <option value={1}>+1 (Increment)</option>
+                  <option value={-1}>-1 (Decrement)</option>
+                  <option value={2}>+2</option>
+                  <option value={-2}>-2</option>
+                  <option value={0}>0 (Reset to 0)</option>
+                </select>
+              </div>
+
+              <div style={{ flex: 1 }}>
+                <label className="small muted">Max Segments / Cap (Optional)</label>
+                <input
+                  type="number"
+                  min="1"
+                  max="99"
+                  placeholder="e.g. 4 or 6 (blank for none)"
+                  value={value.max ?? ''}
+                  onChange={(e) => {
+                    const v = e.target.value ? Number(e.target.value) : undefined;
+                    onChange({ ...value, max: v });
+                  }}
+                />
+              </div>
+            </div>
           </div>
         )}
       </div>
