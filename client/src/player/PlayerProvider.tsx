@@ -10,6 +10,7 @@ import {
 import type { Track } from '@ttrpgapp/shared';
 import { backend } from '../backend';
 import { CrossfadeEngine } from './crossfade';
+import { rampValue, type RampHandle } from './ramp';
 
 interface PlayerState {
   current: Track | null;
@@ -21,13 +22,15 @@ interface PlayerState {
   duration: number;
 }
 
-interface PlayerApi extends PlayerState {
+export interface PlayerApi extends PlayerState {
   /** Replace the queue and start playing at index (crossfades from whatever is on). */
   playQueue: (tracks: Track[], index?: number) => void;
   playTrack: (track: Track) => void;
   next: () => void;
   toggle: () => void;
   setVolume: (v: number) => void;
+  /** Temporarily scale playback level without changing the user's volume setting. */
+  setDuck: (factor: number) => void;
 }
 
 const PlayerContext = createContext<PlayerApi | null>(null);
@@ -47,6 +50,9 @@ export function shuffleTracks(tracks: Track[]): Track[] {
 
 export function PlayerProvider({ children }: { children: ReactNode }) {
   const engineRef = useRef<CrossfadeEngine | null>(null);
+  const duckRampRef = useRef<RampHandle | null>(null);
+  const duckFactorRef = useRef(1);
+  const userVolumeRef = useRef(1);
   const [state, setState] = useState<PlayerState>({
     current: null,
     queue: [],
@@ -58,6 +64,7 @@ export function PlayerProvider({ children }: { children: ReactNode }) {
   });
   const stateRef = useRef(state);
   stateRef.current = state;
+  userVolumeRef.current = state.volume;
 
   const engine = () => {
     if (!engineRef.current) {
@@ -75,6 +82,17 @@ export function PlayerProvider({ children }: { children: ReactNode }) {
     }
     return engineRef.current;
   };
+
+  const setDuck = useCallback((targetFactor: number) => {
+    const current = duckFactorRef.current;
+    if (Math.abs(current - targetFactor) < 0.001) return;
+    duckRampRef.current?.cancel();
+    const ms = targetFactor < current ? 250 : 600;
+    duckRampRef.current = rampValue(current, targetFactor, ms, (v) => {
+      duckFactorRef.current = v;
+      engine().setVolume(userVolumeRef.current * v);
+    });
+  }, []);
 
   const playOn = useCallback((track: Track) => {
     void engine().play(backend().trackUrl(track));
@@ -130,11 +148,13 @@ export function PlayerProvider({ children }: { children: ReactNode }) {
         }
       },
       setVolume: (v) => {
-        engine().setVolume(v);
+        userVolumeRef.current = v;
+        engine().setVolume(v * duckFactorRef.current);
         setState((prev) => ({ ...prev, volume: v }));
       },
+      setDuck,
     }),
-    [state, advance, startTrack],
+    [state, advance, startTrack, setDuck],
   );
 
   return <PlayerContext.Provider value={api}>{children}</PlayerContext.Provider>;
