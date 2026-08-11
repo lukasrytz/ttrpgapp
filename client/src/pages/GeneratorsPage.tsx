@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { showToast } from '../toast';
 import {
   generateNameBatch,
   generateQuirkFlaw,
@@ -12,7 +13,6 @@ type Tab = 'names' | 'quirks';
 
 export default function GeneratorsPage() {
   const [activeTab, setActiveTab] = useState<Tab>('names');
-  const [toastMsg, setToastMsg] = useState<string | null>(null);
 
   // --- Names State ---
   const [raceFilter, setRaceFilter] = useState<string>('Any');
@@ -25,11 +25,6 @@ export default function GeneratorsPage() {
 
   // --- Quirks & Flaws State ---
   const [quirkCard, setQuirkCard] = useState<NPCQuirkFlaw>(() => generateQuirkFlaw());
-
-  const showToast = (msg: string) => {
-    setToastMsg(msg);
-    setTimeout(() => setToastMsg(null), 2200);
-  };
 
   const rollNames = (
     r = raceFilter,
@@ -46,7 +41,7 @@ export default function GeneratorsPage() {
 
   const copyToClipboard = (text: string, label = 'Copied to clipboard!') => {
     void navigator.clipboard.writeText(text);
-    showToast(label);
+    showToast(label, '📋');
   };
 
   const cardMd = [
@@ -63,8 +58,6 @@ export default function GeneratorsPage() {
       <div className="page-header">
         <h1>DM Generators</h1>
       </div>
-
-      {toastMsg && <div className="generator-toast">{toastMsg}</div>}
 
       <div className="generator-tabs">
         <button
