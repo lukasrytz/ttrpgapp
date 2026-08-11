@@ -826,4 +826,50 @@ concentration: sign < 0 && prev.concentration ? prev.concentration : prev.concen
 ```
 
 It appears to have been meant to flag a concentration check when a combatant takes damage.
-Not fixed here — it is unrelated to the deck — but it belongs in `bugs.md`.
+The visible consequence is that a combatant dropped to 0 HP keeps its concentration flag,
+which 5e ends outright. Logged as entry 3 in `bugs.md`; not fixed, because whether it should
+clear concentration or prompt for the Constitution save is a rules call, not a mechanical
+one. Unrelated to the deck — do not fix it as part of these commits.
+
+---
+
+## Appendix — prompts for driving this
+
+*For the person running the implementation, not for the implementing agent.*
+
+Each session starts cold, which is why every prompt begins by pointing at this file. One
+reusable template covers all nine commits — the per-step detail is already above, and
+duplicating it into nine bespoke prompts would only let the two drift apart:
+
+```
+Read plan.md in the repo root. Implement Commit N — <title>. Only that commit.
+
+Follow the "Notes for the implementing agent" section at the top of the file.
+
+When you're done:
+1. Run `npm run typecheck && npm test` at the root — both must pass before you commit
+2. Commit with a message saying what changed and why
+3. Report back: what you did, anything in the plan that was wrong or
+   underspecified, and what you chose instead
+```
+
+Step 3 matters. This plan was written without running the code, so it will have defects;
+the point is for each session to surface them rather than quietly work around them — that
+is how you learn commit 2's backend signatures do not quite fit *before* commit 5 depends
+on them.
+
+**Two commits are worth a checkpoint before any code exists.** Append to the template:
+
+- **Commit 3** — *"Before writing code, explain how the duck factor and the user's volume
+  combine, and what happens on the Android fallback path where Web Audio is unavailable.
+  Wait for my go-ahead."*
+- **Commit 5** — *"Before writing code, show me the component breakdown — specifically how
+  `ActionForm` is factored so that a plain button and a macro row share it. Wait for my
+  go-ahead."*
+
+These interrogate the approach rather than instruct it, which is why they belong in a
+prompt rather than in the plan.
+
+> If you find yourself wanting to write a long prompt for some commit, that is a sign the
+> **plan** is thin there, not that the prompt needs to be fatter. Fix the plan instead — it
+> stays in sync, and the next session gets the improvement for free.
