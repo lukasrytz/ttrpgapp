@@ -99,6 +99,32 @@ describe('migrateDeck', () => {
       delta: 1,
     });
   });
+
+  it('migrates valid roll actions', () => {
+    const raw = {
+      pages: [
+        {
+          id: 'p1',
+          name: 'RollPage',
+          buttons: [
+            {
+              id: 'r1',
+              label: 'Fireball',
+              action: { kind: 'roll', formula: '8d6', label: 'Fireball Damage' },
+            },
+          ],
+        },
+      ],
+    };
+
+    const migrated = migrateDeck(raw);
+    const btn = migrated.pages[0]!.buttons[0]!;
+    expect(btn.action).toEqual({
+      kind: 'roll',
+      formula: '8d6',
+      label: 'Fireball Damage',
+    });
+  });
 });
 
 describe('starterDeck', () => {

@@ -6,6 +6,7 @@ import type { SfxApi } from '../player/SfxProvider';
 import { fromSerializable, matches } from '../music/filter';
 import { showToast } from '../toast';
 import { modifyCounter } from './counterStore';
+import { rollDice } from './dice';
 
 export interface DeckActionDeps {
   tracks: Track[];
@@ -85,6 +86,17 @@ function runLeafAction(action: LeafDeckAction, deps: DeckActionDeps): void {
       const newVal = modifyCounter(action.counterId, action.delta, action.max);
       const display = action.max !== undefined ? `${newVal}/${action.max}` : `${newVal}`;
       showToast(`${action.name}: ${display}`, '🔢');
+      break;
+    }
+    case 'roll': {
+      try {
+        const res = rollDice(action.formula);
+        const label = action.label || action.formula;
+        const rollsText = res.allRolls.length > 0 ? ` [${res.allRolls.join(', ')}]` : '';
+        showToast(`${label}: ${res.total}${rollsText}`, '🎲');
+      } catch {
+        showToast(`Invalid dice formula: ${action.formula}`, '⚠️');
+      }
       break;
     }
   }

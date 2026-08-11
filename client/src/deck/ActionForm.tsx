@@ -50,6 +50,8 @@ export function defaultLeafAction(kind: LeafDeckAction['kind'], isMacroRow = fal
       return { kind: 'openEntry', packId: 'spells', entryId: '' };
     case 'counter':
       return { kind: 'counter', counterId: 'counter-1', name: 'Counter', delta: 1 };
+    case 'roll':
+      return { kind: 'roll', formula: '1d20+5', label: 'd20 Roll' };
   }
 }
 
@@ -134,6 +136,9 @@ export default function ActionForm({
           </option>
           <option value="counter" disabled={disabledKinds?.has('counter')}>
             Counter / Clock
+          </option>
+          <option value="roll" disabled={disabledKinds?.has('roll')}>
+            Roll Dice
           </option>
         </select>
         {onRemove && (
@@ -424,6 +429,31 @@ export default function ActionForm({
                     const v = e.target.value ? Number(e.target.value) : undefined;
                     onChange({ ...value, max: v });
                   }}
+                />
+              </div>
+            </div>
+          </div>
+        )}
+
+        {value.kind === 'roll' && (
+          <div className="form-group" style={{ marginTop: '8px' }}>
+            <div style={{ display: 'flex', gap: '8px' }}>
+              <div style={{ flex: 1 }}>
+                <label className="small muted">Dice Formula</label>
+                <input
+                  type="text"
+                  value={value.formula}
+                  placeholder="e.g. 1d20+5, 2d6, 4d6kh3"
+                  onChange={(e) => onChange({ ...value, formula: e.target.value })}
+                />
+              </div>
+              <div style={{ flex: 1 }}>
+                <label className="small muted">Roll Label (Optional)</label>
+                <input
+                  type="text"
+                  value={value.label ?? ''}
+                  placeholder="e.g. Fireball Damage"
+                  onChange={(e) => onChange({ ...value, label: e.target.value || undefined })}
                 />
               </div>
             </div>

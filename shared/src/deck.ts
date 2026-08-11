@@ -25,7 +25,8 @@ export type LeafDeckAction =
   | { kind: 'navigate'; to: string }
   | { kind: 'openNote'; path: string }
   | { kind: 'openEntry'; packId: string; entryId: string }
-  | { kind: 'counter'; counterId: string; name: string; max?: number; delta: number };
+  | { kind: 'counter'; counterId: string; name: string; max?: number; delta: number }
+  | { kind: 'roll'; formula: string; label?: string };
 
 export type DeckAction = LeafDeckAction | { kind: 'macro'; actions: LeafDeckAction[] };
 
@@ -114,6 +115,12 @@ function migrateLeafAction(raw: unknown): LeafDeckAction | null {
     const max = typeof a['max'] === 'number' ? a['max'] : undefined;
     const delta = typeof a['delta'] === 'number' ? a['delta'] : 1;
     return { kind: 'counter', counterId: a['counterId'], name: a['name'], max, delta };
+  }
+
+  if (kind === 'roll') {
+    if (typeof a['formula'] !== 'string') return null;
+    const label = typeof a['label'] === 'string' ? a['label'] : undefined;
+    return { kind: 'roll', formula: a['formula'], label };
   }
 
   return null;
