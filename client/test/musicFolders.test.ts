@@ -1,5 +1,21 @@
-import { describe, expect, it } from 'vitest';
-import { filterByFolders, folderKey, foldersOf } from '../src/music/folders';
+import { describe, expect, it, vi } from 'vitest';
+import { filterByFolders, folderKey, foldersOf, getSfxFolders, setSfxFolders } from '../src/music/folders';
+
+const { prefs } = vi.hoisted(() => ({
+  prefs: new Map<string, string>(),
+}));
+
+vi.mock('@capacitor/preferences', () => ({
+  Preferences: {
+    get: async ({ key }: { key: string }) => ({ value: prefs.get(key) ?? null }),
+    set: async ({ key, value }: { key: string; value: string }) => {
+      prefs.set(key, value);
+    },
+    remove: async ({ key }: { key: string }) => {
+      prefs.delete(key);
+    },
+  },
+}));
 
 const track = (folder: string, path: string) => ({ folder, path });
 
@@ -44,5 +60,20 @@ describe('foldersOf / filterByFolders', () => {
     expect(filterByFolders(tracks, new Set(['/sd/ttrpg'])).length).toBe(2);
     expect(filterByFolders(tracks, null).length).toBe(3);
     expect(filterByFolders(tracks, new Set()).length).toBe(0);
+  });
+});
+
+describe('getSfxFolders / setSfxFolders', () => {
+  it('defaults to an empty Set when no selection is stored (opt-in)', async () => {
+    const sfxFolders = await getSfxFolders();
+    expect(sfxFolders).toBeInstanceOf(Set);
+    expect(sfxFolders.size).toBe(0);
+  });
+
+  it('stores and retrieves selected SFX folders', async () => {
+    await setSfxFolders(['/sd/sfx']);
+    const sfxFolders = await getSfxFolders();
+    expect(sfxFolders.has('/sd/sfx')).toBe(true);
+    expect(sfxFolders.size).toBe(1);
   });
 });

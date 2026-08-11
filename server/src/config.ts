@@ -8,6 +8,7 @@ export const repoRoot = path.resolve(here, '..', '..');
 
 const DEFAULTS: AppConfig = {
   musicFolders: ['./music'],
+  sfxFolders: [],
   notesVault: './vault',
   dataDir: './data',
   plugins: { dnd5e: true },

@@ -38,5 +38,14 @@ function migrate(db: Database.Database) {
       value TEXT NOT NULL,
       PRIMARY KEY (plugin_id, key)
     );
+
+    CREATE TABLE IF NOT EXISTS sfx (
+      id INTEGER PRIMARY KEY,
+      folder TEXT NOT NULL,
+      path TEXT NOT NULL,
+      name TEXT NOT NULL,
+      duration_sec REAL,
+      UNIQUE (folder, path)
+    );
   `);
 }
