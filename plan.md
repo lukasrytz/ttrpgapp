@@ -4,6 +4,26 @@
 > Every decision below was agreed with the repo owner — do not revisit them, and do not
 > expand scope beyond what is listed. Nothing here has been implemented yet.
 
+## Status — re-verified after the feature-branch merge
+
+This plan was originally written against the trunk before
+`feature/android-touch-enhancements` (DM tools, campaigns, genre themes, touch UI) was
+merged. It has since been re-checked against the merged code. Five premises changed, each
+flagged inline where it matters:
+
+| What changed | Where it bites |
+| --- | --- |
+| A dice-formula parser now exists (`rollHitDice`, `rosters.ts:49`) | Commit 9 is a generalisation, not a greenfield build |
+| A toast already exists, page-local in `GeneratorsPage` | Commit 7 generalises it instead of writing a second one |
+| `CORE_NAV` entries now carry three per-theme icons, and a `/generators` route exists | Commit 6's nav edit |
+| The app is no longer dark-only — three genre themes | Deck button colours (commit 5) must work in all three |
+| `Backend` gained campaign methods | Commit 2 extends the current interface, not the one quoted here |
+
+Everything else in the plan was confirmed still accurate: no dnd-kit dependency,
+`NotesPage` still holds its selection in `useState` (so the `?path=` change is still
+needed), no generic counter primitive, no timers, and the two duplicated `d20()` helpers
+are still there.
+
 ## Notes for the implementing agent
 
 **Take one commit at a time.** The nine commits are ordered by dependency and each is
@@ -106,11 +126,23 @@ them in order; 7–9 depend on the deck existing but not on each other beyond th
 - No import aliases. Relative imports, or `@ttrpgapp/shared`. Relative imports inside
   `shared/` and `server/` carry an explicit `.js` extension; `client/` and `plugins/` do not.
 - `tsconfig.base.json` sets `noUncheckedIndexedAccess` — indexing an array gives `T | undefined`.
-- Styling: append to the single global `client/src/styles.css` under a new
-  `/* --- stream deck --- */` banner comment. No CSS modules, no Tailwind. Icons are emoji.
-  Reuse `.page`, `.page-header`, `.header-actions`, `.chip`/`.chip-on`, `.muted`, `.small`,
-  `.primary`, `.palette-backdrop`, `.icon-btn`. Respect the single breakpoint
-  `@media (max-width: 759px)` and the 44px minimum tap target.
+- Styling: append to the single global `client/src/styles.css` (now ~1930 lines; the last
+  sections are `/* --- Android Touch & BottomSheet UI --- */` and
+  `/* --- DM Generators --- */`) under a new `/* --- stream deck --- */` banner comment.
+  No CSS modules, no Tailwind. Icons are emoji. Reuse `.page`, `.page-header`,
+  `.header-actions`, `.chip`/`.chip-on`, `.muted`, `.small`, `.primary`, `.palette-backdrop`,
+  `.icon-btn`. Respect the single breakpoint `@media (max-width: 759px)` and the 44px minimum
+  tap target.
+- **Theming — the app is no longer dark-only.** There are three genre themes,
+  `theme-fantasy` (default), `theme-horror` and `theme-scifi`, held in `App.tsx` state,
+  persisted to `localStorage` under `ttrpg-theme`, and broadcast via a `ttrpg-theme-change`
+  window event. Anything new must look right in all three; drive colours through custom
+  properties rather than literals.
+- **Convention drift to be aware of.** The dominant style is inline-typed props and
+  CSS-only styling, and that is what to follow. But newer code does not always: e.g.
+  `client/src/components/BottomSheet.tsx` declares a named `BottomSheetProps` interface, and
+  `NotesPage.tsx` uses inline `style={{ … }}` in places. Match the dominant convention;
+  don't propagate the exceptions, and don't "fix" them in files you aren't otherwise touching.
 - Persistence writes follow the pattern in `plugins/dnd5e/src/TrackerPage.tsx`: optimistic
   `setState`, `useRef` debounce timer, then
   `void kvSet(...).then(() => window.dispatchEvent(new Event('ttrpg-local-changed')))`.
@@ -265,6 +297,12 @@ sfxUrl(clip: SfxClip): string;
 
 `MusicFolder` is structurally just "a folder with N audio files in it" — reuse it rather
 than cloning the type; add a line to its JSDoc in `shared/src/music.ts` saying so.
+
+> **Re-verified after the merge:** `Backend` has grown campaign support since this plan was
+> written — `createNote(title, campaign?)`, `createSession(title, campaign?)`,
+> `createCampaign`, `deleteCampaign`, `renameNote`. Nothing conflicts with the SFX methods,
+> but add them to the *current* interface rather than the one quoted here, and remember both
+> implementations (`http.ts` and `capacitor.ts`) must be updated together.
 
 - `client/src/backend/http.ts` — straight passthrough to the new routes;
   `sfxUrl` → `/api/sfx/stream/${clip.id}`.
@@ -555,6 +593,12 @@ preselect the note. This is a few lines and makes notes linkable generally.
   `grid-column: span 2`. Buttons render icon over label, colour from `DeckColor` mapped to CSS
   custom properties defined in the new styles block. Minimum 88px tall — these are meant to be
   hit without looking.
+- **Deck colours must survive all three genre themes** (see the theming note in House rules).
+  Define each `DeckColor` as a custom property that the theme blocks can override, rather than
+  hard-coding hex values on the button classes — otherwise the deck will look wrong in horror
+  and sci-fi.
+- On phones, the clip and track pickers can reuse the existing
+  `client/src/components/BottomSheet.tsx` rather than inventing another sheet.
 - A loop button whose signature is in `sfx.activeLoops` renders lit (`.deck-btn-on`), giving the
   deck live state.
 - A button whose referenced track/clip is missing on this device renders dimmed with a `⚠`, and
@@ -594,7 +638,9 @@ The per-kind pickers:
 - **sfxOneShot / sfxLoop** — searchable list over `useQuery(['sfx'])` grouped by folder, plus a
   volume slider and a ▶ preview button that calls the engine directly.
 - **navigate** — a select built from `CORE_NAV` plus the enabled plugins' nav items
-  (`availableClientPlugins` from `client/src/plugins.ts`).
+  (`availableClientPlugins` from `client/src/plugins.ts`). Note `CORE_NAV` now includes
+  `/generators` ("DM Tools"), so it comes along for free — read the labels off `CORE_NAV`
+  rather than hard-coding a list.
 - **openNote** — picker over `backend().listNotes()`.
 - **openEntry** — reuses `compendiumIndex.search()` from `client/src/compendium.ts`.
 
@@ -608,10 +654,16 @@ meaningless — last would simply win), and a cap of 8 actions so the form stays
 
 ## Commit 6 — Routing, nav, settings, styles, README
 
-- `client/src/App.tsx` — `/` → `DeckPage`, new `/music` → `MusicPage`. `CORE_NAV` becomes
-  `[{ '/', 'Deck', '🎛️' }, { '/music', 'Music', '🎵' }, { '/notes', 'Prep Notes', '📓' }]`;
-  keep `end={item.path === '/'}` on the NavLink. Wrap the shell in `<SfxProvider>` inside
-  `<PlayerProvider>`.
+- `client/src/App.tsx` — `/` → `DeckPage`, new `/music` → `MusicPage`. Wrap the shell in
+  `<SfxProvider>` inside `<PlayerProvider>`.
+
+  > **Re-verified after the merge — `CORE_NAV`'s shape changed.** Entries are now
+  > `{ path, label, iconFantasy, iconHorror, iconScifi }`, resolved through
+  > `getGenreIcon(item, theme)` (`App.tsx:20`), and there is a third entry `/generators`
+  > ("DM Tools"). So the deck entry needs **three** icons, not one — e.g.
+  > `{ path: '/', label: 'Deck', iconFantasy: '🎛️', iconHorror: '🎛️', iconScifi: '🎛️' }` —
+  > and Music keeps its existing three when it moves to `/music`. Keep
+  > `end={item.path === '/'}` on the NavLink.
 - `client/src/pages/SettingsPage.tsx` — a new "Sound effects" block: the SFX folder picker
   (reuse the `FolderPicker` pattern from `MusicPage.tsx` — extract it to
   `client/src/music/FolderPicker.tsx` and parameterise it over the two selections rather than
@@ -629,9 +681,16 @@ meaningless — last would simply win), and a cap of 8 actions so the form stays
 
 ## Commit 7 — Transient overlay (prerequisite for the two below)
 
-The app has **no toast or notification system at all**. Transient feedback today is
-`window.alert` / `window.confirm` / `window.prompt` plus inline text. A dice result and a
-counter reset both need somewhere to go, so build the overlay once, first.
+> **Re-verified after the `feature/android-touch-enhancements` merge:** a toast already
+> exists, but only as page-local state. `client/src/pages/GeneratorsPage.tsx` has its own
+> `showToast(msg)` (a `useState` plus a 2200ms `setTimeout`) rendering `.generator-toast`,
+> styled at `client/src/styles.css:1645`. **Generalise that rather than building a second
+> one**, and refactor `GeneratorsPage` to use the shared version so there is one toast in
+> the app, not two. The CSS can move largely as-is under a neutral class name.
+
+There is still no *app-level* transient feedback: elsewhere it is `window.alert` /
+`window.confirm` / `window.prompt` plus inline text. A dice result and a counter reset both
+need somewhere to go, so promote the overlay once, first.
 
 New `client/src/components/Toast.tsx`, following the app's window-CustomEvent convention
 exactly — a `ttrpg-toast` event and a `<ToastHost />` mounted once in `App.tsx` beside
@@ -690,13 +749,24 @@ Behaviour:
 
 ## Commit 9 — Dice roller
 
-The app has no dice module, no expression parser, and no advantage/crit/damage logic. Its
-entire randomness is two **duplicated, module-private** helpers —
-`plugins/dnd5e/src/TrackerPage.tsx:20` and `plugins/dnd5e/src/rosters.ts:38`, both
+> **Re-verified after the `feature/android-touch-enhancements` merge — this commit's original
+> premise was wrong.** A dice-formula parser now exists: `rollHitDice(formula, fallbackHp, rng)`
+> at `plugins/dnd5e/src/rosters.ts:49` parses `"8d8 + 16"`, `"2d8 - 1"`, `"4d6"` with a regex
+> and is used to randomise monster HP when instantiating an encounter. It is covered by
+> `plugins/dnd5e/test/rosters.test.ts`.
+>
+> So commit 9 is a **generalisation, not a greenfield build**: move the parsing into
+> `shared/src/dice.ts`, widen it to the fuller grammar below, and have `rollHitDice` delegate
+> to it rather than keeping a second regex. The existing rosters tests must keep passing
+> unchanged — treat that as the guard rail on the refactor.
+
+There is still no advantage/crit logic and no general roll entry point, and the app still
+carries two **duplicated, module-private** d20 helpers —
+`plugins/dnd5e/src/TrackerPage.tsx:53` and `plugins/dnd5e/src/rosters.ts:39`, both
 `1 + Math.floor(rng() * 20)`.
 
 New pure `shared/src/dice.ts`, with an injectable RNG in the established style of
-`instantiate(enc, party, rng = Math.random)` (`plugins/dnd5e/src/rosters.ts:50`):
+`instantiate(enc, party, rng = Math.random)` (`plugins/dnd5e/src/rosters.ts`):
 
 ```ts
 export interface DiceTerm { count: number; sides: number; keep?: { mode: 'h' | 'l'; n: number } }
@@ -726,8 +796,9 @@ New `DeckAction` variant, with an optional target number:
 The result goes to the toast from commit 7: total large, breakdown small, and
 `17 vs DC 15 — success` when `dc` is set. A persistent roll log is deliberately deferred.
 
-**De-duplicate while here:** replace both private `d20()` copies with the shared one.
-Keep `instantiate`'s injectable-`rng` parameter exactly as it is so
+**De-duplicate while here:** replace both private `d20()` copies with the shared one, and
+route `rollHitDice` through `parseDice`/`rollDice` instead of its own regex. Keep
+`instantiate`'s and `rollHitDice`'s signatures and injectable `rng` exactly as they are so
 `plugins/dnd5e/test/rosters.test.ts` keeps passing unchanged.
 
 Editor support: the button editor gets a formula field that validates live via
@@ -822,19 +893,33 @@ random generators from the SRD pack, a persistent roll log, and a player-facing 
 display. Each is a clean follow-up on top of the structures above — `DeckAction` is a
 discriminated union precisely so new kinds are additive.
 
-## Unrelated bug noticed while planning
+## Unrelated bugs noticed while planning
 
-`plugins/dnd5e/src/TrackerPage.tsx:168` is a no-op in both branches:
+Do not fix any of these as part of these commits — they are logged so they are not lost.
 
-```ts
-concentration: sign < 0 && prev.concentration ? prev.concentration : prev.concentration
-```
+**Concentration is never ended by damage.** `applyHp` in
+`plugins/dnd5e/src/TrackerPage.tsx` adjusts HP and resets death saves but does not touch
+`concentration`, so a combatant dropped to 0 HP keeps its concentration flag — which 5e ends
+outright — and nothing prompts for the Constitution save damage should trigger. (An earlier
+dead expression that appeared to be a half-written attempt at this was removed by the
+`feature/android-touch-enhancements` merge; the missing behaviour remains.) Logged as entry
+3 in `bugs.md`.
 
-It appears to have been meant to flag a concentration check when a combatant takes damage.
-The visible consequence is that a combatant dropped to 0 HP keeps its concentration flag,
-which 5e ends outright. Logged as entry 3 in `bugs.md`; not fixed, because whether it should
-clear concentration or prompt for the Constitution save is a rules call, not a mechanical
-one. Unrelated to the deck — do not fix it as part of these commits.
+**`sly.html` at the repo root** is a 43KB UTF-16 saved copy of an article from
+SlyFlourish.com, committed by accident on the feature branch and now on the trunk. It is
+third-party content in a public repository and nothing references it.
+
+**`build:apk` is Windows-only.** The root `package.json` script ends in `gradlew.bat`, so it
+fails on Linux and macOS. `./gradlew` with a platform check, or just documenting it as a
+Windows convenience script, would fix it.
+
+**`PluginRuntime.getBackend?(): any`** (`shared/src/plugin-client.ts:38`) puts an `any` into
+an otherwise strict, deliberately narrow plugin boundary — the point of `PluginRuntime` is
+that plugins *cannot* reach the whole backend. Worth typing or reconsidering.
+
+**`BottomSheet.tsx` is duplicated** — identical copies at
+`client/src/components/BottomSheet.tsx` and `plugins/dnd5e/src/BottomSheet.tsx`. The plugin
+boundary makes sharing awkward, but two copies will drift.
 
 ---
 
