@@ -4,13 +4,16 @@ import type {
   MusicScanResult,
   Note,
   NoteMeta,
+  SfxClip,
   Track,
 } from '@ttrpgapp/shared';
 import {
   filterByFolders,
   foldersOf,
   getFolderSelection,
+  getSfxFolders,
   setFolderSelection,
+  setSfxFolders,
 } from '../music/folders';
 import type { Backend, TrackUpdate } from './types';
 
@@ -65,6 +68,31 @@ export class HttpBackend implements Backend {
 
   trackUrl(track: Track): string {
     return `/api/music/stream/${track.id}`;
+  }
+
+  private async allSfx() {
+    return (await get<{ clips: SfxClip[] }>('/api/sfx/clips')).clips;
+  }
+
+  async listSfx() {
+    return filterByFolders(await this.allSfx(), await getSfxFolders());
+  }
+
+  async listSfxFolders(): Promise<MusicFolder[]> {
+    return foldersOf(await this.allSfx(), await getSfxFolders());
+  }
+
+  async setSfxFolders(paths: string[]): Promise<void> {
+    await setSfxFolders(paths);
+  }
+
+  async scanSfx() {
+    const result = await send<MusicScanResult>('POST', '/api/sfx/scan');
+    return { ...result, total: (await this.listSfx()).length };
+  }
+
+  sfxUrl(clip: SfxClip): string {
+    return `/api/sfx/stream/${clip.id}`;
   }
 
   async listNotes() {

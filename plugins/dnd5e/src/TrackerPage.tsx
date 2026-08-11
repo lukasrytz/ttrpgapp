@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from 'react';
-import type { CompendiumSearchHit } from '@ttrpgapp/shared';
+import { d20, type CompendiumSearchHit } from '@ttrpgapp/shared';
 import { getPluginRuntime } from '@ttrpgapp/shared/plugin-client';
 import BottomSheet from './BottomSheet';
 import { rollHitDice } from './rosters';
@@ -48,10 +48,6 @@ function openEntry(packId: string, entryId: string) {
 
 function newId(): string {
   return Math.random().toString(36).slice(2, 10);
-}
-
-function d20(): number {
-  return 1 + Math.floor(Math.random() * 20);
 }
 
 export default function TrackerPage() {

@@ -4,6 +4,7 @@ import { loadConfig, resolvePath } from './config.js';
 import { openDb } from './db.js';
 import { availablePlugins } from './pluginHost.js';
 import { registerMusicRoutes } from './music.js';
+import { registerSfxRoutes } from './sfx.js';
 import { registerNotesRoutes } from './notes.js';
 
 const config = loadConfig();
@@ -44,6 +45,7 @@ app.put<{ Params: { pluginId: string; key: string }; Body: { value: string } }>(
 );
 
 registerMusicRoutes(app, db, config);
+registerSfxRoutes(app, db, config);
 registerNotesRoutes(app, config);
 
 const port = Number(process.env.PORT ?? 8787);

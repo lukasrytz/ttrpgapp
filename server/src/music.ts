@@ -6,28 +6,7 @@ import { parseFile } from 'music-metadata';
 import type { AppConfig, MusicScanResult, TagDimension, Track } from '@ttrpgapp/shared';
 import { TAG_DIMENSIONS } from '@ttrpgapp/shared';
 import { resolvePath } from './config.js';
-
-const AUDIO_EXTS = new Set(['.mp3', '.ogg', '.oga', '.opus', '.flac', '.m4a', '.aac', '.wav', '.webm']);
-
-const MIME: Record<string, string> = {
-  '.mp3': 'audio/mpeg',
-  '.ogg': 'audio/ogg',
-  '.oga': 'audio/ogg',
-  '.opus': 'audio/ogg',
-  '.flac': 'audio/flac',
-  '.m4a': 'audio/mp4',
-  '.aac': 'audio/aac',
-  '.wav': 'audio/wav',
-  '.webm': 'audio/webm',
-};
-
-function* walk(dir: string): Generator<string> {
-  for (const entry of fs.readdirSync(dir, { withFileTypes: true })) {
-    const p = path.join(dir, entry.name);
-    if (entry.isDirectory()) yield* walk(p);
-    else if (entry.isFile() && AUDIO_EXTS.has(path.extname(entry.name).toLowerCase())) yield p;
-  }
-}
+import { walk, sendFileRange } from './audio.js';
 
 export async function scan(db: Database, config: AppConfig): Promise<MusicScanResult> {
   const known = new Map<string, number>(); // "folder\0path" -> id
@@ -168,27 +147,6 @@ export function registerMusicRoutes(app: FastifyInstance, db: Database, config: 
       | undefined;
     if (!track) return reply.code(404).send({ error: 'not found' });
     const abs = path.join(resolvePath(track.folder), track.path);
-    if (!fs.existsSync(abs)) return reply.code(404).send({ error: 'file missing' });
-
-    const stat = fs.statSync(abs);
-    const type = MIME[path.extname(abs).toLowerCase()] ?? 'application/octet-stream';
-    reply.header('Accept-Ranges', 'bytes');
-    reply.header('Content-Type', type);
-
-    const range = req.headers.range;
-    const m = range ? /^bytes=(\d*)-(\d*)$/.exec(range) : null;
-    if (m && (m[1] || m[2])) {
-      const start = m[1] ? Number(m[1]) : Math.max(0, stat.size - Number(m[2]));
-      const end = m[1] && m[2] ? Math.min(Number(m[2]), stat.size - 1) : stat.size - 1;
-      if (start >= stat.size || start > end) {
-        return reply.code(416).header('Content-Range', `bytes */${stat.size}`).send();
-      }
-      reply.code(206);
-      reply.header('Content-Range', `bytes ${start}-${end}/${stat.size}`);
-      reply.header('Content-Length', end - start + 1);
-      return reply.send(fs.createReadStream(abs, { start, end }));
-    }
-    reply.header('Content-Length', stat.size);
-    return reply.send(fs.createReadStream(abs));
+    return sendFileRange(req, reply, abs);
   });
 }

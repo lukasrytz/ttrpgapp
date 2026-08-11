@@ -33,9 +33,9 @@ export interface TrackFilter {
 }
 
 /**
- * A directory holding audio, offered for inclusion in the library. Device
+ * A directory holding audio (music or SFX), offered for inclusion in the library. Device
  * libraries mix TTRPG music with everything else, so the user picks which
- * folders count.
+ * folders count. Also used for SFX folders.
  */
 export interface MusicFolder {
   /** Grouping key: the track's containing directory. */

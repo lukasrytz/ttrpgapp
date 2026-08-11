@@ -8,7 +8,6 @@ import { backend, initBackend, getCapacitorBackend } from './backend';
 import { availableClientPlugins } from './plugins';
 import { initCompendium, installPluginRuntime } from './compendium';
 import { syncManager } from './sync/manager';
-import { castManager } from './cast/manager';
 import './styles.css';
 
 const queryClient = new QueryClient({
@@ -26,11 +25,6 @@ async function bootstrap() {
   const capacitorBackend = getCapacitorBackend();
   if (Capacitor.isNativePlatform() && capacitorBackend) {
     void syncManager.init(capacitorBackend, queryClient);
-    // Casting is Android-only: it needs the native Cast SDK and the on-device
-    // media server. Loaded lazily so the web build never pulls in the bridge.
-    void import('./cast/plugin').then(({ nativeCastTarget, nativeMediaServer }) =>
-      castManager.init(nativeCastTarget, nativeMediaServer),
-    );
   }
 
   createRoot(document.getElementById('root')!).render(

@@ -4,6 +4,7 @@ import type {
   MusicScanResult,
   Note,
   NoteMeta,
+  SfxClip,
   TagDimension,
   Track,
 } from '@ttrpgapp/shared';
@@ -31,6 +32,14 @@ export interface Backend {
   updateTrack(id: number, update: TrackUpdate): Promise<void>;
   /** Playable URL for a track (sync; used by the crossfade engine). */
   trackUrl(track: Track): string;
+
+  listSfx(): Promise<SfxClip[]>;
+  scanSfx(): Promise<MusicScanResult>;
+  /** Every folder holding audio, so the user can pick which hold sound effects. */
+  listSfxFolders(): Promise<MusicFolder[]>;
+  setSfxFolders(paths: string[]): Promise<void>;
+  /** Playable URL for a clip (sync, like trackUrl). */
+  sfxUrl(clip: SfxClip): string;
 
   listNotes(): Promise<NoteMeta[]>;
   readNote(path: string): Promise<Note>;

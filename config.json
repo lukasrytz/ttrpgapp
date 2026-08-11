@@ -1,5 +1,6 @@
 {
   "musicFolders": ["D:/DnD"],
+  "sfxFolders": [],
   "notesVault": "./vault",
   "dataDir": "./data",
   "plugins": {

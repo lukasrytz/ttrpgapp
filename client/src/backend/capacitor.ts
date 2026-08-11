@@ -8,6 +8,7 @@ import type {
   MusicTagCatalog,
   Note,
   NoteMeta,
+  SfxClip,
   TagDimension,
   Track,
   TrackTagEntry,
@@ -24,7 +25,9 @@ import {
   filterByFolders,
   foldersOf,
   getFolderSelection,
+  getSfxFolders,
   setFolderSelection,
+  setSfxFolders,
 } from '../music/folders';
 import type { Backend, TrackUpdate } from './types';
 
@@ -50,6 +53,7 @@ const DATA_DIR = Directory.Data;
 const VAULT_BASE = 'vault';
 const TAGS_FILE = 'music-tags.json';
 const PATHS_FILE = 'music-paths.json';
+const SFX_PATHS_FILE = 'sfx-paths.json';
 
 // Music tags live as a synced plugin-state doc `state/music/tags` (Preferences
 // key `music:tags`), keyed by device-independent trackSignature so they carry
@@ -222,6 +226,56 @@ export class CapacitorBackend implements Backend {
 
   trackUrl(track: Track): string {
     return Capacitor.convertFileSrc(track.path);
+  }
+
+  private async listDeviceSfx(): Promise<SfxClip[]> {
+    const { tracks } = await MusicLibrary.list();
+    return tracks.map((t, i) => {
+      const id = i + 1;
+      const stem = (t.path.split(/[\\/]/).pop() ?? t.path).replace(/\.[^.]+$/, '').trim();
+      return {
+        id,
+        path: t.path,
+        folder: '',
+        name: stem || t.title,
+        durationSec: t.durationSec || null,
+      };
+    });
+  }
+
+  async listSfx(): Promise<SfxClip[]> {
+    const [clips, selection] = await Promise.all([
+      this.listDeviceSfx(),
+      getSfxFolders(),
+    ]);
+    return filterByFolders(clips, selection);
+  }
+
+  async listSfxFolders(): Promise<MusicFolder[]> {
+    const [clips, selection] = await Promise.all([
+      this.listDeviceSfx(),
+      getSfxFolders(),
+    ]);
+    return foldersOf(clips, selection);
+  }
+
+  async setSfxFolders(paths: string[]): Promise<void> {
+    await setSfxFolders(paths);
+  }
+
+  async scanSfx(): Promise<MusicScanResult> {
+    const known = new Set(await readJson<string[]>(SFX_PATHS_FILE, []));
+    const clips = await this.listSfx();
+    const current = clips.map((c) => c.path);
+    const currentSet = new Set(current);
+    const added = current.filter((p) => !known.has(p)).length;
+    const removed = [...known].filter((p) => !currentSet.has(p)).length;
+    await writeJson(SFX_PATHS_FILE, current);
+    return { added, removed, total: current.length };
+  }
+
+  sfxUrl(clip: SfxClip): string {
+    return Capacitor.convertFileSrc(clip.path);
   }
 
   /**

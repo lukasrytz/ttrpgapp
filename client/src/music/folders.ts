@@ -10,7 +10,8 @@ import type { MusicFolder } from '@ttrpgapp/shared';
  *
  * No selection stored = every folder, which is what a fresh install gets.
  */
-const SELECTION_KEY = 'music.folders';
+export const MUSIC_FOLDERS_KEY = 'music.folders';
+export const SFX_FOLDERS_KEY = 'sfx.folders';
 
 /** Just enough of a Track to locate it; server tracks are folder-root + relative path. */
 type Located = { folder: string; path: string };
@@ -30,8 +31,8 @@ function labelOf(key: string): string {
 }
 
 /** Selected folders, or null when every folder counts. */
-export async function getFolderSelection(): Promise<Set<string> | null> {
-  const { value } = await Preferences.get({ key: SELECTION_KEY });
+export async function getFolderSelection(key = MUSIC_FOLDERS_KEY): Promise<Set<string> | null> {
+  const { value } = await Preferences.get({ key });
   if (!value) return null;
   try {
     const parsed: unknown = JSON.parse(value);
@@ -42,9 +43,19 @@ export async function getFolderSelection(): Promise<Set<string> | null> {
 }
 
 /** Restrict the library to `paths`; null clears the restriction (all folders). */
-export async function setFolderSelection(paths: string[] | null): Promise<void> {
-  if (paths === null) await Preferences.remove({ key: SELECTION_KEY });
-  else await Preferences.set({ key: SELECTION_KEY, value: JSON.stringify(paths) });
+export async function setFolderSelection(paths: string[] | null, key = MUSIC_FOLDERS_KEY): Promise<void> {
+  if (paths === null) await Preferences.remove({ key });
+  else await Preferences.set({ key, value: JSON.stringify(paths) });
+}
+
+/** SFX folders are opt-in — unlike music, no stored selection means NO folders (empty set). */
+export async function getSfxFolders(): Promise<Set<string>> {
+  const selection = await getFolderSelection(SFX_FOLDERS_KEY);
+  return selection ?? new Set<string>();
+}
+
+export async function setSfxFolders(paths: string[]): Promise<void> {
+  await setFolderSelection(paths, SFX_FOLDERS_KEY);
 }
 
 export function filterByFolders<T extends Located>(tracks: T[], selection: Set<string> | null): T[] {
