@@ -32,9 +32,9 @@ them in order; 7–9 depend on the deck existing but not on each other beyond th
 | --- | --- |
 | Landing page | Deck takes `/`; Music moves to `/music` |
 | Layout | Multi-page (tabs), responsive grid, drag-to-arrange, explicit Edit mode |
-| Button actions, commits 1–6 | music filter / pinned track · SFX one-shot + ambience loop · navigate |
+| Button actions, commits 1–6 | music filter / pinned track · SFX one-shot + ambience loop · navigate · **macro** (one press, several actions) |
 | Button actions, commits 7–9 | counter / clock on the button face · dice roll (with optional DC) |
-| Explicitly **out** | transport buttons, panic/stop-all button, deck volume sliders, "pin to deck" from Music page, macro buttons, plugin-contributed actions |
+| Explicitly **out** | transport buttons, panic/stop-all button, deck volume sliders, "pin to deck" from Music page, plugin-contributed actions |
 | SFX source | Its own folders, scanned into a separate library |
 | SFX metadata | Folder + filename only. No tags, no intensity |
 | SFX folder selection on Android | A **separate** SFX folder picker, distinct from the music one |
@@ -318,7 +318,11 @@ interface SfxApi {
   /** Clip signatures currently looping, for lighting up deck buttons. */
   activeLoops: string[];
   fire(clip: SfxClip, volume: number): void;
+  /** Explicit start/stop as well as toggle — macros need to force a loop on or off
+   *  rather than flip it (see `sfxLoop.mode` in commit 4). */
   toggleLoop(clip: SfxClip, volume: number): void;
+  startLoop(clip: SfxClip, volume: number): void;
+  stopLoop(sig: string): void;
   stopAllSfx(): void;
   masterVolume: number;
   setMasterVolume(v: number): void;
@@ -363,14 +367,18 @@ export interface SerializedFilter {
   search: string;
 }
 
-export type DeckAction =
+/** Everything a macro may contain. Split out so macros cannot nest — by construction, not
+ *  by a runtime guard. */
+export type LeafDeckAction =
   | { kind: 'musicFilter'; filter: SerializedFilter }
   | { kind: 'musicTrack'; sig: string; title: string }
   | { kind: 'sfxOneShot'; sig: string; name: string; volume: number }
-  | { kind: 'sfxLoop'; sig: string; name: string; volume: number }
+  | { kind: 'sfxLoop'; sig: string; name: string; volume: number; mode: 'toggle' | 'start' | 'stop' }
   | { kind: 'navigate'; to: string }
   | { kind: 'openNote'; path: string }
   | { kind: 'openEntry'; packId: string; entryId: string };
+
+export type DeckAction = LeafDeckAction | { kind: 'macro'; actions: LeafDeckAction[] };
 
 export interface DeckButton {
   id: string;
@@ -393,9 +401,18 @@ export function migrateDeck(raw: unknown): DeckLayout;
 `sfx*.name` are cached copies so a button can still render a sensible label when the underlying
 file is missing on this device.
 
+**Why `sfxLoop` carries a `mode`.** A plain toggle is wrong inside a macro — pressing
+"Tavern" twice must not silence the tavern. `mode` defaults to `'toggle'` for a standalone
+button and to `'start'` inside a macro. It pays for itself immediately: `'stop'` lets a
+scene macro end the *previous* scene's ambience, which is exactly what you want when the
+party leaves the tavern for the road.
+
 `migrateDeck` must be genuinely defensive — this doc arrives over Drive sync from another
 device and may predate any schema change. Drop unrecognised action kinds and malformed buttons
 rather than throwing; a corrupt deck must never white-screen the app's landing page.
+Specifically: default a missing `sfxLoop.mode` to `'toggle'`, drop malformed entries *within*
+a macro individually rather than discarding the whole button, and drop any nested macro that
+arrives from a future schema version.
 
 ### Filter serialization — `client/src/music/filter.ts`
 
@@ -427,6 +444,9 @@ First launch must not show an empty grid. Seed one page, "Session", with navigat
 `DEFAULT_TAG_VOCAB` — battle/tense, peaceful/exploration, social. Do not seed SFX buttons; there
 is no SFX library yet on a fresh install.
 
+Seed one **macro** too — "Combat!" = the battle/tense filter + navigate to the tracker. It costs
+nothing and it is how a new user discovers that a button can do more than one thing.
+
 ---
 
 ## Commit 5 — Deck UI
@@ -455,11 +475,15 @@ export function runDeckAction(action: DeckAction, deps: DeckActionDeps): void
   `player.playQueue(shuffleTracks(filtered))`. Reuses `matches` from `client/src/music/filter.ts`
   and `shuffleTracks` from `PlayerProvider.tsx`. No-op if the filter matches nothing.
 - `musicTrack` → resolve by signature, `player.playTrack(track)`.
-- `sfxOneShot` / `sfxLoop` → resolve by signature, `sfx.fire(...)` / `sfx.toggleLoop(...)`.
+- `sfxOneShot` → resolve by signature, `sfx.fire(...)`.
+- `sfxLoop` → resolve by signature, then `toggleLoop` / `startLoop` / `stopLoop` per `mode`.
 - `navigate` → `navigate(to)`.
 - `openNote` → `navigate('/notes?path=' + encodeURIComponent(path))`.
 - `openEntry` → `window.dispatchEvent(new CustomEvent('open-compendium-entry', { detail: { packId, entryId } }))`.
   `CommandPalette` is mounted app-wide and already listens for this, so it works from anywhere.
+- `macro` → run every non-`navigate` action in order, then at most one `navigate` **last**, so
+  navigation cannot pre-empt the rest. Every leaf action is synchronous, and `PlayerProvider` /
+  `SfxProvider` live at the root, so audio a macro starts survives the navigation that follows it.
 
 **Small enabling change:** `client/src/pages/NotesPage.tsx` currently keeps its selection in
 `useState` and is not deep-linkable. Read an optional `?path=` via `useSearchParams` on mount to
@@ -495,7 +519,15 @@ rather than a drag. Enable the sensors **only in edit mode**.
 ### Button editor — `client/src/deck/ButtonEditor.tsx`
 
 A modal reusing `.palette-backdrop`. Fields: label, emoji (plain text input, 1–2 chars), colour
-swatches, size toggle, action kind select, then kind-specific pickers:
+swatches, size toggle, action kind select, then kind-specific pickers.
+
+> **Structure this deliberately, it is the load-bearing decision here.** Extract the per-kind
+> portion into its own reusable `ActionForm` component — an action kind select plus that kind's
+> picker, editing one `LeafDeckAction`. A plain button renders a single `ActionForm`; a macro
+> button renders a reorderable list of them. Built as one flat form with a `switch` in the
+> middle instead, macro support means restructuring the whole editor later.
+
+The per-kind pickers:
 
 - **musicFilter** — the same tag chips the Music page uses. Extract that chip row out of
   `MusicPage.tsx` into `client/src/music/FilterChips.tsx` and use it in both places rather than
@@ -507,6 +539,12 @@ swatches, size toggle, action kind select, then kind-specific pickers:
   (`availableClientPlugins` from `client/src/plugins.ts`).
 - **openNote** — picker over `backend().listNotes()`.
 - **openEntry** — reuses `compendiumIndex.search()` from `client/src/compendium.ts`.
+
+**Macro buttons** render a reorderable list of `ActionForm`s with add/remove, reusing the same
+dnd-kit sortable machinery as the grid. Constraints enforced in the editor, not at runtime: at
+most one music action and at most one navigate action per macro (a second of either is
+meaningless — last would simply win), and a cap of 8 actions so the form stays legible. New
+`sfxLoop` rows added inside a macro default to `mode: 'start'`; standalone ones to `'toggle'`.
 
 ---
 
@@ -646,9 +684,9 @@ Logic-only Vitest units in `client/test/` (remember: `client/tsconfig.json` incl
 
 | File | Covers |
 | --- | --- |
-| `client/test/deck.test.ts` | `migrateDeck` tolerance (missing version, unknown action kind, malformed button, non-object input), `starterDeck()` shape |
+| `client/test/deck.test.ts` | `migrateDeck` tolerance (missing version, unknown action kind, malformed button, non-object input), plus macro cases: a nested macro is dropped, a malformed entry inside a macro is dropped without losing the button, missing `sfxLoop.mode` defaults to `'toggle'`; `starterDeck()` shape |
 | `client/test/filter.test.ts` (extend) | `toSerializable`/`fromSerializable` round-trip, incl. empty dims and unicode search |
-| `client/test/deckActions.test.ts` | `runDeckAction` for every kind, against fake `player`/`sfx`/`navigate`; missing-signature cases are no-ops |
+| `client/test/deckActions.test.ts` | `runDeckAction` for every kind, against fake `player`/`sfx`/`navigate`; missing-signature cases are no-ops; `sfxLoop` honours all three `mode` values; a macro runs its actions in order with `navigate` last |
 | `client/test/sfxEngine.test.ts` | Layering, loop start/stop/volume, `onOneShotActiveChange` edges — using an injected fake audio-element factory |
 | `client/test/ramp.test.ts` | `rampValue` with injected clock and scheduler |
 | `client/test/musicFolders.test.ts` (extend) | SFX opt-in semantics: no stored selection ⇒ empty, not all |
@@ -665,8 +703,12 @@ Logic-only Vitest units in `client/test/` (remember: `client/tsconfig.json` incl
 2. `npm run dev`, open http://localhost:5173:
    - The deck is the landing page and shows the starter buttons; Music is at `/music` and still
      works (filter chips, play, tag editor, folder picker).
-   - Edit mode: add a page, add one button of each of the seven action kinds, drag to reorder,
-     rename and delete a page. Reload — everything persists.
+   - Edit mode: add a page, add one button of each action kind, drag to reorder, rename and
+     delete a page. Reload — everything persists.
+   - **Macros:** build a "Tavern" button — start the crowd ambience + a social music filter +
+     open the tavern note. Press it **twice** and confirm the ambience keeps playing rather
+     than toggling off (this is what `mode: 'start'` buys). Then build a "Back on the road"
+     macro that stops that loop and starts another, and confirm the handover is clean.
    - Point `sfxFolders` in `config.json` at a folder of short clips, rescan in Settings, then
      bind a one-shot and a loop button.
    - **The core acceptance test:** start music from a filter button, fire a one-shot — the clip
@@ -717,10 +759,10 @@ Two notes for whoever picks that up:
 ## Deliberately not in scope
 
 Transport / panic / stop-all buttons, deck volume sliders, "pin current filter to deck" from the
-Music page, macro buttons (one press → several actions), per-button ducking overrides, restoring
-ambience loops after a reload, timers, random generators from the SRD pack, a persistent roll
-log, and a player-facing full-screen display. Each is a clean follow-up on top of the structures
-above — `DeckAction` is a discriminated union precisely so new kinds are additive.
+Music page, per-button ducking overrides, restoring ambience loops after a reload, timers,
+random generators from the SRD pack, a persistent roll log, and a player-facing full-screen
+display. Each is a clean follow-up on top of the structures above — `DeckAction` is a
+discriminated union precisely so new kinds are additive.
 
 ## Unrelated bug noticed while planning
 
