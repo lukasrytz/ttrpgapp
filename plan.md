@@ -4,6 +4,59 @@
 > Every decision below was agreed with the repo owner — do not revisit them, and do not
 > expand scope beyond what is listed. Nothing here has been implemented yet.
 
+## Notes for the implementing agent
+
+**Take one commit at a time.** The nine commits are ordered by dependency and each is
+independently revertable. Do not attempt several at once, and do not reorder them —
+commit 1 must land before the audio work, and commit 7 before 8 and 9.
+
+**Verify after every commit. Nothing else will.**
+
+```bash
+npm run typecheck && npm test    # at the repo root
+```
+
+There is no linter and no formatter in this repo, and **CI runs neither the tests nor the
+typecheck** — `.github/workflows/android.yml` only builds the APK (it does run on
+`claude/**` branches, so it is a genuine safety net for the Android edits in commit 1,
+which cannot be verified locally without the SDK). If typecheck or tests fail, fix them
+before committing rather than after.
+
+### Risk per commit — where to slow down
+
+| Commit | Risk | Why |
+| --- | --- | --- |
+| 1 Remove Chromecast | low, unverifiable locally | Mostly deletion against an explicit list. The Gradle/manifest edits need the CI APK build to confirm. |
+| 2 SFX library | low | Deliberately mirrors `server/src/music.ts` and the existing backend methods. Follow the existing shapes rather than inventing new ones. |
+| 3 SFX engine | **highest** | Imperative audio: element pooling, volume ramps, duck factor × user volume held in refs. This is code that compiles, looks right, and misbehaves audibly. There is no jsdom, so tests will not catch a wrong ramp — construct `SfxEngine` with the injected fake element factory and assert on the fake. |
+| 4 Deck data model | low–medium | `migrateDeck` must **never throw**: it parses a document that arrives over Drive sync from another device. Every malformed-input case in the test table must pass. |
+| 5 Deck UI | **high** | Largest surface. dnd-kit sensors, the edit-mode/press separation, long-press vs drag, the `ActionForm` extraction, the macro list. Build `ActionForm` as a reusable component from the start — retrofitting it is the expensive path. |
+| 6 Routing/settings/README | low | Small localized edits. |
+| 7 Toast | low | Prerequisite for 8 and 9. Keep the event detail serializable — no ReactNodes through a CustomEvent. |
+| 8 Counters | low | The pure `bumpCounter` carries the logic; keep it pure and test it. |
+| 9 Dice | low | Self-contained pure logic. `parseDice` returns `null` on bad input and never throws. |
+
+### Repo traps that catch agents
+
+- **`noUncheckedIndexedAccess` is on.** Indexing an array yields `T | undefined`. Handle it
+  properly; do not scatter `!` to silence the compiler. The existing `a[j]!` uses are in
+  code that has already proven the index — match that bar.
+- **No formatter.** Match the surrounding file by hand: 2-space indent, single quotes,
+  semicolons, trailing commas, ~100 columns.
+- **`client/test` is not typechecked** (`client/tsconfig.json` includes only `src`). Keep
+  test code simple; a type error there will not surface until it fails at runtime.
+- **`.js` extensions** on relative imports inside `shared/` and `server/` only — never in
+  `client/` or `plugins/`.
+- **Add no dependencies** beyond the three `@dnd-kit` packages named in commit 5.
+- **Do not reformat, rename, or refactor files you are not otherwise changing.** The diff
+  should be readable as the feature.
+
+### When something is unspecified
+
+Prefer the smaller option and say so in the commit message. The "Explicitly **out**" row in
+the decisions table and the "Deliberately not in scope" section at the end are binding —
+they are choices the repo owner already made, not gaps to fill.
+
 ## Context
 
 The app is a GM's companion used live at the table: tagged ambient music, prep notes,
