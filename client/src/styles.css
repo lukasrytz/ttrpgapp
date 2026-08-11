@@ -1691,20 +1691,6 @@ a {
   box-shadow: 0 4px 12px rgba(245, 158, 11, 0.15);
 }
 
-.generator-toast {
-  position: fixed;
-  bottom: 80px;
-  left: 50%;
-  transform: translateX(-50%);
-  background: #10b981;
-  color: #000;
-  font-weight: 700;
-  padding: 8px 18px;
-  border-radius: 20px;
-  z-index: 100;
-  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.5);
-  animation: fadeIn 0.2s ease;
-}
 
 .generator-card {
   background: var(--bg-panel);

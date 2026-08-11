@@ -1,8 +1,19 @@
 name: Android debug APK
 
+# Builds on main, and on every pull request regardless of branch name. The
+# branch-name allow-list this used to carry silently stopped matching when work
+# moved from claude/** to feature/**, so nothing got built.
 on:
   push:
-    branches: [main, claude/**]
+    branches: [main]
+    paths:
+      - 'client/**'
+      - 'shared/**'
+      - 'plugins/**'
+      - 'package.json'
+      - 'package-lock.json'
+      - '.github/workflows/android.yml'
+  pull_request:
     paths:
       - 'client/**'
       - 'shared/**'

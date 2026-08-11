@@ -76,6 +76,46 @@ describe('runDeckAction', () => {
     expect(fire).toHaveBeenCalledWith(testClip, 0.8);
   });
 
+  /**
+   * showToast dispatches on `window`; there is no jsdom here, so stand up a bare
+   * EventTarget to observe what the user would actually be told.
+   */
+  function captureToasts() {
+    const messages: string[] = [];
+    const target = new EventTarget();
+    const previous = (globalThis as Record<string, unknown>)['window'];
+    (globalThis as Record<string, unknown>)['window'] = target;
+    target.addEventListener('ttrpg-toast', (e) => {
+      messages.push((e as CustomEvent<{ message: string }>).detail.message);
+    });
+    return {
+      messages,
+      restore: () => {
+        (globalThis as Record<string, unknown>)['window'] = previous;
+      },
+    };
+  }
+
+  it('reports what a toggled loop actually did, not the stale pre-toggle state', () => {
+    const { deps, toggleLoop } = createMockDeps();
+    // The provider's `activeLoops` is React state and has not re-rendered yet, so
+    // it still says the loop is running while the toggle has just stopped it.
+    (deps.sfx as { activeLoops: string[] }).activeLoops = [clipSig];
+    toggleLoop.mockReturnValue(false);
+
+    const toasts = captureToasts();
+    try {
+      runDeckAction(
+        { kind: 'sfxLoop', sig: clipSig, name: 'Thunder', volume: 0.5, mode: 'toggle' },
+        deps,
+      );
+    } finally {
+      toasts.restore();
+    }
+
+    expect(toasts.messages).toEqual(['Stopped Thunder']);
+  });
+
   it('runs sfxLoop action with all modes', () => {
     const { deps, toggleLoop, startLoop, stopLoop } = createMockDeps();
 

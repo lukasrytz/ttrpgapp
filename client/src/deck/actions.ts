@@ -1,5 +1,5 @@
 import type { DeckAction, LeafDeckAction, SfxClip, Track } from '@ttrpgapp/shared';
-import { trackSignature } from '@ttrpgapp/shared';
+import { formatDiceResult, rollDice, trackSignature } from '@ttrpgapp/shared';
 import type { PlayerApi } from '../player/PlayerProvider';
 import { shuffleTracks } from '../player/PlayerProvider';
 import type { SfxApi } from '../player/SfxProvider';
@@ -8,6 +8,7 @@ import { showToast } from '../toast';
 import { modifyCounter } from './counterStore';
 import { rollDice } from './dice';
 import { availableClientPlugins } from '../plugins';
+
 
 export interface DeckActionDeps {
   tracks: Track[];
@@ -57,8 +58,10 @@ function runLeafAction(action: LeafDeckAction, deps: DeckActionDeps): void {
           deps.sfx.startLoop(found, action.volume);
           showToast(`Started ${name}`, '🌊');
         } else {
-          deps.sfx.toggleLoop(found, action.volume);
-          const isNowActive = deps.sfx.activeLoops?.includes(action.sig) ?? true;
+          // Use the toggle's return value: `activeLoops` is React state and still
+          // holds the pre-toggle value at this point, so reading it here reports
+          // the opposite of what just happened.
+          const isNowActive = deps.sfx.toggleLoop(found, action.volume);
           showToast(`${isNowActive ? 'Started' : 'Stopped'} ${name}`, '🌊');
         }
       }
@@ -114,8 +117,8 @@ function runLeafAction(action: LeafDeckAction, deps: DeckActionDeps): void {
       try {
         const res = rollDice(action.formula);
         const label = action.label || action.formula;
-        const rollsText = res.allRolls.length > 0 ? ` [${res.allRolls.join(', ')}]` : '';
-        showToast(`${label}: ${res.total}${rollsText}`, '🎲');
+        const breakdown = formatDiceResult(res);
+        showToast(`${label}: ${res.total}${breakdown ? ` ${breakdown}` : ''}`, '🎲');
       } catch {
         showToast(`Invalid dice formula: ${action.formula}`, '⚠️');
       }
