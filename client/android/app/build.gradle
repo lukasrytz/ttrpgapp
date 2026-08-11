@@ -52,9 +52,8 @@ android {
             signingConfig signingConfigs.debug
         }
         release {
-            // Left off deliberately: Capacitor and the Cast SDK resolve plugins and
-            // callbacks reflectively, and R8 stripping them fails only at runtime.
-            // Not worth the size saving for a sideloaded app.
+            // Left off deliberately: Capacitor resolves plugins and callbacks reflectively,
+            // and R8 stripping them fails only at runtime. Not worth the size saving for a sideloaded app.
             minifyEnabled false
             proguardFiles getDefaultProguardFile('proguard-android.txt'), 'proguard-rules.pro'
             if (hasReleaseSigning) {
@@ -76,11 +75,6 @@ dependencies {
     implementation "androidx.coordinatorlayout:coordinatorlayout:$androidxCoordinatorLayoutVersion"
     implementation "androidx.core:core-splashscreen:$coreSplashScreenVersion"
     implementation "androidx.core:core:$androidxCoreVersion"
-    // Casting: Google Cast SDK + mediarouter for device discovery, and a pure-Java
-    // embedded HTTP server (no NDK) to serve local audio to the cast device.
-    implementation "com.google.android.gms:play-services-cast-framework:$castFrameworkVersion"
-    implementation "androidx.mediarouter:mediarouter:$androidxMediaRouterVersion"
-    implementation "org.nanohttpd:nanohttpd:$nanohttpdVersion"
     implementation project(':capacitor-android')
     testImplementation "junit:junit:$junitVersion"
     androidTestImplementation "androidx.test.ext:junit:$androidxJunitVersion"

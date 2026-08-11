@@ -140,35 +140,6 @@ Other providers (Dropbox, self-hosted WebDAV) can be added later — the sync
 engine is provider-agnostic (`client/src/sync/`), Google Drive is the first
 `SyncTarget`.
 
-## Casting (Android, Chromecast)
-
-Tap the speaker icon in the player bar to send music to a Chromecast. Nothing to
-configure — but it's worth knowing how it works, because the constraint shapes
-everything: **a Chromecast is not a speaker you push audio to.** It fetches media
-from a URL over your Wi-Fi and plays it itself.
-
-So while casting, the app starts a small HTTP server **on the phone** and hands
-the Chromecast a `http://<phone-ip>:<port>/…` URL for each track. That server:
-
-- serves **only** the tracks in your library — requests address them by index
-  into an allow-list captured when the session starts, so no request can ever
-  name an arbitrary file path;
-- is scoped by a **random token** in the URL, regenerated every session;
-- runs in a foreground service (the "Casting music" notification) holding a
-  Wi-Fi lock, so a long session doesn't die with the screen off;
-- stops the moment you disconnect or leave the app.
-
-Requirements and current limits:
-
-- The phone and the Chromecast **must be on the same Wi-Fi network**. Guest
-  networks and APs with client isolation will show no devices.
-- Volume, play/pause, and skip control the **receiver** while casting.
-- **No crossfade while casting.** Google's Default Media Receiver plays one
-  track at a time, so tracks change with a hard cut. Crossfade still applies to
-  local playback. Getting it on the cast device needs our own receiver app
-  (see `cast_app_id` in `app/src/main/res/values/strings.xml`) — a later step.
-- Casting is Android-only; the browser build hides the button.
-
 ## Local web app
 
 ```bash
@@ -212,8 +183,6 @@ and hit **Rescan library**.
   **Start** one — rolling initiative and loading the tracker with the chosen
   party members. (Party and encounters sync across devices like everything else.)
 
-- **Cast to speakers** (Android) — play the music through a Chromecast. See
-  [Casting](#casting-android-chromecast).
 - **Cross-device sync** (Android) — notes, combat state, and music tags kept in
   step across your phone and tablet through your own Google Drive, offline-first.
   See [Cross-device sync](#cross-device-sync-android-google-drive).
@@ -231,17 +200,6 @@ selected at startup (`client/src/backend/`):
   for the notes vault, `@capacitor/preferences` for plugin state, and a native
   `MusicLibrary` plugin (`client/android/…/MusicLibraryPlugin.java`) that reads
   audio from MediaStore.
-
-### Casting (`client/src/cast/`)
-
-Two collaborating native plugins behind plain TypeScript interfaces: a
-`MediaServer` (NanoHTTPD in `MediaServerPlugin.java`, serving the allow-list over
-the LAN) and a `CastTarget` (the Google Cast SDK in `CastPlugin.java`, for
-discovery and transport). `CastManager` (`cast/manager.ts`) owns the session and
-holds no React or Capacitor imports, so the whole state machine is unit-tested
-against fakes (`client/test/cast.test.ts`). `PlayerProvider` routes playback to
-whichever output is live — `PlayerApi` is unchanged, so the queue, filters, and
-UI don't know the difference.
 
 Compendium search runs entirely client-side over an in-memory index
 (`shared/src/compendiumSearch.ts`) fed by plugin-bundled packs, so it works

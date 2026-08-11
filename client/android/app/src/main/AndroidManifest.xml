@@ -30,22 +30,6 @@
 
         </activity>
 
-        <!--
-          Tells the Cast SDK where to find our receiver app ID / options.
-        -->
-        <meta-data
-            android:name="com.google.android.gms.cast.framework.OPTIONS_PROVIDER_CLASS_NAME"
-            android:value="ch.rytz.ttrpgapp.CastOptionsProvider" />
-
-        <!--
-          Keeps the LAN media server (and the Wi-Fi radio) alive while casting;
-          a table session is hours of playback with the screen off.
-        -->
-        <service
-            android:name=".MediaServerService"
-            android:exported="false"
-            android:foregroundServiceType="mediaPlayback" />
-
         <provider
             android:name="androidx.core.content.FileProvider"
             android:authorities="${applicationId}.fileprovider"
@@ -64,18 +48,4 @@
     <uses-permission
         android:name="android.permission.READ_EXTERNAL_STORAGE"
         android:maxSdkVersion="32" />
-
-    <!-- Casting: discover the receiver, hold the Wi-Fi radio, and run the media server. -->
-    <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE" />
-    <uses-permission android:name="android.permission.ACCESS_WIFI_STATE" />
-    <uses-permission android:name="android.permission.CHANGE_WIFI_MULTICAST_STATE" />
-    <uses-permission android:name="android.permission.WAKE_LOCK" />
-    <uses-permission android:name="android.permission.FOREGROUND_SERVICE" />
-    <uses-permission android:name="android.permission.FOREGROUND_SERVICE_MEDIA_PLAYBACK" />
-    <!-- Required from Android 13 for local-network device discovery. -->
-    <uses-permission
-        android:name="android.permission.NEARBY_WIFI_DEVICES"
-        android:usesPermissionFlags="neverForLocation" />
-    <!-- The persistent "casting" notification. -->
-    <uses-permission android:name="android.permission.POST_NOTIFICATIONS" />
 </manifest>
