@@ -98,6 +98,12 @@ function runLeafAction(action: LeafDeckAction, deps: DeckActionDeps): void {
       showToast(`Opened ${action.entryId}`, '📚');
       break;
     }
+    case 'openEncounter': {
+      const startParam = action.autoStart ? '&start=1' : '';
+      deps.navigate(`/p/dnd5e/encounters?id=${encodeURIComponent(action.encounterId)}${startParam}`);
+      showToast(`Opened encounter`, '📋');
+      break;
+    }
     case 'counter': {
       const newVal = modifyCounter(action.counterId, action.delta, action.max);
       const display = action.max !== undefined ? `${newVal}/${action.max}` : `${newVal}`;

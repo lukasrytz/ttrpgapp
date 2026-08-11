@@ -55,6 +55,8 @@ export function defaultLeafAction(kind: LeafDeckAction['kind'], isMacroRow = fal
       return { kind: 'counter', counterId: 'counter-1', name: 'Counter', delta: 1 };
     case 'roll':
       return { kind: 'roll', formula: '1d20+5', label: 'd20 Roll' };
+    case 'openEncounter':
+      return { kind: 'openEncounter', encounterId: '', autoStart: false };
   }
 }
 
@@ -85,6 +87,15 @@ export default function ActionForm({
     queryFn: () => backend().listNotes(),
   });
   const notes = notesQuery.data ?? [];
+
+  const encountersQuery = useQuery({
+    queryKey: ['encounters'],
+    queryFn: async () => {
+      const raw = await backend().kvGet('dnd5e', 'encounters');
+      return raw ? (JSON.parse(raw) as Array<{ id: string; name: string }>) : [];
+    },
+  });
+  const encounters = encountersQuery.data ?? [];
 
   const navOptions = useMemo(() => getNavOptions(), []);
 
@@ -136,6 +147,9 @@ export default function ActionForm({
           </option>
           <option value="openEntry" disabled={disabledKinds?.has('openEntry')}>
             Open Compendium Entry
+          </option>
+          <option value="openEncounter" disabled={disabledKinds?.has('openEncounter')}>
+            Open Saved Encounter
           </option>
           <option value="counter" disabled={disabledKinds?.has('counter')}>
             Counter / Clock
@@ -460,6 +474,41 @@ export default function ActionForm({
                 />
               </div>
             </div>
+          </div>
+        )}
+
+        {value.kind === 'openEncounter' && (
+          <div className="form-group" style={{ marginTop: '8px' }}>
+            <label className="small muted">Saved Encounter</label>
+            {encounters.length > 0 ? (
+              <select
+                value={value.encounterId}
+                onChange={(e) => onChange({ ...value, encounterId: e.target.value })}
+              >
+                <option value="">-- Select Saved Encounter --</option>
+                {encounters.map((e) => (
+                  <option key={e.id} value={e.id}>
+                    {e.name || e.id}
+                  </option>
+                ))}
+              </select>
+            ) : (
+              <input
+                type="text"
+                placeholder="Encounter ID (e.g. enc-123)"
+                value={value.encounterId}
+                onChange={(e) => onChange({ ...value, encounterId: e.target.value })}
+              />
+            )}
+
+            <label style={{ display: 'flex', alignItems: 'center', gap: '8px', marginTop: '8px' }}>
+              <input
+                type="checkbox"
+                checked={value.autoStart ?? false}
+                onChange={(e) => onChange({ ...value, autoStart: e.target.checked })}
+              />
+              <span className="small">Auto-start (open roll initiative dialog immediately)</span>
+            </label>
           </div>
         )}
       </div>

@@ -125,6 +125,32 @@ describe('migrateDeck', () => {
       label: 'Fireball Damage',
     });
   });
+
+  it('migrates valid openEncounter actions', () => {
+    const raw = {
+      pages: [
+        {
+          id: 'p1',
+          name: 'EncounterPage',
+          buttons: [
+            {
+              id: 'e1',
+              label: 'Goblin Ambush',
+              action: { kind: 'openEncounter', encounterId: 'enc-42', autoStart: true },
+            },
+          ],
+        },
+      ],
+    };
+
+    const migrated = migrateDeck(raw);
+    const btn = migrated.pages[0]!.buttons[0]!;
+    expect(btn.action).toEqual({
+      kind: 'openEncounter',
+      encounterId: 'enc-42',
+      autoStart: true,
+    });
+  });
 });
 
 describe('starterDeck', () => {
