@@ -6,9 +6,7 @@ import type { SfxApi } from '../player/SfxProvider';
 import { fromSerializable, matches } from '../music/filter';
 import { showToast } from '../toast';
 import { modifyCounter } from './counterStore';
-import { rollDice } from './dice';
 import { availableClientPlugins } from '../plugins';
-
 
 export interface DeckActionDeps {
   tracks: Track[];
