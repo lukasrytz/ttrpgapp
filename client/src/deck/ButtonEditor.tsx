@@ -3,7 +3,8 @@ import {
   DndContext,
   closestCenter,
   KeyboardSensor,
-  PointerSensor,
+  MouseSensor,
+  TouchSensor,
   useSensor,
   useSensors,
   type DragEndEvent,
@@ -84,7 +85,8 @@ export default function ButtonEditor({ button, onSave, onDelete, onClose }: Butt
   );
 
   const sensors = useSensors(
-    useSensor(PointerSensor, { activationConstraint: { distance: 8 } }),
+    useSensor(MouseSensor, { activationConstraint: { distance: 5 } }),
+    useSensor(TouchSensor, { activationConstraint: { delay: 150, tolerance: 5 } }),
     useSensor(KeyboardSensor, { coordinateGetter: sortableKeyboardCoordinates }),
   );
 
@@ -209,8 +211,20 @@ export default function ButtonEditor({ button, onSave, onDelete, onClose }: Butt
           <hr style={{ borderColor: 'var(--border)', margin: '16px 0' }} />
 
           <div className="form-group">
-            <label className="small muted">Action Type</label>
-            <div className="chip-row">
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+              <label className="small muted">Action Type</label>
+              {isMacro && macroActions.length < 8 && (
+                <button
+                  type="button"
+                  className="chip chip-on"
+                  style={{ fontSize: '12px', padding: '4px 10px' }}
+                  onClick={handleAddMacroRow}
+                >
+                  + Add Action ({macroActions.length}/8)
+                </button>
+              )}
+            </div>
+            <div className="chip-row" style={{ marginTop: '4px' }}>
               <button
                 type="button"
                 className={`chip ${!isMacro ? 'chip-on' : ''}`}
