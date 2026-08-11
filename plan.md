@@ -21,14 +21,20 @@ does not exist today (the app has exactly one audio path and it can only play on
 It also removes Chromecast support, which the owner reports never really worked and which
 otherwise complicates every audio change below.
 
+Commits 1–6 deliver the deck itself. Commits 7–9 add two further button kinds that came out
+of a follow-on brainstorm — **counters on the button face** and a **dice roller** — together
+with the transient-overlay chrome they both need, which the app also lacks entirely. Take
+them in order; 7–9 depend on the deck existing but not on each other beyond the overlay.
+
 ### Decisions already made (do not re-litigate)
 
 | Decision | Choice |
 | --- | --- |
 | Landing page | Deck takes `/`; Music moves to `/music` |
 | Layout | Multi-page (tabs), responsive grid, drag-to-arrange, explicit Edit mode |
-| Button actions in v1 | music filter / pinned track · SFX one-shot + ambience loop · navigate |
-| Explicitly **out** of v1 | transport buttons, panic/stop-all button, deck volume sliders, "pin to deck" from Music page, plugin-contributed actions |
+| Button actions, commits 1–6 | music filter / pinned track · SFX one-shot + ambience loop · navigate |
+| Button actions, commits 7–9 | counter / clock on the button face · dice roll (with optional DC) |
+| Explicitly **out** | transport buttons, panic/stop-all button, deck volume sliders, "pin to deck" from Music page, macro buttons, plugin-contributed actions |
 | SFX source | Its own folders, scanned into a separate library |
 | SFX metadata | Folder + filename only. No tags, no intensity |
 | SFX folder selection on Android | A **separate** SFX folder picker, distinct from the music one |
@@ -525,6 +531,114 @@ swatches, size toggle, action kind select, then kind-specific pickers:
 
 ---
 
+## Commit 7 — Transient overlay (prerequisite for the two below)
+
+The app has **no toast or notification system at all**. Transient feedback today is
+`window.alert` / `window.confirm` / `window.prompt` plus inline text. A dice result and a
+counter reset both need somewhere to go, so build the overlay once, first.
+
+New `client/src/components/Toast.tsx`, following the app's window-CustomEvent convention
+exactly — a `ttrpg-toast` event and a `<ToastHost />` mounted once in `App.tsx` beside
+`CommandPalette`:
+
+```ts
+export function showToast(msg: { title: string; detail?: string; ttlMs?: number }): void
+```
+
+Bottom-centre, above the player bar. Auto-dismiss ~3.5s (5s for rolls), tap to dismiss,
+stacks at most 3, `aria-live="polite"`. Keep the detail serializable — no ReactNodes
+through the event. Styles copy the existing `.entry-panel` / `.palette-backdrop` patterns
+already in `styles.css`.
+
+---
+
+## Commit 8 — Counters and clocks on button faces
+
+Torches burning, rations, arrows, legendary resistances, a doom clock, "rounds until the
+ritual completes". This is the feature that makes the deck something you *read* rather
+than only press. There is no generic counter primitive today — every counter in the app
+(round, death saves, exhaustion, HP, intensity) is domain-specific.
+
+New `DeckAction` variant in `shared/src/deck.ts`:
+
+```ts
+| { kind: 'counter'; counterId: string; initial: number; step: number;
+    min: number | null; max: number | null; wrap: boolean }
+```
+
+**Values live separately from layout.** Button config stays in `deck:layout`; counter
+*values* go in a second doc `deck:counters` (`Record<string, number>`), so pressing a
+button does not rewrite the whole layout and the two sync independently. Both ride the
+existing `deck` kv namespace — still no sync-engine changes.
+
+New `client/src/deck/counters.ts`:
+
+```ts
+/** Pure: clamp to min/max, or wrap around when `wrap`. The unit-testable core. */
+export function bumpCounter(state: CounterState, id: string, step: number,
+                            opts: { min: number | null; max: number | null; wrap: boolean }): CounterState
+export async function loadCounters(): Promise<CounterState>
+export function saveCounters(state: CounterState): void   // 400ms debounce + 'ttrpg-local-changed'
+```
+
+Behaviour:
+- The button face renders the value large, above the label.
+- Press = `+step`. **Long-press = reset to `initial`**, acknowledged with a toast so the
+  reset is never silent.
+- Long-press applies only *outside* edit mode, so it cannot collide with dnd-kit's
+  `PointerSensor`, which is enabled only *inside* edit mode. Keep that separation strict.
+- Two buttons may deliberately share a `counterId` — bump it on one page, read it on
+  another. Do not de-duplicate them.
+
+---
+
+## Commit 9 — Dice roller
+
+The app has no dice module, no expression parser, and no advantage/crit/damage logic. Its
+entire randomness is two **duplicated, module-private** helpers —
+`plugins/dnd5e/src/TrackerPage.tsx:20` and `plugins/dnd5e/src/rosters.ts:38`, both
+`1 + Math.floor(rng() * 20)`.
+
+New pure `shared/src/dice.ts`, with an injectable RNG in the established style of
+`instantiate(enc, party, rng = Math.random)` (`plugins/dnd5e/src/rosters.ts:50`):
+
+```ts
+export interface DiceTerm { count: number; sides: number; keep?: { mode: 'h' | 'l'; n: number } }
+export interface DiceFormula { terms: DiceTerm[]; modifier: number }
+export interface DiceResult {
+  formula: string; total: number; modifier: number;
+  rolls: { sides: number; values: number[]; kept: boolean[] }[];
+}
+
+/** Returns null on invalid input — never throws. */
+export function parseDice(input: string): DiceFormula | null;
+export function rollDice(f: DiceFormula, rng: () => number = Math.random): DiceResult;
+export function formatDiceResult(r: DiceResult): string;
+export function d20(rng?: () => number): number;
+```
+
+Grammar: `NdM`, `dM` (count defaults to 1), `+K` / `-K`, several terms (`1d8+2d6+3`), and
+keep-highest / keep-lowest (`4d6kh3`, `2d20kl1`). **Advantage and disadvantage fall out of
+`2d20kh1` / `2d20kl1`** — they need no separate concept.
+
+New `DeckAction` variant, with an optional target number:
+
+```ts
+| { kind: 'roll'; formula: string; label: string; dc?: number }
+```
+
+The result goes to the toast from commit 7: total large, breakdown small, and
+`17 vs DC 15 — success` when `dc` is set. A persistent roll log is deliberately deferred.
+
+**De-duplicate while here:** replace both private `d20()` copies with the shared one.
+Keep `instantiate`'s injectable-`rng` parameter exactly as it is so
+`plugins/dnd5e/test/rosters.test.ts` keeps passing unchanged.
+
+Editor support: the button editor gets a formula field that validates live via
+`parseDice` (invalid input disables save), an optional DC field, and a 🎲 preview button.
+
+---
+
 ## Tests
 
 Logic-only Vitest units in `client/test/` (remember: `client/tsconfig.json` includes only
@@ -538,6 +652,8 @@ Logic-only Vitest units in `client/test/` (remember: `client/tsconfig.json` incl
 | `client/test/sfxEngine.test.ts` | Layering, loop start/stop/volume, `onOneShotActiveChange` edges — using an injected fake audio-element factory |
 | `client/test/ramp.test.ts` | `rampValue` with injected clock and scheduler |
 | `client/test/musicFolders.test.ts` (extend) | SFX opt-in semantics: no stored selection ⇒ empty, not all |
+| `client/test/counters.test.ts` | `bumpCounter` — clamp at min/max, wrap-around, negative steps, unknown id starts from `initial` |
+| `client/test/dice.test.ts` | `parseDice` (`d20`, `2d6+3`, `1d8+2d6+3`, `4d6kh3`, `2d20kl1`, whitespace, invalid ⇒ `null`), `rollDice` against a seeded fake RNG, keep-h/l picks the right dice, `formatDiceResult` |
 | `server/test/sfx.test.ts` | Scan add/remove diffing against a temp directory (this workspace *is* typechecked) |
 
 ---
@@ -564,10 +680,55 @@ Logic-only Vitest units in `client/test/` (remember: `client/tsconfig.json` incl
    the SFX folder picker sees the clips folder (see the `IS_MUSIC` caveat).
 4. Deck sync: with Drive connected on two Android devices, edit the deck on one and confirm it
    appears on the other after a sync.
+5. Counters: bind a counter button (initial 4, step −1, min 0), press it four times and confirm
+   the face counts down and stops at 0; long-press and confirm it resets to 4 with a toast.
+   Reload — the value persists. Bind a second button to the same `counterId` on another page
+   and confirm both show the same value.
+6. Dice: bind `2d6+3`, `4d6kh3` and `2d20kh1`, and one with a DC. Confirm the toast shows the
+   total, the breakdown, which dice were kept, and success/failure against the DC. Type an
+   invalid formula in the editor and confirm save is disabled rather than the app throwing.
+   Confirm rolling initiative in the tracker and starting an encounter still work after the
+   `d20()` de-duplication.
 
-## Deliberately not in v1
+## Recorded decisions — agreed, not scheduled
+
+**Combat-tracker verbs** (next turn, previous turn, start encounter X, damage/heal the current
+combatant, apply/clear conditions, short/long rest, end combat) are **not planned yet**. When
+they are picked up, the agreed approach is a contribution point on `ClientPlugin`:
+
+```ts
+actions?: { id: string; label: string; icon: string; run(runtime: PluginRuntime): void }[]
+```
+
+so the deck lists whatever the enabled plugins offer and stays system-agnostic. The rejected
+alternative was having core deck code import `@ttrpgapp/plugin-dnd5e` directly — faster to
+ship, but it hard-codes game-system knowledge into core and breaks the `PluginRuntime` boundary
+the repo deliberately maintains. Recorded so it is not re-litigated.
+
+Two notes for whoever picks that up:
+- **`previousTurn` does not exist** in the tracker at all.
+- The tracker's verbs are closures inside `TrackerPage` JSX with a single `update(fn)` funnel
+  (`TrackerPage.tsx:42-54`); they would want extracting as pure `(Encounter) => Encounter`
+  reducers beside `sortedCombatants` in `plugins/dnd5e/src/trackerTypes.ts` first.
+- No new plumbing is needed to *drive* the tracker: `EncountersPage.tsx:103-112` shows the whole
+  trick — `kvSet` the encounter, then dispatch `ttrpg-local-changed` + `ttrpg-sync-updated`, and
+  a mounted `TrackerPage` reloads itself. `instantiate()` is already exported and pure.
+
+## Deliberately not in scope
 
 Transport / panic / stop-all buttons, deck volume sliders, "pin current filter to deck" from the
-Music page, plugin-contributed deck actions (e.g. "start encounter X"), per-button ducking
-overrides, and restoring ambience loops after a reload. Each is a clean follow-up on top of the
-structures above — `DeckAction` is a discriminated union precisely so new kinds are additive.
+Music page, macro buttons (one press → several actions), per-button ducking overrides, restoring
+ambience loops after a reload, timers, random generators from the SRD pack, a persistent roll
+log, and a player-facing full-screen display. Each is a clean follow-up on top of the structures
+above — `DeckAction` is a discriminated union precisely so new kinds are additive.
+
+## Unrelated bug noticed while planning
+
+`plugins/dnd5e/src/TrackerPage.tsx:168` is a no-op in both branches:
+
+```ts
+concentration: sign < 0 && prev.concentration ? prev.concentration : prev.concentration
+```
+
+It appears to have been meant to flag a concentration check when a combatant takes damage.
+Not fixed here — it is unrelated to the deck — but it belongs in `bugs.md`.
