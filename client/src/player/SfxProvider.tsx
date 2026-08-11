@@ -20,7 +20,8 @@ export interface SfxApi {
   fire(clip: SfxClip, volume: number): void;
   /** Explicit start/stop as well as toggle — macros need to force a loop on or off
    *  rather than flip it (see `sfxLoop.mode` in commit 4). */
-  toggleLoop(clip: SfxClip, volume: number): void;
+  /** Returns whether the loop is running *after* the toggle. */
+  toggleLoop(clip: SfxClip, volume: number): boolean;
   startLoop(clip: SfxClip, volume: number): void;
   stopLoop(sig: string): void;
   stopAllSfx(): void;
@@ -132,9 +133,10 @@ export function SfxProvider({ children }: { children: ReactNode }) {
       const sig = trackSignature(clip.path, clip.durationSec);
       if (engine.activeLoops().includes(sig)) {
         stopLoop(sig);
-      } else {
-        startLoop(clip, volume);
+        return false;
       }
+      startLoop(clip, volume);
+      return true;
     },
     [engine, startLoop, stopLoop],
   );
