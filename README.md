@@ -164,6 +164,8 @@ and hit **Rescan library**.
 
 ## Features
 
+- **Stream Deck** — customizable soundboard and macro grid page by page. Trigger music filters, specific tracks, sound effect one-shots, ambience loops, page navigation, prep notes, or compendium entries. Buttons can be styled with custom genre colors and icons, resized (`1x1` / `2x1`), reordered via drag-and-drop, and combined into single-tap macros (e.g. start combat music + turn on battle ambience + navigate to tracker). Decks sync seamlessly across devices.
+- **Sound Effects & Ambience Loops** — dedicated SFX library support with audio element pooling, loop toggle/start/stop controls, master volume, and smooth automatic music ducking (~250ms dip, ~600ms restore) whenever sound effects play.
 - **Music** — tracks tagged along theme / mood / landscape dimensions plus an
   intensity rating (1–5). Filter chips build a shuffled queue; playback
   crossfades between tracks via a dual-deck engine (Web Audio, with an
