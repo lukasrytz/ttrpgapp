@@ -26,7 +26,10 @@ export function getNavOptions() {
   ];
   for (const plugin of availableClientPlugins) {
     for (const item of plugin.nav) {
-      options.push({ path: item.path, label: item.label });
+      options.push({
+        path: `/p/${plugin.id}${item.path}`,
+        label: `${plugin.name}: ${item.label}`,
+      });
     }
   }
   return options;

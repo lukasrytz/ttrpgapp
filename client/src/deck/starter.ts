@@ -15,7 +15,7 @@ export function starterDeck(): DeckLayout {
             icon: '⚔️',
             color: 'crimson',
             size: '1x1',
-            action: { kind: 'navigate', to: '/tracker' },
+            action: { kind: 'navigate', to: '/p/dnd5e/tracker' },
           },
           {
             id: 'btn-compendium',
@@ -23,7 +23,7 @@ export function starterDeck(): DeckLayout {
             icon: '📚',
             color: 'indigo',
             size: '1x1',
-            action: { kind: 'navigate', to: '/compendium' },
+            action: { kind: 'navigate', to: '/p/dnd5e/compendium' },
           },
           {
             id: 'btn-notes',
@@ -103,7 +103,7 @@ export function starterDeck(): DeckLayout {
                     search: '',
                   },
                 },
-                { kind: 'navigate', to: '/tracker' },
+                { kind: 'navigate', to: '/p/dnd5e/tracker' },
               ],
             },
           },

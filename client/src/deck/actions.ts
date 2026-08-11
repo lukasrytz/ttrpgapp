@@ -7,6 +7,7 @@ import { fromSerializable, matches } from '../music/filter';
 import { showToast } from '../toast';
 import { modifyCounter } from './counterStore';
 import { rollDice } from './dice';
+import { availableClientPlugins } from '../plugins';
 
 export interface DeckActionDeps {
   tracks: Track[];
@@ -64,7 +65,22 @@ function runLeafAction(action: LeafDeckAction, deps: DeckActionDeps): void {
       break;
     }
     case 'navigate': {
-      deps.navigate(action.to);
+      let target = action.to;
+      if (
+        !target.startsWith('/p/') &&
+        target !== '/' &&
+        target !== '/music' &&
+        !target.startsWith('/notes') &&
+        target !== '/generators'
+      ) {
+        for (const plugin of availableClientPlugins) {
+          if (plugin.nav.some((item) => item.path === target)) {
+            target = `/p/${plugin.id}${target}`;
+            break;
+          }
+        }
+      }
+      deps.navigate(target);
       break;
     }
     case 'openNote': {
