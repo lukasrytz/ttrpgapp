@@ -14,14 +14,30 @@ function ago(ts: number): string {
   return `${Math.round(s / 3600)}h ago`;
 }
 
+const THEMES = [
+  { id: 'theme-fantasy', label: 'D&D / Fantasy', icon: '🏰', color: '#f59e0b', desc: 'Candlelight Amber' },
+  { id: 'theme-horror', label: 'Call of Cthulhu / Horror', icon: '🐙', color: '#10b981', desc: 'Eldritch Emerald' },
+  { id: 'theme-scifi', label: 'Mothership / Sci-Fi', icon: '🚀', color: '#06b6d4', desc: 'CRT Cyan & Alarm Orange' },
+  { id: 'theme-universal', label: 'Universal Dark', icon: '🌙', color: '#6366f1', desc: 'High-Contrast Cyber' },
+];
+
 export default function SettingsPage() {
   const native = Capacitor.isNativePlatform();
   const qc = useQueryClient();
   const [clientId, setClientId] = useState('');
+  const [currentTheme, setCurrentTheme] = useState<string>(
+    () => localStorage.getItem('ttrpg-theme') || 'theme-fantasy',
+  );
   const [state, setState] = useState<SyncState>(syncManager.state);
   const [busy, setBusy] = useState(false);
   const [importMsg, setImportMsg] = useState<string | null>(null);
   const fileInput = useRef<HTMLInputElement>(null);
+
+  const changeTheme = (themeId: string) => {
+    setCurrentTheme(themeId);
+    localStorage.setItem('ttrpg-theme', themeId);
+    window.dispatchEvent(new CustomEvent('ttrpg-theme-change', { detail: themeId }));
+  };
 
   useEffect(() => {
     void Preferences.get({ key: 'sync.google.clientId' }).then(({ value }) => {
@@ -69,6 +85,42 @@ export default function SettingsPage() {
   return (
     <div className="page">
       <h1>Settings</h1>
+
+      <section className="settings-section">
+        <h2>Genre UI Theme</h2>
+        <p className="muted">
+          Select a visual theme tailored to your campaign genre. Compatible across D&D 5e, Call of Cthulhu, and Mothership.
+        </p>
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))', gap: '10px', marginTop: '12px', marginBottom: '24px' }}>
+          {THEMES.map((t) => {
+            const active = currentTheme === t.id;
+            return (
+              <button
+                key={t.id}
+                onClick={() => changeTheme(t.id)}
+                style={{
+                  textAlign: 'left',
+                  padding: '12px 14px',
+                  borderRadius: '10px',
+                  border: active ? `2px solid ${t.color}` : '1px solid var(--border)',
+                  background: active ? 'var(--bg-hover)' : 'var(--bg-panel)',
+                  boxShadow: active ? `0 0 14px ${t.color}40` : 'none',
+                  cursor: 'pointer',
+                  display: 'flex',
+                  flexDirection: 'column',
+                  gap: '4px',
+                }}
+              >
+                <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+                  <span style={{ fontSize: '18px' }}>{t.icon}</span>
+                  <span style={{ fontSize: '13px', fontWeight: 700, color: t.color }}>{t.label}</span>
+                </div>
+                <span className="small muted">{t.desc}</span>
+              </button>
+            );
+          })}
+        </div>
+      </section>
 
       <section className="settings-section">
         <h2>Cross-device sync</h2>

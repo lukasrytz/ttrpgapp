@@ -36,8 +36,11 @@ export interface Backend {
   readNote(path: string): Promise<Note>;
   writeNote(path: string, content: string): Promise<void>;
   deleteNote(path: string): Promise<void>;
-  createNote(title: string): Promise<{ path: string }>;
-  createSession(title: string): Promise<{ path: string }>;
+  createNote(title: string, campaign?: string): Promise<{ path: string }>;
+  createSession(title: string, campaign?: string): Promise<{ path: string }>;
+  createCampaign(name: string): Promise<void>;
+  deleteCampaign(name: string): Promise<void>;
+  renameNote(path: string, newPath: string): Promise<{ path: string }>;
 
   kvGet(pluginId: string, key: string): Promise<string | null>;
   kvSet(pluginId: string, key: string, value: string): Promise<void>;

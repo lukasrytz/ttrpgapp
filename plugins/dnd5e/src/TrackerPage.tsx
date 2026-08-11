@@ -1,6 +1,8 @@
 import { useEffect, useRef, useState } from 'react';
 import type { CompendiumSearchHit } from '@ttrpgapp/shared';
 import { getPluginRuntime } from '@ttrpgapp/shared/plugin-client';
+import BottomSheet from './BottomSheet';
+import { rollHitDice } from './rosters';
 import {
   CONDITIONS,
   EMPTY_ENCOUNTER,
@@ -8,6 +10,37 @@ import {
   type Combatant,
   type Encounter,
 } from './trackerTypes';
+
+const CONDITION_DESCRIPTIONS: Record<string, string> = {
+  blinded:
+    "A blinded creature can't see and automatically fails any ability check that requires sight. Attack rolls against the creature have advantage, and the creature's attack rolls have disadvantage.",
+  charmed:
+    "A charmed creature can't attack the charmer or target the charmer with harmful abilities or magical effects. The charmer has advantage on any ability check to interact socially with the creature.",
+  deafened:
+    "A deafened creature can't hear and automatically fails any ability check that requires hearing.",
+  frightened:
+    "A frightened creature has disadvantage on ability checks and attack rolls while the source of its fear is within line of sight. The creature can't willingly move closer to the source of its fear.",
+  grappled:
+    "A grappled creature's speed becomes 0, and it can't benefit from any bonus to its speed. The condition ends if the grappler is incapacitated or if an effect removes the grappled creature from the reach of the grappler.",
+  incapacitated: "An incapacitated creature can't take actions or reactions.",
+  invisible:
+    "An invisible creature is impossible to see without the aid of magic or a special sense. Attack rolls against the creature have disadvantage, and the creature's attack rolls have advantage.",
+  paralyzed:
+    "A paralyzed creature is incapacitated and can't move or speak. The creature automatically fails Strength and Dexterity saving throws. Attack rolls against the creature have advantage, and any attack that hits the creature is a critical hit if the attacker is within 5 feet of the creature.",
+  petrified:
+    "A petrified creature is transformed, along with any nonmagical objects it is wearing or carrying, into a solid inanimate substance (usually stone). Its weight increases by a factor of ten, and it ceases aging. The creature is incapacitated, can't move or speak, and is unaware of its surroundings.",
+  poisoned: "A poisoned creature has disadvantage on attack rolls and ability checks.",
+  prone:
+    "A prone creature's only movement option is to crawl, unless it stands up. The creature has disadvantage on attack rolls. An attack roll against the creature has advantage if the attacker is within 5 feet. Otherwise, the attack roll has disadvantage.",
+  restrained:
+    "A restrained creature's speed becomes 0, and it can't benefit from any bonus to its speed. Attack rolls against the creature have advantage, and the creature's attack rolls have disadvantage. The creature has disadvantage on Dexterity saving throws.",
+  stunned:
+    "A stunned creature is incapacitated, can't move, and can speak only falteringly. The creature automatically fails Strength and Dexterity saving throws. Attack rolls against the creature have advantage.",
+  unconscious:
+    "An unconscious creature is incapacitated, can't move or speak, and is unaware of its surroundings. The creature drops whatever it's holding and falls prone. The creature automatically fails Strength and Dexterity saving throws. Attack rolls against the creature have advantage, and any attack that hits the creature is a critical hit if the attacker is within 5 feet.",
+  exhaustion:
+    'Exhaustion is measured in six levels. Level 1: Disadvantage on ability checks. Level 2: Speed halved. Level 3: Disadvantage on attack rolls and saving throws. Level 4: HP max halved. Level 5: Speed reduced to 0. Level 6: Death.',
+};
 
 function openEntry(packId: string, entryId: string) {
   getPluginRuntime().openCompendiumEntry(packId, entryId);
@@ -26,6 +59,10 @@ export default function TrackerPage() {
   const saveTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
   const [editingConditions, setEditingConditions] = useState<string | null>(null);
 
+  // BottomSheet states for touch interactions
+  const [activeCondition, setActiveCondition] = useState<string | null>(null);
+  const [hpSheetCombatant, setHpSheetCombatant] = useState<Combatant | null>(null);
+
   const load = () =>
     void getPluginRuntime()
       .kvGet('dnd5e', 'encounter')
@@ -33,7 +70,6 @@ export default function TrackerPage() {
 
   useEffect(() => {
     load();
-    // Refresh when a background sync pulled a newer encounter from another device.
     const onSynced = () => load();
     window.addEventListener('ttrpg-sync-updated', onSynced);
     return () => window.removeEventListener('ttrpg-sync-updated', onSynced);
@@ -72,6 +108,11 @@ export default function TrackerPage() {
       const next = e.turnIndex + 1;
       return next >= n ? { ...e, round: e.round + 1, turnIndex: 0 } : { ...e, turnIndex: next };
     });
+
+  const rollMonsterHp = (c: Combatant) => {
+    const rolled = rollHitDice(c.hitDice, c.maxHp);
+    updateCombatant(c.id, (prev) => ({ ...prev, hp: rolled, maxHp: rolled }));
+  };
 
   return (
     <div className="page tracker-page">
@@ -125,6 +166,9 @@ export default function TrackerPage() {
                 onToggleConditions={() =>
                   setEditingConditions(editingConditions === c.id ? null : c.id)
                 }
+                onInspectCondition={(cond) => setActiveCondition(cond)}
+                onOpenHpSheet={() => setHpSheetCombatant(c)}
+                onRollHp={() => rollMonsterHp(c)}
                 onChange={(fn) => updateCombatant(c.id, fn)}
                 onRemove={() =>
                   update((e) => ({ ...e, combatants: e.combatants.filter((x) => x.id !== c.id) }))
@@ -133,6 +177,62 @@ export default function TrackerPage() {
             ))}
           </tbody>
         </table>
+      )}
+
+      {/* Touch Action Bar at bottom */}
+      {order.length > 0 && (
+        <div className="touch-action-bar">
+          <div className="touch-bar-info">
+            {enc.round > 0 ? (
+              <span>Round {enc.round} · <strong>{active?.name}</strong></span>
+            ) : (
+              <span>Combat ready</span>
+            )}
+          </div>
+          <button className="primary touch-bar-btn" onClick={nextTurn}>
+            {enc.turnIndex < 0 ? '▶ Start Combat' : '⏭ Next Turn'}
+          </button>
+        </div>
+      )}
+
+      {/* Condition Inspect BottomSheet */}
+      <BottomSheet
+        isOpen={Boolean(activeCondition)}
+        onClose={() => setActiveCondition(null)}
+        title={activeCondition ? activeCondition.toUpperCase() : ''}
+      >
+        <div className="condition-inspect">
+          <p>{activeCondition ? CONDITION_DESCRIPTIONS[activeCondition] ?? 'Condition details.' : ''}</p>
+          <div className="header-actions" style={{ marginTop: 16 }}>
+            {activeCondition && (
+              <button
+                className="primary"
+                onClick={() => {
+                  openEntry('dnd5e-srd', `condition:${activeCondition}`);
+                  setActiveCondition(null);
+                }}
+              >
+                Open in Compendium
+              </button>
+            )}
+          </div>
+        </div>
+      </BottomSheet>
+
+      {/* Touch HP Keypad BottomSheet */}
+      {hpSheetCombatant && (
+        <HpKeypadSheet
+          c={hpSheetCombatant}
+          onClose={() => setHpSheetCombatant(null)}
+          onApply={(newHp) => {
+            updateCombatant(hpSheetCombatant.id, (prev) => ({
+              ...prev,
+              hp: newHp,
+              deathSaves: newHp === 0 && prev.hp > 0 ? { successes: 0, failures: 0 } : prev.deathSaves,
+            }));
+            setHpSheetCombatant(null);
+          }}
+        />
       )}
     </div>
   );
@@ -143,6 +243,9 @@ function CombatantRow({
   isActive,
   editingConditions,
   onToggleConditions,
+  onInspectCondition,
+  onOpenHpSheet,
+  onRollHp,
   onChange,
   onRemove,
 }: {
@@ -150,6 +253,9 @@ function CombatantRow({
   isActive: boolean;
   editingConditions: boolean;
   onToggleConditions: () => void;
+  onInspectCondition: (cond: string) => void;
+  onOpenHpSheet: () => void;
+  onRollHp: () => void;
   onChange: (fn: (c: Combatant) => Combatant) => void;
   onRemove: () => void;
 }) {
@@ -165,7 +271,6 @@ function CombatantRow({
         ...prev,
         hp,
         deathSaves: dropped ? { successes: 0, failures: 0 } : prev.deathSaves,
-        concentration: sign < 0 && prev.concentration ? prev.concentration : prev.concentration,
       };
     });
     setAmount('');
@@ -197,7 +302,17 @@ function CombatantRow({
             <span>{c.name}</span>
           )}
           {c.isPlayer && <span className="tag">PC</span>}
-          {c.concentration && (
+          {!c.isPlayer && c.hitDice && (
+            <button
+              className="chip icon-chip"
+              title={`Re-roll HP (${c.hitDice})`}
+              onClick={onRollHp}
+              style={{ marginLeft: 6 }}
+            >
+              🎲 {c.hitDice}
+            </button>
+          )}
+          {c.concentration ? (
             <button
               className="chip chip-on conc"
               title="Concentrating — click to drop"
@@ -205,8 +320,7 @@ function CombatantRow({
             >
               ⌛ conc.
             </button>
-          )}
-          {!c.concentration && (
+          ) : (
             <button
               className="chip conc"
               title="Mark concentrating"
@@ -217,13 +331,13 @@ function CombatantRow({
           )}
         </td>
         <td className="cell-hp">
-          <span className={c.hp <= c.maxHp / 4 ? 'hp-low' : ''}>
-            {c.hp}/{c.maxHp}
-          </span>
+          <button className="hp-touch-btn" onClick={onOpenHpSheet}>
+            <span className={c.hp <= c.maxHp / 4 ? 'hp-low' : ''}>
+              {c.hp}/{c.maxHp}
+            </span>
+          </button>
           <span className="hp-controls">
-            <button onClick={() => applyHp(-1)} title="Damage">
-              −
-            </button>
+            <button onClick={() => applyHp(-1)} title="Damage">−</button>
             <input
               className="hp-amount"
               value={amount}
@@ -233,9 +347,7 @@ function CombatantRow({
                 if (e.key === 'Enter') applyHp(-1);
               }}
             />
-            <button onClick={() => applyHp(1)} title="Heal">
-              +
-            </button>
+            <button onClick={() => applyHp(1)} title="Heal">+</button>
           </span>
         </td>
         <td>{c.ac ?? '—'}</td>
@@ -244,8 +356,8 @@ function CombatantRow({
             <button
               key={cond}
               className="chip chip-on"
-              title="Click for rules; ✕ in editor to remove"
-              onClick={() => openEntry('dnd5e-srd', `condition:${cond}`)}
+              title="Click for rules"
+              onClick={() => onInspectCondition(cond)}
             >
               {cond}
             </button>
@@ -253,7 +365,7 @@ function CombatantRow({
           {c.exhaustion > 0 && (
             <button
               className="chip chip-on"
-              onClick={() => openEntry('dnd5e-srd', 'condition:exhaustion')}
+              onClick={() => onInspectCondition('exhaustion')}
             >
               exhaustion {c.exhaustion}
             </button>
@@ -263,9 +375,7 @@ function CombatantRow({
           </button>
         </td>
         <td className="cell-remove">
-          <button onClick={onRemove} title="Remove">
-            ✕
-          </button>
+          <button onClick={onRemove} title="Remove">✕</button>
         </td>
       </tr>
       {down && c.isPlayer && (
@@ -312,6 +422,60 @@ function CombatantRow({
         </tr>
       )}
     </>
+  );
+}
+
+function HpKeypadSheet({
+  c,
+  onClose,
+  onApply,
+}: {
+  c: Combatant;
+  onClose: () => void;
+  onApply: (newHp: number) => void;
+}) {
+  const [val, setVal] = useState('');
+
+  const modify = (delta: number) => {
+    const next = Math.max(0, Math.min(c.maxHp, c.hp + delta));
+    onApply(next);
+  };
+
+  const submitCustom = (sign: 1 | -1) => {
+    const n = Number(val);
+    if (Number.isFinite(n) && n > 0) {
+      modify(sign * n);
+    }
+  };
+
+  return (
+    <BottomSheet isOpen={true} onClose={onClose} title={`Adjust HP: ${c.name}`}>
+      <div className="hp-keypad-container">
+        <div className="hp-current-stat">
+          Current HP: <strong>{c.hp}</strong> / {c.maxHp}
+        </div>
+        <div className="hp-preset-grid">
+          <button className="hp-btn damage-btn" onClick={() => modify(-10)}>-10 HP</button>
+          <button className="hp-btn damage-btn" onClick={() => modify(-5)}>-5 HP</button>
+          <button className="hp-btn damage-btn" onClick={() => modify(-1)}>-1 HP</button>
+          <button className="hp-btn heal-btn" onClick={() => modify(1)}>+1 HP</button>
+          <button className="hp-btn heal-btn" onClick={() => modify(5)}>+5 HP</button>
+          <button className="hp-btn heal-btn" onClick={() => modify(10)}>+10 HP</button>
+        </div>
+        <div className="hp-custom-row">
+          <input
+            className="hp-custom-input"
+            type="number"
+            placeholder="Amount"
+            value={val}
+            onChange={(e) => setVal(e.target.value)}
+          />
+          <button className="hp-btn damage-btn" onClick={() => submitCustom(-1)}>Damage</button>
+          <button className="hp-btn heal-btn" onClick={() => submitCustom(1)}>Heal</button>
+          <button className="hp-btn" onClick={() => onApply(c.maxHp)}>Full HP</button>
+        </div>
+      </div>
+    </BottomSheet>
   );
 }
 
@@ -393,6 +557,8 @@ function AddCombatant({
     if (!entry) return;
     const f = (entry.fields ?? {}) as { hp?: number; ac?: number; dexMod?: number };
     const maxHp = f.hp ?? 1;
+    const hitDiceMatch = entry.body ? /\*\*HP\*\*\s+\d+\s+\(([^)]+)\)/i.exec(entry.body) : null;
+    const hitDice = hitDiceMatch ? hitDiceMatch[1] : undefined;
     onAdd({
       id: newId(),
       name: uniqueName(entry.name),
@@ -406,6 +572,7 @@ function AddCombatant({
       isPlayer: false,
       deathSaves: { successes: 0, failures: 0 },
       monsterRef: { packId: hit.packId, entryId: hit.entryId },
+      hitDice,
     });
     setMonsterQuery('');
   };

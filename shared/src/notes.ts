@@ -3,27 +3,56 @@ export const STARTER_TEMPLATE = `# {{title}}
 
 *Prepared {{date}}*
 
-## Recap
+## 1. Review the Characters
 
--
+- **Character 1**: 
+- **Character 2**: 
+- **Character 3**: 
 
-## Strong start
+## 2. Create a Strong Start
 
--
+- 
 
-## Scenes
+## 3. Outline Potential Scenes
 
-### Scene 1
+- 
+- 
+- 
 
--
+## 4. Define Secrets and Clues
 
-## NPCs & places
+1. 
+2. 
+3. 
+4. 
+5. 
+6. 
+7. 
+8. 
+9. 
+10. 
 
--
+## 5. Develop Fantastic Locations
 
-## Treasure & clues
+- **Location 1**: 
+- **Location 2**: 
 
--
+## 6. Outline Important NPCs
+
+- 
+- 
+- 
+
+## 7. Choose Relevant Monsters
+
+- 
+- 
+- 
+
+## 8. Select Treasure and Magic Item Rewards
+
+- 
+- 
 `;
 
 /** Fills template placeholders when creating a session note. */
@@ -42,6 +71,7 @@ export interface NoteMeta {
   path: string;
   title: string;
   isSession: boolean;
+  campaign?: string;
   modifiedAt: number;
 }
 

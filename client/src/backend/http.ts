@@ -83,12 +83,24 @@ export class HttpBackend implements Backend {
     await send('DELETE', `/api/notes/note?path=${encodeURIComponent(path)}`);
   }
 
-  createNote(title: string) {
-    return send<{ path: string }>('POST', '/api/notes/create', { title });
+  createNote(title: string, campaign?: string) {
+    return send<{ path: string }>('POST', '/api/notes/create', { title, campaign });
   }
 
-  createSession(title: string) {
-    return send<{ path: string }>('POST', '/api/notes/session', { title });
+  createSession(title: string, campaign?: string) {
+    return send<{ path: string }>('POST', '/api/notes/session', { title, campaign });
+  }
+
+  async createCampaign(name: string) {
+    await send('POST', '/api/notes/campaign', { name });
+  }
+
+  async deleteCampaign(name: string) {
+    await send('DELETE', `/api/notes/campaign?name=${encodeURIComponent(name)}`);
+  }
+
+  renameNote(path: string, newPath: string) {
+    return send<{ path: string }>('POST', '/api/notes/rename', { path, newPath });
   }
 
   async kvGet(pluginId: string, key: string) {

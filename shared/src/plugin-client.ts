@@ -35,6 +35,7 @@ export interface PluginRuntime {
   getCompendiumEntry(packId: string, entryId: string): CompendiumEntry | null;
   /** Opens the entry slide-over panel. */
   openCompendiumEntry(packId: string, entryId: string): void;
+  getBackend?(): any;
 }
 
 declare global {

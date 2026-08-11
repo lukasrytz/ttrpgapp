@@ -31,6 +31,8 @@ export interface Combatant {
   deathSaves: { successes: number; failures: number };
   /** Set when added from the compendium; enables the inline stat block. */
   monsterRef?: { packId: string; entryId: string };
+  /** 5e hit dice formula, e.g. "8d8 + 16" */
+  hitDice?: string;
 }
 
 export interface Encounter {

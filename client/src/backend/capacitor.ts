@@ -280,10 +280,26 @@ export class CapacitorBackend implements Backend {
       if (f.type === 'directory') {
         out.push(...(await this.walkNotes(child)));
       } else if (f.name.endsWith('.md')) {
+        const parts = child.split('/');
+        let isSession = false;
+        let campaign: string | undefined = undefined;
+
+        if (parts.length > 1) {
+          if (parts[0] === 'sessions') {
+            isSession = true;
+          } else {
+            campaign = parts[0];
+            if (parts[1] === 'sessions') {
+              isSession = true;
+            }
+          }
+        }
+
         out.push({
           path: child,
           title: f.name.replace(/\.md$/, ''),
-          isSession: child.startsWith('sessions/'),
+          isSession,
+          campaign,
           modifiedAt: f.mtime ?? 0,
         });
       }
@@ -323,6 +339,7 @@ export class CapacitorBackend implements Backend {
       path,
       title: myTitle && meta ? meta.title : path.replace(/\.md$/, ''),
       isSession: meta?.isSession ?? path.startsWith('sessions/'),
+      campaign: meta?.campaign,
       modifiedAt: meta?.modifiedAt ?? 0,
       content,
       links: extractLinks(content),
@@ -362,25 +379,57 @@ export class CapacitorBackend implements Backend {
     }
   }
 
-  async createNote(title: string): Promise<{ path: string }> {
+  async createNote(title: string, campaign?: string): Promise<{ path: string }> {
     await this.ensureVault();
     const name = sanitizeNoteName(title);
     if (!name) throw new Error('bad title');
-    const rel = `${name}.md`;
+    const cname = campaign ? sanitizeNoteName(campaign) : undefined;
+    const rel = cname ? `${cname}/${name}.md` : `${name}.md`;
     if (await this.exists(rel)) throw new Error('exists');
     await this.writeNote(rel, `# ${name}\n\n`);
     return { path: rel };
   }
 
-  async createSession(title: string): Promise<{ path: string }> {
+  async createSession(title: string, campaign?: string): Promise<{ path: string }> {
     await this.ensureVault();
     const name = sanitizeNoteName(title);
     if (!name) throw new Error('bad title');
-    const rel = `sessions/${name}.md`;
+    const cname = campaign ? sanitizeNoteName(campaign) : undefined;
+    const rel = cname ? `${cname}/sessions/${name}.md` : `sessions/${name}.md`;
     if (await this.exists(rel)) throw new Error('exists');
-    const template = await this.readRaw('template.md');
+    
+    let templatePath = cname ? `${cname}/template.md` : 'template.md';
+    if (!(await this.exists(templatePath))) {
+      templatePath = 'template.md';
+    }
+    const template = await this.readRaw(templatePath);
     await this.writeNote(rel, renderTemplate(template, name));
     return { path: rel };
+  }
+
+  async createCampaign(name: string): Promise<void> {
+    await this.ensureVault();
+    const cname = sanitizeNoteName(name);
+    if (!cname) throw new Error('bad name');
+    const rel = `${cname}/template.md`;
+    if (await this.exists(rel)) throw new Error('exists');
+    
+    // Ensure sessions directory exists
+    await Filesystem.mkdir({ path: `${VAULT_BASE}/${cname}/sessions`, directory: VAULT_DIR, recursive: true });
+    
+    const globalTemplate = await this.readRaw('template.md');
+    await this.writeNote(rel, globalTemplate);
+  }
+
+  async deleteCampaign(name: string): Promise<void> {
+    const cname = sanitizeNoteName(name);
+    if (!cname) throw new Error('bad name');
+    await Filesystem.rmdir({ path: `${VAULT_BASE}/${cname}`, directory: VAULT_DIR, recursive: true });
+  }
+
+  async renameNote(path: string, newPath: string): Promise<{ path: string }> {
+    await Filesystem.rename({ from: `${VAULT_BASE}/${path}`, to: `${VAULT_BASE}/${newPath}`, directory: VAULT_DIR });
+    return { path: newPath };
   }
 
   // --- plugin KV ---

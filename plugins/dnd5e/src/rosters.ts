@@ -21,6 +21,7 @@ export interface EncounterGroup {
   hp: number;
   ac: number | null;
   dexMod: number;
+  hitDice?: string;
 }
 
 /** A pre-planned encounter: a named roster of monster groups. */
@@ -42,6 +43,33 @@ function d20(rng: () => number): number {
 const emptyDeathSaves = () => ({ successes: 0, failures: 0 });
 
 /**
+ * Parse and roll a hit dice formula like "8d8 + 16", "2d8 - 1", or "4d6".
+ * Returns calculated HP (minimum 1). Falls back to defaultHp if formula is omitted or invalid.
+ */
+export function rollHitDice(
+  formula?: string,
+  defaultHp = 1,
+  rng: () => number = Math.random,
+): number {
+  if (!formula) return defaultHp;
+  const match = /^(\d+)d(\d+)(?:\s*([+-])\s*(\d+))?$/i.exec(formula.trim());
+  if (!match) return defaultHp;
+  const numDice = parseInt(match[1]!, 10);
+  const sides = parseInt(match[2]!, 10);
+  const op = match[3];
+  const mod = match[4] ? parseInt(match[4], 10) : 0;
+
+  let total = 0;
+  for (let i = 0; i < numDice; i++) {
+    total += 1 + Math.floor(rng() * sides);
+  }
+  if (op === '+') total += mod;
+  else if (op === '-') total -= mod;
+
+  return Math.max(1, total);
+}
+
+/**
  * Expand a saved encounter plus the chosen party members into live combatants,
  * rolling initiative (d20 + modifier). Monster instances of a repeated name are
  * numbered ("Goblin 1", "Goblin 2"); unique names stay bare. Pure and
@@ -51,6 +79,7 @@ export function instantiate(
   enc: SavedEncounter,
   party: PartyMember[],
   rng: () => number = Math.random,
+  randomizeMonsterHp = false,
 ): Combatant[] {
   const out: Combatant[] = [];
   const seen = new Map<string, number>();
@@ -62,12 +91,13 @@ export function instantiate(
 
   for (const g of enc.groups) {
     for (let i = 0; i < g.count; i++) {
+      const rolledHp = randomizeMonsterHp ? rollHitDice(g.hitDice, g.hp, rng) : g.hp;
       out.push({
         id: newId(),
         name: nextName(g.name, g.count > 1),
         initiative: d20(rng) + g.dexMod,
-        hp: g.hp,
-        maxHp: g.hp,
+        hp: rolledHp,
+        maxHp: rolledHp,
         ac: g.ac,
         conditions: [],
         exhaustion: 0,
@@ -75,6 +105,7 @@ export function instantiate(
         isPlayer: false,
         deathSaves: emptyDeathSaves(),
         monsterRef: { packId: g.packId, entryId: g.entryId },
+        hitDice: g.hitDice,
       });
     }
   }
