@@ -284,5 +284,5 @@ Worth recording so these don't get re-suggested:
 
 Since other systems are likely later: §2 and §3 are **core app** and system-agnostic. §1 is
 **5e plugin** work. The mechanism for the plugin to contribute the turn card and its deck
-buttons is the `ClientPlugin.actions[]` contribution point already recorded as the agreed
-approach in `plan.md` — build that when §1 lands, rather than reaching into dnd5e from core.
+buttons is a `ClientPlugin.actions[]` contribution point, rather than core code reaching into
+dnd5e directly. `plan.md` builds it as Commit 1, ahead of everything system-specific.

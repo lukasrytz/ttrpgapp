@@ -1,925 +1,507 @@
-# Stream Deck front page — implementation plan
+# Feature implementation plan
 
-> Implementation plan for the next feature. Written to be executed commit-by-commit.
-> Every decision below was agreed with the repo owner — do not revisit them, and do not
-> expand scope beyond what is listed. Nothing here has been implemented yet.
+> Implements `features.md`. Written to be executed commit-by-commit.
+> Every decision here was agreed with the repo owner — do not revisit them, and do not
+> expand scope beyond what is listed.
 
-## Status — re-verified after the feature-branch merge
-
-This plan was originally written against the trunk before
-`feature/android-touch-enhancements` (DM tools, campaigns, genre themes, touch UI) was
-merged. It has since been re-checked against the merged code. Five premises changed, each
-flagged inline where it matters:
-
-| What changed | Where it bites |
-| --- | --- |
-| A dice-formula parser now exists (`rollHitDice`, `rosters.ts:49`) | Commit 9 is a generalisation, not a greenfield build |
-| A toast already exists, page-local in `GeneratorsPage` | Commit 7 generalises it instead of writing a second one |
-| `CORE_NAV` entries now carry three per-theme icons, and a `/generators` route exists | Commit 6's nav edit |
-| The app is no longer dark-only — three genre themes | Deck button colours (commit 5) must work in all three |
-| `Backend` gained campaign methods | Commit 2 extends the current interface, not the one quoted here |
-
-Everything else in the plan was confirmed still accurate: no dnd-kit dependency,
-`NotesPage` still holds its selection in `useState` (so the `?path=` change is still
-needed), no generic counter primitive, no timers, and the two duplicated `d20()` helpers
-are still there.
+This replaces the previous stream-deck plan, which is finished: the deck, SFX layer,
+counters, dice and toast all shipped and are on `main`. Read `features.md` first — it
+explains *why* each of these, against how this table actually runs. This file is the *how*.
 
 ## Notes for the implementing agent
 
-**Take one commit at a time.** The nine commits are ordered by dependency and each is
-independently revertable. Do not attempt several at once, and do not reorder them —
-commit 1 must land before the audio work, and commit 7 before 8 and 9.
+**Take one commit at a time.** They are ordered by dependency. Commits 1–2 are enablers with
+no user-visible effect on their own; resist the urge to fold them into 3.
 
-**Verify after every commit. Nothing else will.**
+**Verify after every commit. Three commands, not two:**
 
 ```bash
-npm run typecheck && npm test    # at the repo root
+npm run typecheck && npm test && npm run build -w client
 ```
 
-There is no linter and no formatter in this repo, and **CI runs neither the tests nor the
-typecheck** — `.github/workflows/android.yml` only builds the APK (it does run on
-`claude/**` branches, so it is a genuine safety net for the Android edits in commit 1,
-which cannot be verified locally without the SDK). If typecheck or tests fail, fix them
-before committing rather than after.
+The build step is not optional and is not decoration. A previous merge left an import
+pointing at a deleted file; **typecheck and tests both passed** and only `vite build` caught
+it, because TypeScript resolves differently from rollup and Vitest never bundles. CI now
+builds on every pull request, but do not rely on that — run it locally.
 
-### Risk per commit — where to slow down
+There is no linter and no formatter in this repo. Match the surrounding file by hand.
+
+### Risk per commit
 
 | Commit | Risk | Why |
 | --- | --- | --- |
-| 1 Remove Chromecast | low, unverifiable locally | Mostly deletion against an explicit list. The Gradle/manifest edits need the CI APK build to confirm. |
-| 2 SFX library | low | Deliberately mirrors `server/src/music.ts` and the existing backend methods. Follow the existing shapes rather than inventing new ones. |
-| 3 SFX engine | **highest** | Imperative audio: element pooling, volume ramps, duck factor × user volume held in refs. This is code that compiles, looks right, and misbehaves audibly. There is no jsdom, so tests will not catch a wrong ramp — construct `SfxEngine` with the injected fake element factory and assert on the fake. |
-| 4 Deck data model | low–medium | `migrateDeck` must **never throw**: it parses a document that arrives over Drive sync from another device. Every malformed-input case in the test table must pass. |
-| 5 Deck UI | **high** | Largest surface. dnd-kit sensors, the edit-mode/press separation, long-press vs drag, the `ActionForm` extraction, the macro list. Build `ActionForm` as a reusable component from the start — retrofitting it is the expensive path. |
-| 6 Routing/settings/README | low | Small localized edits. |
-| 7 Toast | low | Prerequisite for 8 and 9. Keep the event detail serializable — no ReactNodes through a CustomEvent. |
-| 8 Counters | low | The pure `bumpCounter` carries the logic; keep it pure and test it. |
-| 9 Dice | low | Self-contained pure logic. `parseDice` returns `null` on bad input and never throws. |
+| 1 Plugin actions | medium | New public contract on `ClientPlugin`. Get the shape right; everything system-specific rides on it. |
+| 2 SRD structured fields | low–medium | Data pipeline. Regenerating the pack is easy to get almost-right; the parser needs real tests. |
+| 3 Turn card | medium | The one combat ask. State (used/recharged) must reset at the right moments or it silently misleads. |
+| 4 Scene model | medium | Enter/exit is the whole point. Get teardown right or ambience layers stack up. |
+| 5 Scene UI | medium | Largest UI surface here. Reuse the deck's existing pickers rather than writing new ones. |
+| 6 Home Assistant | low | One POST. The work is CORS, cleartext and token storage, not the call. |
+| 7 Running order | low | Pure derivation from existing data. |
+| 8 Capture | **high** | The notes editor holds an unsaved buffer. Naive append **destroys user data**. See the commit. |
+| 9 Session clock | low | |
+| 10 Oracle / escalate | low | Content quality matters more than code here. |
+| 11 Small wins | low | Independent; can be done any time. |
 
-### Repo traps that catch agents
+### Repo traps
 
-- **`noUncheckedIndexedAccess` is on.** Indexing an array yields `T | undefined`. Handle it
-  properly; do not scatter `!` to silence the compiler. The existing `a[j]!` uses are in
-  code that has already proven the index — match that bar.
-- **No formatter.** Match the surrounding file by hand: 2-space indent, single quotes,
-  semicolons, trailing commas, ~100 columns.
-- **`client/test` is not typechecked** (`client/tsconfig.json` includes only `src`). Keep
-  test code simple; a type error there will not surface until it fails at runtime.
-- **`.js` extensions** on relative imports inside `shared/` and `server/` only — never in
-  `client/` or `plugins/`.
-- **Add no dependencies** beyond the three `@dnd-kit` packages named in commit 5.
-- **Do not reformat, rename, or refactor files you are not otherwise changing.** The diff
-  should be readable as the feature.
+- **`noUncheckedIndexedAccess` is on.** Indexing an array yields `T | undefined`. Handle it;
+  do not scatter `!` to silence the compiler.
+- **`client/test` is not typechecked** (`client/tsconfig.json` includes only `src`).
+- **`.js` extensions** on relative imports inside `shared/` and `server/` only.
+- **Three genre themes exist** (`theme-fantasy` / `-horror` / `-scifi`, plus `theme-universal`),
+  with fonts and radii per theme. Anything new must work in all of them — drive colour through
+  the existing custom properties, never literals.
+- **Do not reformat, rename, or refactor files you are not otherwise changing.**
 
 ### When something is unspecified
 
-Prefer the smaller option and say so in the commit message. The "Explicitly **out**" row in
-the decisions table and the "Deliberately not in scope" section at the end are binding —
-they are choices the repo owner already made, not gaps to fill.
-
-## Context
-
-The app is a GM's companion used live at the table: tagged ambient music, prep notes,
-and a D&D 5e plugin (SRD compendium + combat tracker). Today it opens on the **Music**
-page, and every function is reached by hunting through the sidebar — which is the wrong
-interaction model mid-session, when you have three seconds and one hand free.
-
-The goal is a **stream deck front page**: a customizable grid of big, tappable buttons
-that fire the app's functions directly. Press one button to swing the music to "tense
-battle", another to drop a thunderclap over the top of it, another to jump to the combat
-tracker. It becomes the app's landing page.
-
-This needs one genuinely new capability — **sound effects layered over the music**, which
-does not exist today (the app has exactly one audio path and it can only play one thing).
-It also removes Chromecast support, which the owner reports never really worked and which
-otherwise complicates every audio change below.
-
-Commits 1–6 deliver the deck itself. Commits 7–9 add two further button kinds that came out
-of a follow-on brainstorm — **counters on the button face** and a **dice roller** — together
-with the transient-overlay chrome they both need, which the app also lacks entirely. Take
-them in order; 7–9 depend on the deck existing but not on each other beyond the overlay.
-
-### Decisions already made (do not re-litigate)
-
-| Decision | Choice |
-| --- | --- |
-| Landing page | Deck takes `/`; Music moves to `/music` |
-| Layout | Multi-page (tabs), responsive grid, drag-to-arrange, explicit Edit mode |
-| Button actions, commits 1–6 | music filter / pinned track · SFX one-shot + ambience loop · navigate · **macro** (one press, several actions) |
-| Button actions, commits 7–9 | counter / clock on the button face · dice roll (with optional DC) |
-| Explicitly **out** | transport buttons, panic/stop-all button, deck volume sliders, "pin to deck" from Music page, plugin-contributed actions |
-| SFX source | Its own folders, scanned into a separate library |
-| SFX metadata | Folder + filename only. No tags, no intensity |
-| SFX folder selection on Android | A **separate** SFX folder picker, distinct from the music one |
-| Ducking | Always on, no per-button setting; one global duck-amount slider in Settings |
-| Chromecast | Removed, as commit 1 |
+Prefer the smaller option and say so in the commit message. The "Deliberately not in scope"
+section at the end is binding — those are choices already made, not gaps to fill.
 
 ---
 
-## House rules (this repo has no linter — match by hand)
+## The design spine
 
-- 2-space indent, single quotes, semicolons, trailing commas, ~100 col.
-- Function components only. `export default function Foo()`. Props typed **inline in the
-  parameter position**, never a named `Props` interface.
-- `interface` for object shapes, `type` for unions. Const-tuple + derived union for
-  vocabularies (`export const X = [...] as const; export type X = (typeof X)[number]`).
-- No import aliases. Relative imports, or `@ttrpgapp/shared`. Relative imports inside
-  `shared/` and `server/` carry an explicit `.js` extension; `client/` and `plugins/` do not.
-- `tsconfig.base.json` sets `noUncheckedIndexedAccess` — indexing an array gives `T | undefined`.
-- Styling: append to the single global `client/src/styles.css` (now ~1930 lines; the last
-  sections are `/* --- Android Touch & BottomSheet UI --- */` and
-  `/* --- DM Generators --- */`) under a new `/* --- stream deck --- */` banner comment.
-  No CSS modules, no Tailwind. Icons are emoji. Reuse `.page`, `.page-header`,
-  `.header-actions`, `.chip`/`.chip-on`, `.muted`, `.small`, `.primary`, `.palette-backdrop`,
-  `.icon-btn`. Respect the single breakpoint `@media (max-width: 759px)` and the 44px minimum
-  tap target.
-- **Theming — the app is no longer dark-only.** There are three genre themes,
-  `theme-fantasy` (default), `theme-horror` and `theme-scifi`, held in `App.tsx` state,
-  persisted to `localStorage` under `ttrpg-theme`, and broadcast via a `ttrpg-theme-change`
-  window event. Anything new must look right in all three; drive colours through custom
-  properties rather than literals.
-- **Convention drift to be aware of.** The dominant style is inline-typed props and
-  CSS-only styling, and that is what to follow. But newer code does not always: e.g.
-  `client/src/components/BottomSheet.tsx` declares a named `BottomSheetProps` interface, and
-  `NotesPage.tsx` uses inline `style={{ … }}` in places. Match the dominant convention;
-  don't propagate the exceptions, and don't "fix" them in files you aren't otherwise touching.
-- Persistence writes follow the pattern in `plugins/dnd5e/src/TrackerPage.tsx`: optimistic
-  `setState`, `useRef` debounce timer, then
-  `void kvSet(...).then(() => window.dispatchEvent(new Event('ttrpg-local-changed')))`.
-  Reads reload on the `ttrpg-sync-updated` window event.
-- Tests are **logic-only** Vitest units in the sibling `test/` dir, using hand-written fake
-  classes, no jsdom and no React Testing Library. Design new classes to accept their
-  collaborators via constructor injection so they stay testable.
-- Run `npm run typecheck` and `npm test` before every commit — **CI runs neither.**
+Two ideas carry most of this document. Understand them before writing code.
+
+**1. Scenes are stateful; macros are not.** A macro fires and forgets, so leaving the tavern
+leaves the tavern crowd murmuring under the road ambush. A scene has **enter and exit**: it
+knows it is active, and entering another scene tears the previous one down. Every pacing
+feature depends on the app knowing which scene is active.
+
+**2. Structure is derived, not authored.** The owner preps a light skeleton and improvises.
+Anything that requires authoring structure will not get used. `splitSections` in
+`client/src/components/Markdown.tsx` already splits a note on `## ` headings — so the session
+note *already contains* the running order. Read it; do not build an editor for it.
 
 ---
 
-## Commit 1 — Remove Chromecast
+## Commit 1 — `ClientPlugin.actions[]` contribution point
 
-Do this first and alone, so it is trivially revertable and so the audio work lands on a
-simple player.
+Carried forward from the previous plan as an agreed decision. The deck must be able to fire
+system-specific things without core code importing `@ttrpgapp/plugin-dnd5e`. The rejected
+alternative was importing the plugin directly — faster, but it hard-codes game-system
+knowledge into core and breaks the `PluginRuntime` boundary the repo maintains.
 
-**Delete outright**
-- `client/src/cast/manager.ts`, `client/src/cast/plugin.ts`, `client/src/cast/types.ts`
-- `client/src/player/CastButton.tsx`
-- `client/test/cast.test.ts`
-- `client/android/app/src/main/java/ch/rytz/ttrpgapp/`: `CastPlugin.java`,
-  `CastOptionsProvider.java`, `MediaServerPlugin.java`, `MediaHttpServer.java`,
-  `MediaServerService.java`
-
-**Edit**
-- `client/src/player/PlayerProvider.tsx` — drop the `castManager` import; collapse `playOn`
-  to `void engine().play(backend().trackUrl(track))`; delete the `castManager.onProgress /
-  onEnded` effect and the `ttrpg-cast-status` effect; remove the cast branches from `toggle`
-  and `setVolume`. `advance` can then call the engine directly.
-- `client/src/player/PlayerBar.tsx` — remove the `CastButton` import and its element.
-- `client/src/main.tsx` — remove the `castManager` import and the lazy
-  `import('./cast/plugin')` block inside the `isNativePlatform()` branch.
-- `client/android/app/src/main/java/ch/rytz/ttrpgapp/MainActivity.java` — drop the
-  `registerPlugin(MediaServerPlugin.class)` and `registerPlugin(CastPlugin.class)` lines.
-- `client/android/variables.gradle` — remove `castFrameworkVersion`,
-  `androidxMediaRouterVersion`, `nanohttpdVersion`.
-- `client/android/app/build.gradle` — remove the three cast/nanohttpd `implementation` lines
-  and their comment; reword the `minifyEnabled false` comment so it no longer cites the Cast SDK
-  (Capacitor's reflective plugin lookup is still a valid reason to keep R8 off).
-- `client/android/app/src/main/res/values/strings.xml` — remove `cast_app_id` and its comment.
-- `client/android/app/src/main/AndroidManifest.xml` — remove the Cast `OPTIONS_PROVIDER_CLASS_NAME`
-  meta-data, the `.MediaServerService` `<service>`, and the whole "Casting:" permission block
-  (`ACCESS_NETWORK_STATE`, `ACCESS_WIFI_STATE`, `CHANGE_WIFI_MULTICAST_STATE`, `WAKE_LOCK`,
-  `FOREGROUND_SERVICE`, `FOREGROUND_SERVICE_MEDIA_PLAYBACK`, `NEARBY_WIFI_DEVICES`,
-  `POST_NOTIFICATIONS`). **Keep** `INTERNET`, `READ_MEDIA_AUDIO`, `READ_EXTERNAL_STORAGE`.
-- `README.md` — delete the "Casting (Android, Chromecast)" section, the "Cast to speakers"
-  bullet under Features, the `### Casting (client/src/cast/)` subsection under Architecture,
-  and the `[Casting](#casting-android-chromecast)` cross-links.
-
-Verify: `npm run typecheck && npm test`, then `grep -ri cast client server shared` returns
-nothing outside `plugins/dnd5e` SRD data (which legitimately contains spellcasting text).
-
----
-
-## Commit 2 — The SFX library
-
-A second audio library, deliberately much thinner than the music one: no tags, no
-intensity, no editor. A clip is a file with a name.
-
-> **Design assumption:** this library is small and hand-curated — tens of clips, not
-> thousands. Every SFX button is bound by hand to one specific clip, so the picker in
-> commit 5 should be built for browsing a curated set, not for searching a bulk import.
-> See `sfx_sourcing.md` for where the clips come from and how they must be prepared.
-
-### Shared types — new `shared/src/sfx.ts`, re-exported from `shared/src/index.ts`
+In `shared/src/plugin-client.ts`:
 
 ```ts
-/** A sound-effect clip. Deliberately thinner than Track: no tags, no intensity. */
-export interface SfxClip {
-  id: number;
-  /** Server: path relative to its folder root. Android: the device path. */
-  path: string;
-  /** Server: the configured folder root. Android: '' (device paths are absolute). */
-  folder: string;
-  /** Display name — the filename without its extension. */
-  name: string;
-  durationSec: number | null;
-}
-```
-
-Reuse `trackSignature(pathOrName, durationSec)` from `shared/src/music.ts` for clip identity —
-it is already the app's device-independent audio identity and works verbatim here.
-
-### Config
-
-- `shared/src/config.ts` — add `sfxFolders: string[]` to `AppConfig`.
-- `server/src/config.ts` — default it to `[]` in the `DEFAULTS` object used by `loadConfig()`.
-- `config.json` — add `"sfxFolders": []` and document it in the README config block.
-
-### Server
-
-Extract the shared file-walking bits so music and SFX do not diverge. New
-`server/src/audio.ts` holding `AUDIO_EXTS`, `MIME`, `walk()`, and a
-`sendFileRange(req, reply, abs)` helper carrying the existing 206/`Accept-Ranges` logic
-verbatim out of `server/src/music.ts`. Rewrite `music.ts` to import them (no behaviour change).
-
-New `server/src/sfx.ts` mirroring `music.ts`:
-- table in `server/src/db.ts` (`migrate()` is plain idempotent DDL — just add it):
-  ```sql
-  CREATE TABLE IF NOT EXISTS sfx (
-    id INTEGER PRIMARY KEY,
-    folder TEXT NOT NULL,
-    path TEXT NOT NULL,
-    name TEXT NOT NULL,
-    duration_sec REAL,
-    UNIQUE (folder, path)
-  );
-  ```
-- `scanSfx(db, config)` over `config.sfxFolders`, same add/remove diff as `scan()`, returning
-  the existing `MusicScanResult` shape. Use `music-metadata` only for duration; the name is
-  always the filename stem (SFX files rarely carry useful ID3 titles).
-- `registerSfxRoutes(app, db, config)` → `GET /api/sfx/clips`, `POST /api/sfx/scan`,
-  `GET /api/sfx/stream/:id`. Register it from `server/src/index.ts` beside the music routes.
-
-### Folder selection — `client/src/music/folders.ts`
-
-Generalize the module over the storage key, keeping existing call sites and
-`client/test/musicFolders.test.ts` untouched via default parameters:
-
-```ts
-export const MUSIC_FOLDERS_KEY = 'music.folders';
-export const SFX_FOLDERS_KEY = 'sfx.folders';
-
-export async function getFolderSelection(key = MUSIC_FOLDERS_KEY): Promise<Set<string> | null>
-export async function setFolderSelection(paths: string[] | null, key = MUSIC_FOLDERS_KEY): Promise<void>
-```
-
-> **Trap — opposite defaults.** For music, "no selection stored" means *every folder*. For
-> SFX that would turn the whole music library into sound effects on first launch. So SFX
-> folders are **opt-in**: add a dedicated pair that treats a missing selection as *empty*.
-> ```ts
-> /** SFX folders are opt-in — unlike music, no stored selection means NO folders. */
-> export async function getSfxFolders(): Promise<Set<string>>
-> export async function setSfxFolders(paths: string[]): Promise<void>
-> ```
-> `filterByFolders` and `foldersOf` already take a `Set | null` and are reused as-is.
-
-A folder may legitimately be selected for both libraries; allow it, and have the SFX picker
-mark such folders "also in music library" rather than forbidding it.
-
-### Backend interface — `client/src/backend/types.ts`
-
-```ts
-listSfx(): Promise<SfxClip[]>;
-scanSfx(): Promise<MusicScanResult>;
-/** Every folder holding audio, so the user can pick which hold sound effects. */
-listSfxFolders(): Promise<MusicFolder[]>;
-setSfxFolders(paths: string[]): Promise<void>;
-/** Playable URL for a clip (sync, like trackUrl). */
-sfxUrl(clip: SfxClip): string;
-```
-
-`MusicFolder` is structurally just "a folder with N audio files in it" — reuse it rather
-than cloning the type; add a line to its JSDoc in `shared/src/music.ts` saying so.
-
-> **Re-verified after the merge:** `Backend` has grown campaign support since this plan was
-> written — `createNote(title, campaign?)`, `createSession(title, campaign?)`,
-> `createCampaign`, `deleteCampaign`, `renameNote`. Nothing conflicts with the SFX methods,
-> but add them to the *current* interface rather than the one quoted here, and remember both
-> implementations (`http.ts` and `capacitor.ts`) must be updated together.
-
-- `client/src/backend/http.ts` — straight passthrough to the new routes;
-  `sfxUrl` → `/api/sfx/stream/${clip.id}`.
-- `client/src/backend/capacitor.ts` — **no native changes needed.** Derive SFX from the same
-  `MusicLibrary.list()` MediaStore listing, filtered by the `sfx.folders` selection, and map
-  each entry to an `SfxClip` (`name` = filename stem, `folder` = `''`). `sfxUrl` →
-  `Capacitor.convertFileSrc(clip.path)`. `scanSfx` mirrors the existing `scanMusic` counting.
-  Assign ids over the *full* device listing exactly as `listDeviceTracks` does, so ids stay
-  stable while the selection changes.
-
-> **Android caveat to note in the README:** `MusicLibraryPlugin.java` queries MediaStore with
-> `IS_MUSIC != 0`. Ordinary audio files the user copies into a folder are flagged that way, but
-> clips MediaStore has classified as notification/alarm/ringtone will not appear. If that bites,
-> the one-line fix is to widen the `selection` string in `doList()`.
-
-**Durable references.** Backend ids are positional on Android and therefore not stable across
-devices or rescans. A deck button must store `trackSignature(clip.path, clip.durationSec)`,
-never an id — same rule the music tag catalog already follows.
-
----
-
-## Commit 3 — The SFX audio engine
-
-### The key design call: no Web Audio
-
-`CrossfadeEngine` already degrades to ramping `HTMLAudioElement.volume` on a 50ms interval,
-because `createMediaElementSource` can fail or output silence in the Android WebView. Building
-the SFX layer on Web Audio would therefore be unreliable on the one platform that matters most.
-
-**`SfxEngine` uses plain `HTMLAudioElement`s and nothing else.** Multiple `<audio>` elements
-play simultaneously in the Android WebView — that is all the layering we need — and per-element
-`.volume` is all the level control we need, since SFX require no crossfading. It gets **no
-`AudioContext` of its own and does not touch the music engine's** (an element can only ever be
-attached to one `MediaElementSource`, so sharing is not an option anyway).
-
-Ducking is therefore not a gain-graph operation but a volume ramp applied to the music engine's
-existing master volume, which works identically on both of `CrossfadeEngine`'s paths.
-
-### New `client/src/player/ramp.ts`
-
-A tiny shared linear-ramp helper, used by both loop fades and ducking. Inject the clock so it
-is unit-testable without jsdom:
-
-```ts
-export interface RampHandle { cancel(): void }
-export function rampValue(
-  from: number, to: number, ms: number,
-  onStep: (v: number) => void,
-  now: () => number = () => performance.now(),
-  schedule: (fn: () => void, ms: number) => unknown = setInterval,
-): RampHandle
-```
-
-### New `client/src/player/sfx.ts` — `SfxEngine`
-
-React-free and unit-testable, in the same spirit as `CrossfadeEngine`.
-
-```ts
-export class SfxEngine {
-  /** Element factory is injected so tests can pass fakes (no jsdom in this repo). */
-  constructor(createAudio: () => HTMLAudioElement = () => new Audio()) {}
-
-  /** 0..1 applied on top of every clip's own volume. */
-  setMasterVolume(v: number): void;
-
-  /** Fire a layered one-shot. Several may overlap. */
-  playOneShot(url: string, volume: number): void;
-
-  /** Start or restart a named ambience loop (key = the clip's signature). */
-  startLoop(key: string, url: string, volume: number): void;
-  setLoopVolume(key: string, volume: number): void;
-  /** Fade out over `fadeSec` (default 1.5) then stop and release the element. */
-  stopLoop(key: string, fadeSec?: number): void;
-  stopAll(): void;
-  activeLoops(): string[];
-
-  /** True while ≥1 one-shot is sounding; drives ducking. Fires on both edges. */
-  onOneShotActiveChange: ((active: boolean) => void) | null;
-}
-```
-
-Implementation notes: keep a small pool of one-shot elements and reuse idle ones (creating an
-element per press leaks in a long session); track a live-one-shot count and fire
-`onOneShotActiveChange` only on 0→1 and 1→0; loops set `audio.loop = true` and fade in over
-~0.8s via `rampValue`. Element `.volume` is always `clipVolume * masterVolume`.
-
-### Ducking — a minimal addition to `PlayerProvider`
-
-`PlayerApi` gains exactly one member (this is the only transport-adjacent API added in v1,
-and it exists solely to serve ducking):
-
-```ts
-/** Temporarily scale playback level without changing the user's volume setting. */
-setDuck: (factor: number) => void;
-```
-
-Hold the user volume and the duck factor in refs, push `volume * duck` into
-`engine().setVolume(...)`, and ramp the transition with `rampValue` (dip over ~250ms, restore
-over ~600ms) so the dip is not a jump. This needs **no change to `crossfade.ts`**.
-
-### New `client/src/player/SfxProvider.tsx`
-
-Context + `useSfx()` hook, following the `PlayerProvider` shape exactly (nullable context,
-throwing accessor hook, engine held in a `useRef` so it survives route changes). Mounted in
-`App.tsx` **inside** `PlayerProvider`, because it calls `usePlayer().setDuck`.
-
-```ts
-interface SfxApi {
-  /** Clip signatures currently looping, for lighting up deck buttons. */
-  activeLoops: string[];
-  fire(clip: SfxClip, volume: number): void;
-  /** Explicit start/stop as well as toggle — macros need to force a loop on or off
-   *  rather than flip it (see `sfxLoop.mode` in commit 4). */
-  toggleLoop(clip: SfxClip, volume: number): void;
-  startLoop(clip: SfxClip, volume: number): void;
-  stopLoop(sig: string): void;
-  stopAllSfx(): void;
-  masterVolume: number;
-  setMasterVolume(v: number): void;
-  duckAmount: number;
-  setDuckAmount(v: number): void;
-}
-```
-
-It wires `engine.onOneShotActiveChange = (active) => player.setDuck(active ? duckAmount : 1)`.
-`masterVolume` and `duckAmount` persist via `kvGet/kvSet('deck', 'audio')` (see the namespace
-note in commit 4) and are edited in Settings, not on the deck.
-
-**Lifecycle, stated so it is not a surprise:** ambience loops survive route changes (the engine
-lives in a root-level ref) and keep playing when the app is backgrounded, which is what you want
-for ambience. They do **not** survive a reload or app restart — nothing about playback is
-persisted anywhere in this app today, and v1 does not change that. After a reload, loop buttons
-render "off", which matches reality.
-
----
-
-## Commit 4 — Deck data model and storage
-
-### New `shared/src/deck.ts`, re-exported from `shared/src/index.ts`
-
-Add `export * from './deck.js';` to the barrel (and `'./sfx.js'` from commit 2) — note the
-`.js` extension, which `shared/` requires. `deck.ts` needs
-`import type { TagDimension } from './music.js';`.
-
-```ts
-export const DECK_SCHEMA_VERSION = 1;
-
-export const DECK_COLORS = ['slate', 'amber', 'crimson', 'forest', 'indigo', 'plum'] as const;
-export type DeckColor = (typeof DECK_COLORS)[number];
-
-export const DECK_SIZES = ['1x1', '2x1'] as const;
-export type DeckSize = (typeof DECK_SIZES)[number];
-
-/** JSON-safe form of the music page's Filter, whose `dims` holds Sets. */
-export interface SerializedFilter {
-  dims: Partial<Record<TagDimension, string[]>>;
-  minIntensity: number;
-  search: string;
-}
-
-/** Everything a macro may contain. Split out so macros cannot nest — by construction, not
- *  by a runtime guard. */
-export type LeafDeckAction =
-  | { kind: 'musicFilter'; filter: SerializedFilter }
-  | { kind: 'musicTrack'; sig: string; title: string }
-  | { kind: 'sfxOneShot'; sig: string; name: string; volume: number }
-  | { kind: 'sfxLoop'; sig: string; name: string; volume: number; mode: 'toggle' | 'start' | 'stop' }
-  | { kind: 'navigate'; to: string }
-  | { kind: 'openNote'; path: string }
-  | { kind: 'openEntry'; packId: string; entryId: string };
-
-export type DeckAction = LeafDeckAction | { kind: 'macro'; actions: LeafDeckAction[] };
-
-export interface DeckButton {
+export interface PluginAction {
   id: string;
   label: string;
   /** Emoji, matching the app's icon convention. */
   icon: string;
+  /** Optional gate — e.g. hide "next turn" when no combat is running. */
+  isAvailable?(runtime: PluginRuntime): Promise<boolean>;
+  run(runtime: PluginRuntime): void | Promise<void>;
+}
+
+export interface ClientPlugin {
+  // …existing fields
+  actions?: PluginAction[];
+}
+```
+
+New leaf action in `shared/src/deck.ts`:
+
+```ts
+| { kind: 'pluginAction'; pluginId: string; actionId: string; label: string }
+```
+
+`label` is a cached copy so a button still renders sensibly when the plugin is disabled.
+`runDeckAction` resolves through `availableClientPlugins` (`client/src/plugins.ts`); an
+unknown plugin or action is a **no-op with a toast**, matching how missing clips already
+degrade. `migrateDeck` must accept the new kind, and `ActionForm` gains a picker listing the
+enabled plugins' actions.
+
+**dnd5e contributes three actions** to prove the hook: `nextTurn`, `previousTurn`, `endCombat`.
+Two notes on that:
+
+- **`previousTurn` does not exist yet** — add it.
+- The tracker's verbs are closures inside `TrackerPage` JSX behind a single `update(fn)`
+  funnel. Extract them first as pure `(Encounter) => Encounter` reducers beside
+  `sortedCombatants` in `plugins/dnd5e/src/trackerTypes.ts`, then have both the page and the
+  plugin actions call those. Pure reducers are the testable part.
+- No new plumbing is needed to *drive* the tracker from outside: `kvSet` the encounter, then
+  dispatch `ttrpg-local-changed` and `ttrpg-sync-updated`, and a mounted `TrackerPage` reloads
+  itself. `EncountersPage` already does exactly this.
+
+---
+
+## Commit 2 — Structured monster actions in the SRD pack
+
+The turn card needs a monster's abilities as data. Today `fields` carries only
+`{ hp, ac, dexMod, cr, size, monsterType }`; abilities live as prose in the markdown `body`.
+
+Extend `plugins/dnd5e/scripts/convert.ts` to emit them structured, then regenerate with
+`npm run build-srd`:
+
+```ts
+export interface MonsterAbility {
+  name: string;
+  text: string;
+  /** Parsed from "(Recharge 5-6)" in the name. */
+  recharge?: { min: number };
+  /** Parsed from "(1/Day)", "(3/Day)". */
+  usesPerDay?: number;
+}
+// fields: { …existing, traits: MonsterAbility[], actions: MonsterAbility[], legendary: MonsterAbility[] }
+```
+
+**Leave `body` untouched** — the existing stat-block panel renders it and must keep working.
+This is additive.
+
+Parse recharge and per-day markers off the ability name and strip them from the displayed
+name. Cover the parser in `plugins/dnd5e/test/convert.test.ts`: plain traits, `(Recharge 5-6)`,
+`(Recharge 6)`, `(1/Day)`, and a monster with no traits at all.
+
+Commit the regenerated `plugins/dnd5e/data/srd-pack.json`.
+
+---
+
+## Commit 3 — Turn card with nag-until-used chips
+
+The one combat ask. Today you can open a full stat block — which is "go and read it", exactly
+what does not happen mid-fight.
+
+New `plugins/dnd5e/src/TurnCard.tsx`, rendered in `TrackerPage` when the active combatant has
+a `monsterRef`. It shows **what the creature can do**, not its stat block: four to six chips
+drawn from `fields.traits` / `actions` / `legendary`.
+
+**Chips nag until used.** Forgetting is usually not "didn't know" but "knew, and the round went
+past". So:
+
+- A chip with `usesPerDay` or `recharge` renders **lit** until tapped, then dims.
+- Tapping a chip opens its full text in the existing `BottomSheet` **and** marks it used.
+- At the start of that creature's turn, any dimmed `recharge` ability rolls `d6` via
+  `rollDice` from `@ttrpgapp/shared`; on `>= recharge.min` it re-lights, with a toast.
+
+State lives on the combatant so it survives reload and sync — extend `Combatant` in
+`trackerTypes.ts`:
+
+```ts
+usedAbilities?: string[];   // ability names marked used
+```
+
+**Reset semantics, which are easy to get wrong:** clear `usedAbilities` when combat *starts*
+(`turnIndex` moving from `-1` to `0`), not each round — a once-per-day ability must stay used
+across rounds. `EMPTY_ENCOUNTER` naturally clears it when combat ends.
+
+Optional, only if lairs get used: a lair-action reminder at the top of each round rather than
+on a creature's turn. Skip unless asked.
+
+---
+
+## Commit 4 — Scene model and store
+
+New `shared/src/scene.ts`:
+
+```ts
+export interface Scene {
+  id: string;
+  name: string;
+  icon: string;
   color: DeckColor;
-  size: DeckSize;
-  action: DeckAction;
+  /** Music to swing to on enter. */
+  music?: SerializedFilter;
+  /** Ambience loops this scene owns — started on enter, stopped on exit. */
+  ambience: { sig: string; name: string; volume: number }[];
+  /** Optional note section to open on enter. */
+  noteSection?: { path: string; heading: string };
+  /** Home Assistant scene entity id (commit 6). */
+  haScene?: string;
 }
 
-export interface DeckPage { id: string; name: string; buttons: DeckButton[] }
-export interface DeckLayout { version: number; pages: DeckPage[] }
+export interface SceneLibrary { version: number; scenes: Scene[] }
 
-/** Tolerant load: never throws, drops malformed buttons, stamps the current version. */
-export function migrateDeck(raw: unknown): DeckLayout;
+/** Tolerant load, same contract as migrateDeck: never throws. */
+export function migrateScenes(raw: unknown): SceneLibrary;
 ```
 
-`sig` fields hold `trackSignature(...)` values, never backend ids. `musicTrack.title` /
-`sfx*.name` are cached copies so a button can still render a sensible label when the underlying
-file is missing on this device.
+**Storage — two stores, deliberately different:**
 
-**Why `sfxLoop` carries a `mode`.** A plain toggle is wrong inside a macro — pressing
-"Tavern" twice must not silence the tavern. `mode` defaults to `'toggle'` for a standalone
-button and to `'start'` inside a macro. It pays for itself immediately: `'stop'` lets a
-scene macro end the *previous* scene's ambience, which is exactly what you want when the
-party leaves the tavern for the road.
+- **Scene definitions** go in the synced `deck` kv namespace, key `scenes`, exactly like the
+  deck layout. They are content and should follow you across devices.
+- **Which scene is active, and when it was entered**, goes in `@capacitor/preferences`
+  directly (localStorage on web), following the precedent of `music.folders` in
+  `client/src/music/folders.ts`. This is **per-device session state** — syncing it would mean
+  entering a scene on the tablet changes what the phone thinks is happening.
 
-`migrateDeck` must be genuinely defensive — this doc arrives over Drive sync from another
-device and may predate any schema change. Drop unrecognised action kinds and malformed buttons
-rather than throwing; a corrupt deck must never white-screen the app's landing page.
-Specifically: default a missing `sfxLoop.mode` to `'toggle'`, drop malformed entries *within*
-a macro individually rather than discarding the whole button, and drop any nested macro that
-arrives from a future schema version.
-
-### Filter serialization — `client/src/music/filter.ts`
-
-`Filter.dims` holds `Set`s, which `JSON.stringify` silently flattens to `{}`. Add the explicit
-conversions next to the type they convert, and round-trip them in `client/test/filter.test.ts`:
+New `client/src/scene/store.ts` for persistence and `client/src/scene/transition.ts` for the
+pure part:
 
 ```ts
-export function toSerializable(f: Filter): SerializedFilter
-export function fromSerializable(s: SerializedFilter): Filter
-```
-
-### Storage — new `client/src/deck/store.ts`
-
-`kvGet`/`kvSet` under the synthetic namespace **`deck`** (keys `layout` and `audio`), exactly as
-music tags use the synthetic `music` namespace. On web this lands in the SQLite `plugin_state`
-table; on Android it is written through `setStateRaw`, which registers `state/deck/layout` in
-`sync.state.index` — so **the deck syncs across devices via Google Drive for free**, with no
-sync-engine changes at all.
-
-```ts
-export async function loadDeck(): Promise<DeckLayout>   // migrateDeck, falling back to starterDeck()
-export function saveDeck(layout: DeckLayout): void      // 400ms debounce + 'ttrpg-local-changed'
-```
-
-### Starter deck — new `client/src/deck/starter.ts`
-
-First launch must not show an empty grid. Seed one page, "Session", with navigation buttons
-(Combat Tracker, Compendium, Prep Notes, Music) and three music-filter buttons built from
-`DEFAULT_TAG_VOCAB` — battle/tense, peaceful/exploration, social. Do not seed SFX buttons; there
-is no SFX library yet on a fresh install.
-
-Seed one **macro** too — "Combat!" = the battle/tense filter + navigate to the tracker. It costs
-nothing and it is how a new user discovers that a button can do more than one thing.
-
----
-
-## Commit 5 — Deck UI
-
-Files: `client/src/pages/DeckPage.tsx` (route component) plus a feature directory
-`client/src/deck/` holding `store.ts`, `starter.ts`, `actions.ts`, `ButtonEditor.tsx` —
-mirroring how `player/`, `music/`, `sync/` are organised.
-
-### The action runner — `client/src/deck/actions.ts`
-
-Keep it a plain function over injected dependencies so it is unit-testable with fakes, per
-house style:
-
-```ts
-export interface DeckActionDeps {
-  tracks: Track[];
-  clips: SfxClip[];
-  player: PlayerApi;
-  sfx: SfxApi;
-  navigate: (to: string) => void;
+export interface SceneTransition {
+  stopLoops: string[];    // signatures to stop (previous scene's ambience)
+  startLoops: { sig: string; volume: number }[];
+  music?: SerializedFilter;
+  openNote?: { path: string; heading: string };
+  haScene?: string;
 }
-export function runDeckAction(action: DeckAction, deps: DeckActionDeps): void
+/** Pure: what entering `next` from `current` implies. Unit-tested. */
+export function planTransition(current: Scene | null, next: Scene | null): SceneTransition;
 ```
 
-- `musicFilter` → `fromSerializable`, `tracks.filter(t => matches(t, f))`, then
-  `player.playQueue(shuffleTracks(filtered))`. Reuses `matches` from `client/src/music/filter.ts`
-  and `shuffleTracks` from `PlayerProvider.tsx`. No-op if the filter matches nothing.
-- `musicTrack` → resolve by signature, `player.playTrack(track)`.
-- `sfxOneShot` → resolve by signature, `sfx.fire(...)`.
-- `sfxLoop` → resolve by signature, then `toggleLoop` / `startLoop` / `stopLoop` per `mode`.
-- `navigate` → `navigate(to)`.
-- `openNote` → `navigate('/notes?path=' + encodeURIComponent(path))`.
-- `openEntry` → `window.dispatchEvent(new CustomEvent('open-compendium-entry', { detail: { packId, entryId } }))`.
-  `CommandPalette` is mounted app-wide and already listens for this, so it works from anywhere.
-- `macro` → run every non-`navigate` action in order, then at most one `navigate` **last**, so
-  navigation cannot pre-empt the rest. Every leaf action is synchronous, and `PlayerProvider` /
-  `SfxProvider` live at the root, so audio a macro starts survives the navigation that follows it.
-
-**Small enabling change:** `client/src/pages/NotesPage.tsx` currently keeps its selection in
-`useState` and is not deep-linkable. Read an optional `?path=` via `useSearchParams` on mount to
-preselect the note. This is a few lines and makes notes linkable generally.
-
-### Grid, tabs, edit mode — `DeckPage.tsx`
-
-- Page tabs across the top (`.deck-tabs`), one per `DeckPage`. Add / rename / delete / reorder
-  pages only in edit mode.
-- CSS Grid: `grid-template-columns: repeat(auto-fill, minmax(96px, 1fr))`; a `2x1` button gets
-  `grid-column: span 2`. Buttons render icon over label, colour from `DeckColor` mapped to CSS
-  custom properties defined in the new styles block. Minimum 88px tall — these are meant to be
-  hit without looking.
-- **Deck colours must survive all three genre themes** (see the theming note in House rules).
-  Define each `DeckColor` as a custom property that the theme blocks can override, rather than
-  hard-coding hex values on the button classes — otherwise the deck will look wrong in horror
-  and sci-fi.
-- On phones, the clip and track pickers can reuse the existing
-  `client/src/components/BottomSheet.tsx` rather than inventing another sheet.
-- A loop button whose signature is in `sfx.activeLoops` renders lit (`.deck-btn-on`), giving the
-  deck live state.
-- A button whose referenced track/clip is missing on this device renders dimmed with a `⚠`, and
-  does nothing when pressed. Expected on a device that has the synced deck but not the audio file.
-- **Edit mode** is an explicit toggle in `.page-header` (`✎ Edit` / `✓ Done`). Out of edit mode,
-  pressing a button fires its action and drag is disabled. In edit mode, pressing opens the
-  editor and buttons are draggable. This separation is the whole point — nothing should move by
-  accident mid-session.
-
-### Drag and drop — add `@dnd-kit`
-
-The repo has no DnD dependency. Hand-rolling touch-correct dragging in an Android WebView is
-a real trap; add `@dnd-kit/core`, `@dnd-kit/sortable`, `@dnd-kit/utilities` to
-`client/package.json`. They are pure JS and do not affect the Capacitor build.
-
-Use `DndContext` + `SortableContext` with `rectSortingStrategy` over the flat button array, and a
-`PointerSensor` with `activationConstraint: { distance: 8 }` so a tap still registers as a press
-rather than a drag. Enable the sensors **only in edit mode**.
-
-### Button editor — `client/src/deck/ButtonEditor.tsx`
-
-A modal reusing `.palette-backdrop`. Fields: label, emoji (plain text input, 1–2 chars), colour
-swatches, size toggle, action kind select, then kind-specific pickers.
-
-> **Structure this deliberately, it is the load-bearing decision here.** Extract the per-kind
-> portion into its own reusable `ActionForm` component — an action kind select plus that kind's
-> picker, editing one `LeafDeckAction`. A plain button renders a single `ActionForm`; a macro
-> button renders a reorderable list of them. Built as one flat form with a `switch` in the
-> middle instead, macro support means restructuring the whole editor later.
-
-The per-kind pickers:
-
-- **musicFilter** — the same tag chips the Music page uses. Extract that chip row out of
-  `MusicPage.tsx` into `client/src/music/FilterChips.tsx` and use it in both places rather than
-  duplicating it.
-- **musicTrack** — searchable list over `useQuery(['tracks'])`.
-- **sfxOneShot / sfxLoop** — searchable list over `useQuery(['sfx'])` grouped by folder, plus a
-  volume slider and a ▶ preview button that calls the engine directly.
-- **navigate** — a select built from `CORE_NAV` plus the enabled plugins' nav items
-  (`availableClientPlugins` from `client/src/plugins.ts`). Note `CORE_NAV` now includes
-  `/generators` ("DM Tools"), so it comes along for free — read the labels off `CORE_NAV`
-  rather than hard-coding a list.
-- **openNote** — picker over `backend().listNotes()`.
-- **openEntry** — reuses `compendiumIndex.search()` from `client/src/compendium.ts`.
-
-**Macro buttons** render a reorderable list of `ActionForm`s with add/remove, reusing the same
-dnd-kit sortable machinery as the grid. Constraints enforced in the editor, not at runtime: at
-most one music action and at most one navigate action per macro (a second of either is
-meaningless — last would simply win), and a cap of 8 actions so the form stays legible. New
-`sfxLoop` rows added inside a macro default to `mode: 'start'`; standalone ones to `'toggle'`.
+Keep `planTransition` free of React and of the backend — it is the piece worth testing.
+Entering the same scene twice must be idempotent (do not restart loops already running).
 
 ---
 
-## Commit 6 — Routing, nav, settings, styles, README
+## Commit 5 — Scenes on the deck
 
-- `client/src/App.tsx` — `/` → `DeckPage`, new `/music` → `MusicPage`. Wrap the shell in
-  `<SfxProvider>` inside `<PlayerProvider>`.
+New leaf action:
 
-  > **Re-verified after the merge — `CORE_NAV`'s shape changed.** Entries are now
-  > `{ path, label, iconFantasy, iconHorror, iconScifi }`, resolved through
-  > `getGenreIcon(item, theme)` (`App.tsx:20`), and there is a third entry `/generators`
-  > ("DM Tools"). So the deck entry needs **three** icons, not one — e.g.
-  > `{ path: '/', label: 'Deck', iconFantasy: '🎛️', iconHorror: '🎛️', iconScifi: '🎛️' }` —
-  > and Music keeps its existing three when it moves to `/music`. Keep
-  > `end={item.path === '/'}` on the NavLink.
-- `client/src/pages/SettingsPage.tsx` — a new "Sound effects" block: the SFX folder picker
-  (reuse the `FolderPicker` pattern from `MusicPage.tsx` — extract it to
-  `client/src/music/FolderPicker.tsx` and parameterise it over the two selections rather than
-  copying it), a "Rescan sound effects" button, an SFX master volume slider, and the global
-  duck-amount slider.
-- `client/src/styles.css` — append `/* --- stream deck --- */` and `/* --- sfx --- */` sections
-  after the existing `/* --- party roster & encounters --- */` block. Add deck rules to the
-  `max-width: 759px` block: fewer, larger columns on phones.
-- `README.md` — a "Stream deck" bullet under Features and a short section explaining pages,
-  edit mode, and the button kinds; `sfxFolders` in the config example plus a line on
-  pointing it at a sound-effects folder, **linking to `sfx_sourcing.md`**; the MediaStore
-  `IS_MUSIC` caveat; and a note that the deck syncs across Android devices like notes do.
+```ts
+| { kind: 'scene'; sceneId: string; name: string }
+```
+
+Running it calls `planTransition`, then applies the result through the APIs that already
+exist: `sfx.stopLoop(sig)` / `sfx.startLoop(clip, volume)` from `SfxProvider`, and
+`player.playQueue(shuffleTracks(filtered))` for the music, reusing `matches` and
+`fromSerializable` from `client/src/music/filter.ts`. **Do not duplicate `runDeckAction`'s
+logic** — extract the shared bits if needed.
+
+UI:
+
+- **Active scene is visible.** The scene's deck button renders lit, the same way an active
+  ambience loop already does.
+- A **scene editor** reached from the deck's edit mode. Reuse `FilterChips`
+  (`client/src/music/FilterChips.tsx`) for the music filter and the SFX clip picker from
+  `ButtonEditor.tsx` for ambience. Do not write new pickers.
+- Exiting to "no scene" must be reachable — a scene button pressed while active clears it and
+  stops its ambience.
 
 ---
 
-## Commit 7 — Transient overlay (prerequisite for the two below)
+## Commit 6 — Home Assistant lighting
 
-> **Re-verified after the `feature/android-touch-enhancements` merge:** a toast already
-> exists, but only as page-local state. `client/src/pages/GeneratorsPage.tsx` has its own
-> `showToast(msg)` (a `useState` plus a 2200ms `setTimeout`) rendering `.generator-toast`,
-> styled at `client/src/styles.css:1645`. **Generalise that rather than building a second
-> one**, and refactor `GeneratorsPage` to use the shared version so there is one toast in
-> the app, not two. The CSS can move largely as-is under a neutral class name.
+Fires a scene you have **already defined in Home Assistant**. Do not build light control:
+HA owns colours, brightness, transitions and groups; the app stores one entity id.
 
-There is still no *app-level* transient feedback: elsewhere it is `window.alert` /
-`window.confirm` / `window.prompt` plus inline text. A dice result and a counter reset both
-need somewhere to go, so promote the overlay once, first.
-
-New `client/src/components/Toast.tsx`, following the app's window-CustomEvent convention
-exactly — a `ttrpg-toast` event and a `<ToastHost />` mounted once in `App.tsx` beside
-`CommandPalette`:
+Because the app has two runtimes, this goes through the `Backend` interface like everything
+else — that is the established pattern and it solves the token problem for free:
 
 ```ts
-export function showToast(msg: { title: string; detail?: string; ttlMs?: number }): void
+// client/src/backend/types.ts
+/** Fire-and-forget: resolves even on failure. Never blocks a deck press. */
+triggerHaScene(entityId: string): Promise<void>;
 ```
 
-Bottom-centre, above the player bar. Auto-dismiss ~3.5s (5s for rolls), tap to dismiss,
-stacks at most 3, `aria-live="polite"`. Keep the detail serializable — no ReactNodes
-through the event. Styles copy the existing `.entry-panel` / `.palette-backdrop` patterns
-already in `styles.css`.
+- **`HttpBackend`** → `POST /api/ha/scene` on the Fastify server, which holds the base URL and
+  long-lived token in `config.json` / gitignored `config.local.json` and forwards to HA. This
+  keeps the token **out of the browser** and sidesteps CORS entirely.
+- **`CapacitorBackend`** → direct `fetch` to HA, with base URL and token in
+  `@capacitor/preferences` (same pattern as the Drive client id). Needs a **cleartext HTTP
+  exception in `AndroidManifest.xml`**, because the WebView serves from `https://localhost`
+  and HA is plain `http://` on the LAN. Add it narrowly, via a network security config
+  domain exception rather than blanket `usesCleartextTraffic`.
+
+Keep the request builder pure and unit-test it against a fake fetch:
+
+```ts
+// shared/src/homeAssistant.ts
+export function buildSceneRequest(baseUrl: string, token: string, entityId: string):
+  { url: string; init: { method: string; headers: Record<string, string>; body: string } };
+```
+
+The call is `POST {baseUrl}/api/services/scene/turn_on`, `Authorization: Bearer <token>`,
+body `{"entity_id": entityId}`.
+
+**The rule that matters:** a deck press must never block or fail because HA is unreachable.
+Fire it, do not await it in the transition path, toast on failure. Music and ambience land
+whether or not the lights do.
+
+Settings gets a "Home Assistant" block: base URL, token, and a **Test** button that fires a
+named scene and reports success or failure plainly.
 
 ---
 
-## Commit 8 — Counters and clocks on button faces
+## Commit 7 — The running order
 
-Torches burning, rations, arrows, legendary resistances, a doom clock, "rounds until the
-ritual completes". This is the feature that makes the deck something you *read* rather
-than only press. There is no generic counter primitive today — every counter in the app
-(round, death saves, exhaustion, HP, intensity) is domain-specific.
-
-New `DeckAction` variant in `shared/src/deck.ts`:
+Derived, not authored. New `client/src/session/runningOrder.ts`:
 
 ```ts
-| { kind: 'counter'; counterId: string; initial: number; step: number;
-    min: number | null; max: number | null; wrap: boolean }
-```
-
-**Values live separately from layout.** Button config stays in `deck:layout`; counter
-*values* go in a second doc `deck:counters` (`Record<string, number>`), so pressing a
-button does not rewrite the whole layout and the two sync independently. Both ride the
-existing `deck` kv namespace — still no sync-engine changes.
-
-New `client/src/deck/counters.ts`:
-
-```ts
-/** Pure: clamp to min/max, or wrap around when `wrap`. The unit-testable core. */
-export function bumpCounter(state: CounterState, id: string, step: number,
-                            opts: { min: number | null; max: number | null; wrap: boolean }): CounterState
-export async function loadCounters(): Promise<CounterState>
-export function saveCounters(state: CounterState): void   // 400ms debounce + 'ttrpg-local-changed'
-```
-
-Behaviour:
-- The button face renders the value large, above the label.
-- Press = `+step`. **Long-press = reset to `initial`**, acknowledged with a toast so the
-  reset is never silent.
-- Long-press applies only *outside* edit mode, so it cannot collide with dnd-kit's
-  `PointerSensor`, which is enabled only *inside* edit mode. Keep that separation strict.
-- Two buttons may deliberately share a `counterId` — bump it on one page, read it on
-  another. Do not de-duplicate them.
-
----
-
-## Commit 9 — Dice roller
-
-> **Re-verified after the `feature/android-touch-enhancements` merge — this commit's original
-> premise was wrong.** A dice-formula parser now exists: `rollHitDice(formula, fallbackHp, rng)`
-> at `plugins/dnd5e/src/rosters.ts:49` parses `"8d8 + 16"`, `"2d8 - 1"`, `"4d6"` with a regex
-> and is used to randomise monster HP when instantiating an encounter. It is covered by
-> `plugins/dnd5e/test/rosters.test.ts`.
->
-> So commit 9 is a **generalisation, not a greenfield build**: move the parsing into
-> `shared/src/dice.ts`, widen it to the fuller grammar below, and have `rollHitDice` delegate
-> to it rather than keeping a second regex. The existing rosters tests must keep passing
-> unchanged — treat that as the guard rail on the refactor.
-
-There is still no advantage/crit logic and no general roll entry point, and the app still
-carries two **duplicated, module-private** d20 helpers —
-`plugins/dnd5e/src/TrackerPage.tsx:53` and `plugins/dnd5e/src/rosters.ts:39`, both
-`1 + Math.floor(rng() * 20)`.
-
-New pure `shared/src/dice.ts`, with an injectable RNG in the established style of
-`instantiate(enc, party, rng = Math.random)` (`plugins/dnd5e/src/rosters.ts`):
-
-```ts
-export interface DiceTerm { count: number; sides: number; keep?: { mode: 'h' | 'l'; n: number } }
-export interface DiceFormula { terms: DiceTerm[]; modifier: number }
-export interface DiceResult {
-  formula: string; total: number; modifier: number;
-  rolls: { sides: number; values: number[]; kept: boolean[] }[];
+export interface Beat { heading: string; doneAt: number | null }
+export interface SessionState {
+  notePath: string;
+  startedAt: number;
+  beats: Beat[];
+  activeBeat: string | null;
+  activeBeatAt: number | null;
 }
-
-/** Returns null on invalid input — never throws. */
-export function parseDice(input: string): DiceFormula | null;
-export function rollDice(f: DiceFormula, rng: () => number = Math.random): DiceResult;
-export function formatDiceResult(r: DiceResult): string;
-export function d20(rng?: () => number): number;
+/** Pure: derive beats from a note's markdown, preserving done-state by heading. */
+export function deriveBeats(markdown: string, previous: Beat[]): Beat[];
 ```
 
-Grammar: `NdM`, `dM` (count defaults to 1), `+K` / `-K`, several terms (`1d8+2d6+3`), and
-keep-highest / keep-lowest (`4d6kh3`, `2d20kl1`). **Advantage and disadvantage fall out of
-`2d20kh1` / `2d20kl1`** — they need no separate concept.
+`deriveBeats` uses `splitSections` from `client/src/components/Markdown.tsx` — sections with a
+non-null `heading` become beats, in order. Preserving previous done-state **by heading text**
+matters: the owner edits the note mid-session, and ticked beats must not un-tick.
 
-New `DeckAction` variant, with an optional target number:
+`SessionState` lives in Preferences (per-device, not synced), like the scene state.
+
+UI on the deck: a compact panel listing beats, each a full-width tappable row (44px minimum).
+Tap marks done; long-press makes it the active beat. The active beat shows elapsed time. What
+is left is visible at a glance — that is the entire point.
+
+**Starting a session** picks the note: default to the newest note under `sessions/`, with a
+picker to override. If there is no session note, the panel is empty and nothing breaks.
+
+Optional and good: making a beat active also enters the scene of the same name, if one exists —
+so the running order and the scene switcher become one control.
+
+---
+
+## Commit 8 — One-press capture
+
+**Highest-risk commit here. A naive implementation destroys notes.**
+
+The goal: a button opens a single-line input, appends a timestamped line to tonight's session
+note under the active beat, and gets out of the way. Because most of what happens was
+improvised, this is how the session note gets written at all.
+
+Two hard constraints:
+
+1. **There is no append API.** `Backend` offers only whole-file `writeNote(path, content)`, so
+   this is read → modify → write.
+2. **`NotesPage` holds a debounced unsaved buffer.** If that note is open in the editor, a
+   read-modify-write **will clobber whatever is being typed.**
+
+Required sequence, do not shortcut it:
+
+- `NotesPage` gains a listener for a new `ttrpg-flush-notes` window event that flushes its
+  pending save immediately (it already flushes on unmount and visibilitychange — reuse that
+  path, do not write a second one).
+- Capture dispatches `ttrpg-flush-notes`, waits for the flush to resolve, *then* reads,
+  appends and writes.
+- If the flush cannot be confirmed, **refuse and toast** rather than writing. Losing a captured
+  line is annoying; losing a paragraph the owner was typing is not acceptable.
+
+Insert under the active beat's `## ` heading when there is one, otherwise at the end of the
+file. Format: `- HH:MM — <text>`.
+
+---
+
+## Commit 9 — Session clock and summary
+
+Small once commits 4 and 7 exist, because the timestamps are already being kept.
+
+- **Session clock** on the deck: elapsed since `SessionState.startedAt`.
+- **Time in the current beat**, and in the current scene.
+- **End session** writes a summary into the session note: time per beat, total, and which beats
+  were never reached. Three of these teach more about pacing than any amount of theorising.
+
+Deliberately **not**: turn timers, countdowns, or anything that beeps. The ask was to *know*
+where the session is, not to be interrupted.
+
+---
+
+## Commit 10 — Levers for when energy drops
+
+All of these must work cold, with no prep.
+
+New `shared/src/oracle.ts` — a small, curated, **system-agnostic** table of complications:
+*someone arrives · a demand is made · it costs more than expected · it goes wrong now · an
+old obligation surfaces.* Twenty to thirty entries that are actually good beat two hundred
+that are not. Keep it short and keep it sharp; this is a content problem more than a code one.
+
+New leaf actions:
 
 ```ts
-| { kind: 'roll'; formula: string; label: string; dc?: number }
+| { kind: 'oracle' }
+| { kind: 'escalate' }
 ```
 
-The result goes to the toast from commit 7: total large, breakdown small, and
-`17 vs DC 15 — success` when `dc` is set. A persistent roll log is deliberately deferred.
+- **`oracle`** draws a prompt and shows it in a toast, with the same injectable-`rng` pattern
+  used by `shared/src/dice.ts` so it is testable.
+- **`escalate`** raises the current music filter's `minIntensity` by one (the tag model already
+  supports 1–5) and draws a complication.
+- **Cut to** is the running-order panel from commit 7 — jumping to another beat without
+  pretending the current one resolved. No new action needed.
+- **NPC on demand:** wire the existing `generateNameBatch` / `generateQuirkFlaw` from
+  `client/src/pages/generatorsData.ts` to a deck action that shows one NPC in a toast, with a
+  second press to capture it into the session note via commit 8.
 
-**De-duplicate while here:** replace both private `d20()` copies with the shared one, and
-route `rollHitDice` through `parseDice`/`rollDice` instead of its own regex. Keep
-`instantiate`'s and `rollHitDice`'s signatures and injectable `rng` exactly as they are so
-`plugins/dnd5e/test/rosters.test.ts` keeps passing unchanged.
+---
 
-Editor support: the button editor gets a formula field that validates live via
-`parseDice` (invalid input disables save), an optional DC field, and a 🎲 preview button.
+## Commit 11 — Small wins
+
+Independent of everything above; do them whenever.
+
+- **Party passive perceptions.** `PartyMember.passivePerception` is already stored and edited
+  and read by nothing. Surface it as a dnd5e plugin action (commit 1) showing a small card.
+- **Keep the screen awake** — add `@capacitor/keep-awake`, enable while a session is running.
+- **Haptics on deck press** — add `@capacitor/haptics`. A touch deck you are not looking at
+  benefits more than usual.
+- **Roll on a table stored as a note** — pick a random `- ` list item from a markdown note.
+  No new data model; the owner writes their own tables in the vault.
 
 ---
 
 ## Tests
 
-Logic-only Vitest units in `client/test/` (remember: `client/tsconfig.json` includes only
-`src`, so `client/test` is **not** typechecked — keep test code simple).
+Logic-only Vitest units in the sibling `test/` directory, hand-written fakes, no jsdom.
 
 | File | Covers |
 | --- | --- |
-| `client/test/deck.test.ts` | `migrateDeck` tolerance (missing version, unknown action kind, malformed button, non-object input), plus macro cases: a nested macro is dropped, a malformed entry inside a macro is dropped without losing the button, missing `sfxLoop.mode` defaults to `'toggle'`; `starterDeck()` shape |
-| `client/test/filter.test.ts` (extend) | `toSerializable`/`fromSerializable` round-trip, incl. empty dims and unicode search |
-| `client/test/deckActions.test.ts` | `runDeckAction` for every kind, against fake `player`/`sfx`/`navigate`; missing-signature cases are no-ops; `sfxLoop` honours all three `mode` values; a macro runs its actions in order with `navigate` last |
-| `client/test/sfxEngine.test.ts` | Layering, loop start/stop/volume, `onOneShotActiveChange` edges — using an injected fake audio-element factory |
-| `client/test/ramp.test.ts` | `rampValue` with injected clock and scheduler |
-| `client/test/musicFolders.test.ts` (extend) | SFX opt-in semantics: no stored selection ⇒ empty, not all |
-| `client/test/counters.test.ts` | `bumpCounter` — clamp at min/max, wrap-around, negative steps, unknown id starts from `initial` |
-| `client/test/dice.test.ts` | `parseDice` (`d20`, `2d6+3`, `1d8+2d6+3`, `4d6kh3`, `2d20kl1`, whitespace, invalid ⇒ `null`), `rollDice` against a seeded fake RNG, keep-h/l picks the right dice, `formatDiceResult` |
-| `server/test/sfx.test.ts` | Scan add/remove diffing against a temp directory (this workspace *is* typechecked) |
+| `plugins/dnd5e/test/convert.test.ts` (extend) | ability parsing: plain, `(Recharge 5-6)`, `(Recharge 6)`, `(1/Day)`, none |
+| `plugins/dnd5e/test/trackerTypes.test.ts` (new) | `nextTurn` / `previousTurn` / `endCombat` reducers, round wrapping, empty encounter |
+| `client/test/scene.test.ts` | `planTransition`: enter from nothing, swap scenes stops only the previous scene's loops, re-entering the same scene is idempotent, exit to null |
+| `client/test/runningOrder.test.ts` | `deriveBeats`: preserves done-state by heading across edits, handles a renamed heading, no headings, preamble-only |
+| `client/test/homeAssistant.test.ts` | `buildSceneRequest` shape, trailing-slash base URLs |
+| `client/test/oracle.test.ts` | draw with a seeded rng, no repeats within a short window |
+| `client/test/deckActions.test.ts` (extend) | `scene`, `pluginAction`, `oracle`, `escalate`; unknown plugin/action is a no-op |
+| `client/test/deck.test.ts` (extend) | `migrateDeck` accepts and round-trips the new action kinds; unknown kinds still dropped |
 
 ---
 
 ## Verification
 
-1. `npm run typecheck && npm test` at the repo root — both must be clean. CI runs neither, so
-   this is the only gate.
-2. `npm run dev`, open http://localhost:5173:
-   - The deck is the landing page and shows the starter buttons; Music is at `/music` and still
-     works (filter chips, play, tag editor, folder picker).
-   - Edit mode: add a page, add one button of each action kind, drag to reorder, rename and
-     delete a page. Reload — everything persists.
-   - **Macros:** build a "Tavern" button — start the crowd ambience + a social music filter +
-     open the tavern note. Press it **twice** and confirm the ambience keeps playing rather
-     than toggling off (this is what `mode: 'start'` buys). Then build a "Back on the road"
-     macro that stops that loop and starts another, and confirm the handover is clean.
-   - Point `sfxFolders` in `config.json` at a folder of short clips, rescan in Settings, then
-     bind a one-shot and a loop button.
-   - **The core acceptance test:** start music from a filter button, fire a one-shot — the clip
-     is audible *over* the music and the music dips and recovers. Start two ambience loops — both
-     sound at once, on top of the music, and their buttons light up. Navigating between views
-     does not interrupt them.
+1. `npm run typecheck && npm test && npm run build -w client` — all three, every commit.
+2. `npm run dev`, then:
+   - **Turn card:** start a fight with a monster that has a recharge ability. Its chip is lit;
+     tap it, it dims and shows the text; on its next turn it either re-lights or stays dim.
+     Reload mid-fight — used state survives. End combat and restart — state is cleared.
+   - **Scenes:** build "Tavern" (social music + crowd ambience) and "The Road". Enter Tavern,
+     then enter The Road: **the crowd stops**, the road ambience starts, the music swings.
+     Press Tavern twice — the second press does not restart the loop.
+   - **Running order:** open a session note with three `## ` headings; the panel lists them.
+     Tick one, edit the note to add a fourth heading, and confirm the ticked one stays ticked.
+   - **Capture (do this carefully):** open the session note in the editor, type a sentence but
+     do **not** wait for the save, then fire capture. The typed sentence must survive.
+   - **Home Assistant:** with HA reachable, entering a scene changes the lights. Then turn HA
+     off and enter the scene again — music and ambience must still work, with a toast about
+     the failure and no hang.
 3. Android: `npm run build -w client && cd client && npx cap sync android && cd android &&
-   ./gradlew assembleDebug`. The build must succeed with the Cast SDK and NanoHTTPD removed.
-   On device, verify separately that SFX layering and ducking work in the WebView — this is the
-   path where Web Audio may be unavailable, and the reason `SfxEngine` avoids it. Also confirm
-   the SFX folder picker sees the clips folder (see the `IS_MUSIC` caveat).
-4. Deck sync: with Drive connected on two Android devices, edit the deck on one and confirm it
-   appears on the other after a sync.
-5. Counters: bind a counter button (initial 4, step −1, min 0), press it four times and confirm
-   the face counts down and stops at 0; long-press and confirm it resets to 4 with a toast.
-   Reload — the value persists. Bind a second button to the same `counterId` on another page
-   and confirm both show the same value.
-6. Dice: bind `2d6+3`, `4d6kh3` and `2d20kh1`, and one with a DC. Confirm the toast shows the
-   total, the breakdown, which dice were kept, and success/failure against the DC. Type an
-   invalid formula in the editor and confirm save is disabled rather than the app throwing.
-   Confirm rolling initiative in the tracker and starting an encounter still work after the
-   `d20()` de-duplication.
+   ./gradlew assembleDebug`. Verify the turn card and running order are usable one-handed on a
+   tablet, and that the HA cleartext exception works on a real LAN.
 
-## Recorded decisions — agreed, not scheduled
-
-**Combat-tracker verbs** (next turn, previous turn, start encounter X, damage/heal the current
-combatant, apply/clear conditions, short/long rest, end combat) are **not planned yet**. When
-they are picked up, the agreed approach is a contribution point on `ClientPlugin`:
-
-```ts
-actions?: { id: string; label: string; icon: string; run(runtime: PluginRuntime): void }[]
-```
-
-so the deck lists whatever the enabled plugins offer and stays system-agnostic. The rejected
-alternative was having core deck code import `@ttrpgapp/plugin-dnd5e` directly — faster to
-ship, but it hard-codes game-system knowledge into core and breaks the `PluginRuntime` boundary
-the repo deliberately maintains. Recorded so it is not re-litigated.
-
-Two notes for whoever picks that up:
-- **`previousTurn` does not exist** in the tracker at all.
-- The tracker's verbs are closures inside `TrackerPage` JSX with a single `update(fn)` funnel
-  (`TrackerPage.tsx:42-54`); they would want extracting as pure `(Encounter) => Encounter`
-  reducers beside `sortedCombatants` in `plugins/dnd5e/src/trackerTypes.ts` first.
-- No new plumbing is needed to *drive* the tracker: `EncountersPage.tsx:103-112` shows the whole
-  trick — `kvSet` the encounter, then dispatch `ttrpg-local-changed` + `ttrpg-sync-updated`, and
-  a mounted `TrackerPage` reloads itself. `instantiate()` is already exported and pure.
+---
 
 ## Deliberately not in scope
 
-Transport / panic / stop-all buttons, deck volume sliders, "pin current filter to deck" from the
-Music page, per-button ducking overrides, restoring ambience loops after a reload, timers,
-random generators from the SRD pack, a persistent roll log, and a player-facing full-screen
-display. Each is a clean follow-up on top of the structures above — `DeckAction` is a
-discriminated union precisely so new kinds are additive.
+From `features.md` §5, binding: player-facing displays, handouts or a second screen; player
+accounts or shared characters; prep-time tooling such as encounter builders and campaign
+wikis; turn-admin shortcuts, expiry reminders and faster encounter setup; and anything that
+beeps or nags on a timer.
 
-## Unrelated bugs noticed while planning
+Also out: light-level control in Home Assistant (scenes only), lair actions unless asked, and a
+persistent roll log.
 
-Do not fix any of these as part of these commits — they are logged so they are not lost.
+---
 
-**Concentration is never ended by damage.** `applyHp` in
-`plugins/dnd5e/src/TrackerPage.tsx` adjusts HP and resets death saves but does not touch
-`concentration`, so a combatant dropped to 0 HP keeps its concentration flag — which 5e ends
-outright — and nothing prompts for the Constitution save damage should trigger. (An earlier
-dead expression that appeared to be a half-written attempt at this was removed by the
-`feature/android-touch-enhancements` merge; the missing behaviour remains.) Logged as entry
-3 in `bugs.md`.
+## Still-open bugs, unrelated to this work
 
-**`sly.html` at the repo root** is a 43KB UTF-16 saved copy of an article from
-SlyFlourish.com, committed by accident on the feature branch and now on the trunk. It is
-third-party content in a public repository and nothing references it.
+Logged in `bugs.md`; do not fix them as part of these commits.
 
-**`build:apk` is Windows-only.** The root `package.json` script ends in `gradlew.bat`, so it
-fails on Linux and macOS. `./gradlew` with a platform check, or just documenting it as a
-Windows convenience script, would fix it.
+- Concentration is never ended by damage — `applyHp` in `TrackerPage` does not touch it, so a
+  combatant dropped to 0 HP keeps concentration, which 5e ends outright (entry 3).
+- `sly.html` — a stray 43KB saved article at the repo root, third-party content, referenced by
+  nothing (entry 4).
+- `npm run build:apk` ends in `gradlew.bat`, so it is Windows-only (entry 5).
 
-**`PluginRuntime.getBackend?(): any`** (`shared/src/plugin-client.ts:38`) puts an `any` into
-an otherwise strict, deliberately narrow plugin boundary — the point of `PluginRuntime` is
-that plugins *cannot* reach the whole backend. Worth typing or reconsidering.
-
-**`BottomSheet.tsx` is duplicated** — identical copies at
-`client/src/components/BottomSheet.tsx` and `plugins/dnd5e/src/BottomSheet.tsx`. The plugin
-boundary makes sharing awkward, but two copies will drift.
+Two more worth knowing, not yet logged: `PluginRuntime.getBackend?(): any` puts an `any` into
+a deliberately narrow boundary, and `BottomSheet.tsx` exists as identical copies in `client`
+and in the dnd5e plugin.
 
 ---
 
@@ -927,39 +509,33 @@ boundary makes sharing awkward, but two copies will drift.
 
 *For the person running the implementation, not for the implementing agent.*
 
-Each session starts cold, which is why every prompt begins by pointing at this file. One
-reusable template covers all nine commits — the per-step detail is already above, and
-duplicating it into nine bespoke prompts would only let the two drift apart:
+One template covers every commit; the detail is above, and duplicating it into per-commit
+prompts only lets the two drift apart:
 
 ```
-Read plan.md in the repo root. Implement Commit N — <title>. Only that commit.
+Read plan.md in the repo root, and features.md for the reasoning behind it.
+Implement Commit N — <title>. Only that commit.
 
-Follow the "Notes for the implementing agent" section at the top of the file.
+Follow the "Notes for the implementing agent" section at the top of plan.md.
 
 When you're done:
-1. Run `npm run typecheck && npm test` at the root — both must pass before you commit
+1. Run `npm run typecheck && npm test && npm run build -w client` — all three must pass
 2. Commit with a message saying what changed and why
 3. Report back: what you did, anything in the plan that was wrong or
    underspecified, and what you chose instead
 ```
 
-Step 3 matters. This plan was written without running the code, so it will have defects;
-the point is for each session to surface them rather than quietly work around them — that
-is how you learn commit 2's backend signatures do not quite fit *before* commit 5 depends
-on them.
+Step 3 matters. This plan was written without running the code, so it has defects; the point
+is for each session to surface them rather than quietly work around them.
 
-**Two commits are worth a checkpoint before any code exists.** Append to the template:
+**Three commits are worth a checkpoint before any code exists.** Append to the template:
 
-- **Commit 3** — *"Before writing code, explain how the duck factor and the user's volume
-  combine, and what happens on the Android fallback path where Web Audio is unavailable.
-  Wait for my go-ahead."*
-- **Commit 5** — *"Before writing code, show me the component breakdown — specifically how
-  `ActionForm` is factored so that a plain button and a macro row share it. Wait for my
-  go-ahead."*
-
-These interrogate the approach rather than instruct it, which is why they belong in a
-prompt rather than in the plan.
+- **Commit 1** — *"Before writing code, show me the `PluginAction` shape and how a deck button
+  resolves it when the plugin is disabled. Wait for my go-ahead."*
+- **Commit 4** — *"Before writing code, explain what `planTransition` returns when swapping
+  between two scenes that share an ambience loop. Wait for my go-ahead."*
+- **Commit 8** — *"Before writing code, walk me through exactly what happens if the session
+  note is open in the editor with unsaved changes when capture fires. Wait for my go-ahead."*
 
 > If you find yourself wanting to write a long prompt for some commit, that is a sign the
-> **plan** is thin there, not that the prompt needs to be fatter. Fix the plan instead — it
-> stays in sync, and the next session gets the improvement for free.
+> **plan** is thin there, not that the prompt needs to be fatter. Fix the plan instead.
