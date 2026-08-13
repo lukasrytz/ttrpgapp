@@ -1,4 +1,4 @@
-import type { TagDimension, Track } from '@ttrpgapp/shared';
+import type { SerializedFilter, TagDimension, Track } from '@ttrpgapp/shared';
 import { TAG_DIMENSIONS } from '@ttrpgapp/shared';
 
 export interface Filter {
@@ -25,4 +25,39 @@ export function matches(track: Track, f: Filter): boolean {
       return false;
   }
   return true;
+}
+
+export function toSerializable(f: Filter): SerializedFilter {
+  const dims: Partial<Record<TagDimension, string[]>> = {};
+  for (const dim of TAG_DIMENSIONS) {
+    if (f.dims[dim] && f.dims[dim].size > 0) {
+      dims[dim] = Array.from(f.dims[dim]);
+    }
+  }
+  return {
+    dims,
+    minIntensity: f.minIntensity,
+    search: f.search,
+  };
+}
+
+export function fromSerializable(s: SerializedFilter): Filter {
+  const dims: Record<TagDimension, Set<string>> = {
+    theme: new Set(),
+    mood: new Set(),
+    landscape: new Set(),
+  };
+  if (s.dims) {
+    for (const dim of TAG_DIMENSIONS) {
+      const arr = s.dims[dim];
+      if (Array.isArray(arr)) {
+        dims[dim] = new Set(arr);
+      }
+    }
+  }
+  return {
+    dims,
+    minIntensity: typeof s.minIntensity === 'number' ? s.minIntensity : 0,
+    search: typeof s.search === 'string' ? s.search : '',
+  };
 }

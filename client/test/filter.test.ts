@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import type { Track } from '@ttrpgapp/shared';
-import { EMPTY_FILTER, matches, type Filter } from '../src/music/filter';
+import { EMPTY_FILTER, fromSerializable, matches, toSerializable, type Filter } from '../src/music/filter';
 
 const track = (over: Partial<Track>): Track => ({
   id: 1,
@@ -45,5 +45,48 @@ describe('music filter', () => {
     expect(matches(track({}), filter({ search: 'drums' }))).toBe(true);
     expect(matches(track({}), filter({ search: 'bard' }))).toBe(true);
     expect(matches(track({}), filter({ search: 'lute' }))).toBe(false);
+  });
+});
+
+describe('filter serialization', () => {
+  it('round-trips a filter with tags, minIntensity, and unicode search', () => {
+    const original: Filter = {
+      dims: {
+        theme: new Set(['battle', 'social']),
+        mood: new Set(['epic']),
+        landscape: new Set(),
+      },
+      minIntensity: 3,
+      search: 'Höhle 🐉',
+    };
+
+    const serialized = toSerializable(original);
+    expect(serialized).toEqual({
+      dims: {
+        theme: ['battle', 'social'],
+        mood: ['epic'],
+      },
+      minIntensity: 3,
+      search: 'Höhle 🐉',
+    });
+
+    const deserialized = fromSerializable(serialized);
+    expect(deserialized.dims.theme).toEqual(new Set(['battle', 'social']));
+    expect(deserialized.dims.mood).toEqual(new Set(['epic']));
+    expect(deserialized.dims.landscape).toEqual(new Set());
+    expect(deserialized.minIntensity).toBe(3);
+    expect(deserialized.search).toBe('Höhle 🐉');
+  });
+
+  it('handles empty filter serialization', () => {
+    const serialized = toSerializable(EMPTY_FILTER);
+    expect(serialized).toEqual({
+      dims: {},
+      minIntensity: 0,
+      search: '',
+    });
+
+    const deserialized = fromSerializable(serialized);
+    expect(deserialized).toEqual(EMPTY_FILTER);
   });
 });

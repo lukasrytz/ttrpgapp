@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useSearchParams } from 'react-router-dom';
 import type { CompendiumSearchHit } from '@ttrpgapp/shared';
 import { getPluginRuntime } from '@ttrpgapp/shared/plugin-client';
 import { instantiate, newId, type EncounterGroup, type PartyMember, type SavedEncounter } from './rosters';
@@ -9,9 +9,13 @@ const rt = getPluginRuntime;
 
 export default function EncountersPage() {
   const navigate = useNavigate();
+  const [searchParams, setSearchParams] = useSearchParams();
+  const urlId = searchParams.get('id');
+  const urlStart = searchParams.get('start');
+
   const [encounters, setEncounters] = useState<SavedEncounter[] | null>(null);
   const [party, setParty] = useState<PartyMember[]>([]);
-  const [selectedId, setSelectedId] = useState<string | null>(null);
+  const [selectedId, setSelectedId] = useState<string | null>(urlId);
   const [starting, setStarting] = useState<SavedEncounter | null>(null);
   const saveTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
 
@@ -29,6 +33,24 @@ export default function EncountersPage() {
     window.addEventListener('ttrpg-sync-updated', load);
     return () => window.removeEventListener('ttrpg-sync-updated', load);
   }, []);
+
+  useEffect(() => {
+    if (!encounters) return;
+    if (urlId) {
+      const match = encounters.find((e) => e.id === urlId);
+      if (match) {
+        setSelectedId(match.id);
+        if (urlStart === '1' || urlStart === 'true') {
+          setStarting(match);
+        }
+      }
+    }
+  }, [encounters, urlId, urlStart]);
+
+  const selectEncounter = (id: string) => {
+    setSelectedId(id);
+    setSearchParams({ id }, { replace: true });
+  };
 
   const persist = (next: SavedEncounter[]) => {
     setEncounters(next);
@@ -51,7 +73,7 @@ export default function EncountersPage() {
     if (!name?.trim()) return;
     const enc: SavedEncounter = { id: newId(), name: name.trim(), groups: [], notes: '' };
     persist([...encounters, enc]);
-    setSelectedId(enc.id);
+    selectEncounter(enc.id);
   };
 
   return (
@@ -67,7 +89,7 @@ export default function EncountersPage() {
           <button
             key={e.id}
             className={`note-item ${e.id === selectedId ? 'note-item-active' : ''}`}
-            onClick={() => setSelectedId(e.id)}
+            onClick={() => selectEncounter(e.id)}
           >
             {e.name}
             <span className="muted small">
@@ -87,6 +109,7 @@ export default function EncountersPage() {
             if (window.confirm(`Delete "${selected.name}"?`)) {
               persist(encounters.filter((e) => e.id !== selected.id));
               setSelectedId(null);
+              setSearchParams({}, { replace: true });
             }
           }}
           onStart={() => setStarting(selected)}
@@ -257,7 +280,7 @@ function StartDialog({
     });
 
   return (
-    <div className="palette-backdrop" onClick={onCancel}>
+    <div className="modal-backdrop" onClick={onCancel}>
       <div className="start-dialog" onClick={(e) => e.stopPropagation()}>
         <h2>Start “{enc.name}”</h2>
         <p className="muted small">

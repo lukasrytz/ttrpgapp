@@ -1,5 +1,6 @@
 export interface AppConfig {
   musicFolders: string[];
+  sfxFolders: string[];
   notesVault: string;
   dataDir: string;
   /** plugin id -> enabled */

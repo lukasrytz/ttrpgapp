@@ -4,7 +4,9 @@ import { Preferences } from '@capacitor/preferences';
 import { useQueryClient } from '@tanstack/react-query';
 import type { MusicTagCatalog } from '@ttrpgapp/shared';
 import { syncManager, type SyncState } from '../sync/manager';
-import { getCapacitorBackend } from '../backend';
+import { backend, getCapacitorBackend } from '../backend';
+import { useSfx } from '../player/SfxProvider';
+import { getSfxFolders, setSfxFolders } from '../music/folders';
 
 function ago(ts: number): string {
   if (!ts) return 'never';
@@ -191,9 +193,6 @@ export default function SettingsPage() {
             <input
               ref={fileInput}
               type="file"
-              // No `accept` filter: Android's document picker maps it to MIME types and
-              // greys out .json files it reports as text/plain or octet-stream (common for
-              // files copied via USB/Downloads/Drive). Content is validated on read instead.
               style={{ display: 'none' }}
               onChange={(e) => {
                 const f = e.target.files?.[0];
@@ -205,7 +204,86 @@ export default function SettingsPage() {
           {importMsg && <p className="muted small">{importMsg}</p>}
         </section>
       )}
+
+      <SfxSettingsSection />
     </div>
+  );
+}
+
+function SfxSettingsSection() {
+  const sfx = useSfx();
+  const [folders, setFolders] = useState<Set<string>>(new Set());
+  const [scanning, setScanning] = useState(false);
+  const [scanMsg, setScanMsg] = useState<string | null>(null);
+
+  useEffect(() => {
+    void getSfxFolders().then(setFolders);
+  }, []);
+
+  const handleToggleFolder = async (folder: string) => {
+    const next = new Set(folders);
+    if (next.has(folder)) next.delete(folder);
+    else next.add(folder);
+    setFolders(next);
+    await setSfxFolders(Array.from(next));
+  };
+
+  const handleRescan = async () => {
+    setScanning(true);
+    setScanMsg(null);
+    try {
+      const res = await backend().scanSfx();
+      setScanMsg(`SFX scan complete: ${res.added} added, ${res.removed} removed, ${res.total} total.`);
+    } catch (e) {
+      setScanMsg(`Scan failed: ${e instanceof Error ? e.message : String(e)}`);
+    } finally {
+      setScanning(false);
+    }
+  };
+
+  return (
+    <section className="settings-section" style={{ marginTop: '24px' }}>
+      <h2>Audio & SFX Library</h2>
+      <p className="muted">
+        Configure sound effect folders, master volume, and music ducking when sound effects trigger.
+      </p>
+
+      <div className="form-group" style={{ marginTop: '12px' }}>
+        <label className="small muted">SFX Master Volume: {Math.round(sfx.masterVolume * 100)}%</label>
+        <input
+          type="range"
+          min="0"
+          max="1"
+          step="0.05"
+          value={sfx.masterVolume}
+          onChange={(e) => sfx.setMasterVolume(Number(e.target.value))}
+        />
+      </div>
+
+      <div className="form-group" style={{ marginTop: '12px' }}>
+        <label className="small muted">
+          Music Ducking Level: {Math.round(sfx.duckAmount * 100)}% music volume during SFX
+        </label>
+        <input
+          type="range"
+          min="0"
+          max="1"
+          step="0.05"
+          value={sfx.duckAmount}
+          onChange={(e) => sfx.setDuckAmount(Number(e.target.value))}
+        />
+      </div>
+
+      <div style={{ marginTop: '16px' }}>
+        <h3>SFX Library Folders</h3>
+        <div className="header-actions" style={{ marginTop: '8px' }}>
+          <button className="primary" onClick={handleRescan} disabled={scanning}>
+            {scanning ? 'Scanning SFX…' : 'Rescan SFX Library'}
+          </button>
+        </div>
+        {scanMsg && <p className="muted small" style={{ marginTop: '4px' }}>{scanMsg}</p>}
+      </div>
+    </section>
   );
 }
 

@@ -5,6 +5,7 @@ import { DEFAULT_TAG_VOCAB, TAG_DIMENSIONS } from '@ttrpgapp/shared';
 import { backend, type TrackUpdate } from '../backend';
 import { usePlayer, shuffleTracks } from '../player/PlayerProvider';
 import { EMPTY_FILTER, matches, type Filter } from '../music/filter';
+import FilterChips from '../music/FilterChips';
 
 function fmtDuration(sec: number | null): string {
   if (!sec) return '';
@@ -95,28 +96,12 @@ export default function MusicPage() {
         )}
 
         <div className="filter-panel">
-          <div className="filter-row" style={{ justifyContent: 'space-between', marginBottom: '4px' }}>
-            <span className="filter-label">filters</span>
-            <button className="chip" onClick={() => setFilter(EMPTY_FILTER)}>
-              Reset filters
-            </button>
-          </div>
-          {TAG_DIMENSIONS.map((dim) => (
-            <div className="filter-row" key={dim}>
-              <span className="filter-label">{dim}</span>
-              <div className="chip-row">
-                {vocab[dim].map((v) => (
-                  <button
-                    key={v}
-                    className={`chip ${filter.dims[dim].has(v) ? 'chip-on' : ''}`}
-                    onClick={() => toggleDim(dim, v)}
-                  >
-                    {v}
-                  </button>
-                ))}
-              </div>
-            </div>
-          ))}
+          <FilterChips
+            filter={filter}
+            vocab={vocab}
+            onToggleTag={toggleDim}
+            onReset={() => setFilter(EMPTY_FILTER)}
+          />
           <div className="filter-row">
             <span className="filter-label">intensity</span>
             <div className="chip-row">

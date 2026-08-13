@@ -2,7 +2,6 @@ import {
   createContext,
   useCallback,
   useContext,
-  useEffect,
   useMemo,
   useRef,
   useState,
@@ -10,8 +9,8 @@ import {
 } from 'react';
 import type { Track } from '@ttrpgapp/shared';
 import { backend } from '../backend';
-import { castManager } from '../cast/manager';
 import { CrossfadeEngine } from './crossfade';
+import { rampValue, type RampHandle } from './ramp';
 
 interface PlayerState {
   current: Track | null;
@@ -23,13 +22,15 @@ interface PlayerState {
   duration: number;
 }
 
-interface PlayerApi extends PlayerState {
+export interface PlayerApi extends PlayerState {
   /** Replace the queue and start playing at index (crossfades from whatever is on). */
   playQueue: (tracks: Track[], index?: number) => void;
   playTrack: (track: Track) => void;
   next: () => void;
   toggle: () => void;
   setVolume: (v: number) => void;
+  /** Temporarily scale playback level without changing the user's volume setting. */
+  setDuck: (factor: number) => void;
 }
 
 const PlayerContext = createContext<PlayerApi | null>(null);
@@ -49,6 +50,9 @@ export function shuffleTracks(tracks: Track[]): Track[] {
 
 export function PlayerProvider({ children }: { children: ReactNode }) {
   const engineRef = useRef<CrossfadeEngine | null>(null);
+  const duckRampRef = useRef<RampHandle | null>(null);
+  const duckFactorRef = useRef(1);
+  const userVolumeRef = useRef(1);
   const [state, setState] = useState<PlayerState>({
     current: null,
     queue: [],
@@ -60,6 +64,7 @@ export function PlayerProvider({ children }: { children: ReactNode }) {
   });
   const stateRef = useRef(state);
   stateRef.current = state;
+  userVolumeRef.current = state.volume;
 
   const engine = () => {
     if (!engineRef.current) {
@@ -78,23 +83,24 @@ export function PlayerProvider({ children }: { children: ReactNode }) {
     return engineRef.current;
   };
 
-  /**
-   * Route a track to whichever output is active. While a cast session is up the
-   * Chromecast fetches the file itself from the on-device media server, so the
-   * local crossfade decks stay silent. Falls back to local playback if the
-   * receiver can't be given the track (e.g. it isn't in the server's allow-list).
-   */
-  const playOn = useCallback(async (track: Track) => {
-    if (castManager.isCasting()) {
-      engine().stop();
-      if (await castManager.loadTrack(track)) return;
-    }
+  const setDuck = useCallback((targetFactor: number) => {
+    const current = duckFactorRef.current;
+    if (Math.abs(current - targetFactor) < 0.001) return;
+    duckRampRef.current?.cancel();
+    const ms = targetFactor < current ? 250 : 600;
+    duckRampRef.current = rampValue(current, targetFactor, ms, (v) => {
+      duckFactorRef.current = v;
+      engine().setVolume(userVolumeRef.current * v);
+    });
+  }, []);
+
+  const playOn = useCallback((track: Track) => {
     void engine().play(backend().trackUrl(track));
   }, []);
 
   const startTrack = useCallback(
     (track: Track) => {
-      void playOn(track);
+      playOn(track);
       setState((s) => ({ ...s, current: track, playing: true, position: 0, duration: 0 }));
     },
     [playOn],
@@ -105,7 +111,7 @@ export function PlayerProvider({ children }: { children: ReactNode }) {
     if (s.queue.length === 0) return;
     const nextIndex = (s.queueIndex + 1) % s.queue.length;
     const track = s.queue[nextIndex]!;
-    void playOn(track);
+    playOn(track);
     setState((prev) => ({
       ...prev,
       current: track,
@@ -114,35 +120,6 @@ export function PlayerProvider({ children }: { children: ReactNode }) {
       position: 0,
       duration: 0,
     }));
-  }, [playOn]);
-
-  // The receiver drives progress and end-of-track while casting; the local
-  // engine's timeupdate events are silent then.
-  useEffect(() => {
-    castManager.onProgress = (position, duration) =>
-      setState((s) => ({ ...s, position, duration }));
-    castManager.onEnded = () => advance();
-    return () => {
-      castManager.onProgress = null;
-      castManager.onEnded = null;
-    };
-  }, [advance]);
-
-  // Moving between speakers mid-session: restart the current track on the new
-  // output rather than leaving it playing on the old one.
-  useEffect(() => {
-    const onCastStatus = () => {
-      const s = stateRef.current;
-      if (!s.current) return;
-      if (castManager.isCasting()) {
-        void playOn(s.current);
-      } else {
-        engine().stop();
-        if (s.playing) void engine().play(backend().trackUrl(s.current));
-      }
-    };
-    window.addEventListener('ttrpg-cast-status', onCastStatus);
-    return () => window.removeEventListener('ttrpg-cast-status', onCastStatus);
   }, [playOn]);
 
   const api = useMemo<PlayerApi>(
@@ -163,23 +140,21 @@ export function PlayerProvider({ children }: { children: ReactNode }) {
         const s = stateRef.current;
         if (!s.current) return;
         if (s.playing) {
-          if (castManager.isCasting()) void castManager.pause();
-          else engine().pause();
+          engine().pause();
           setState((prev) => ({ ...prev, playing: false }));
         } else {
-          if (castManager.isCasting()) void castManager.play();
-          else void engine().resume();
+          void engine().resume();
           setState((prev) => ({ ...prev, playing: true }));
         }
       },
       setVolume: (v) => {
-        // While casting this is the receiver's volume, not the phone's.
-        if (castManager.isCasting()) void castManager.setVolume(v);
-        else engine().setVolume(v);
+        userVolumeRef.current = v;
+        engine().setVolume(v * duckFactorRef.current);
         setState((prev) => ({ ...prev, volume: v }));
       },
+      setDuck,
     }),
-    [state, advance, startTrack],
+    [state, advance, startTrack, setDuck],
   );
 
   return <PlayerContext.Provider value={api}>{children}</PlayerContext.Provider>;

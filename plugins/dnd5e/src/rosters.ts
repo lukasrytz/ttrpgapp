@@ -1,3 +1,4 @@
+import { d20, parseDice, rollFormula } from '@ttrpgapp/shared';
 import type { Combatant } from './trackerTypes';
 
 /** A reusable player character for the tracker (a persistent party roster). */
@@ -36,15 +37,13 @@ export function newId(): string {
   return Math.random().toString(36).slice(2, 10);
 }
 
-function d20(rng: () => number): number {
-  return 1 + Math.floor(rng() * 20);
-}
-
 const emptyDeathSaves = () => ({ successes: 0, failures: 0 });
 
 /**
- * Parse and roll a hit dice formula like "8d8 + 16", "2d8 - 1", or "4d6".
- * Returns calculated HP (minimum 1). Falls back to defaultHp if formula is omitted or invalid.
+ * Roll a hit dice formula like "8d8 + 16", "2d8 - 1", or "4d6" into a concrete
+ * HP value (minimum 1). Falls back to defaultHp when the formula is missing or
+ * unparseable. Parsing lives in `@ttrpgapp/shared` so this is not a second dice
+ * implementation.
  */
 export function rollHitDice(
   formula?: string,
@@ -52,21 +51,9 @@ export function rollHitDice(
   rng: () => number = Math.random,
 ): number {
   if (!formula) return defaultHp;
-  const match = /^(\d+)d(\d+)(?:\s*([+-])\s*(\d+))?$/i.exec(formula.trim());
-  if (!match) return defaultHp;
-  const numDice = parseInt(match[1]!, 10);
-  const sides = parseInt(match[2]!, 10);
-  const op = match[3];
-  const mod = match[4] ? parseInt(match[4], 10) : 0;
-
-  let total = 0;
-  for (let i = 0; i < numDice; i++) {
-    total += 1 + Math.floor(rng() * sides);
-  }
-  if (op === '+') total += mod;
-  else if (op === '-') total -= mod;
-
-  return Math.max(1, total);
+  const parsed = parseDice(formula);
+  if (!parsed) return defaultHp;
+  return Math.max(1, rollFormula(parsed, rng).total);
 }
 
 /**
