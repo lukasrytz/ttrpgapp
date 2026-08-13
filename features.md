@@ -105,6 +105,68 @@ name. Switching scenes is one press and the previous scene tears itself down.
 **This also unlocks everything in 2b for free** — if the app knows which scene is active, it
 knows when it started.
 
+### Scenes calling out: lights via Home Assistant
+
+A scene that changes the music and the ambience but not the *room* is doing half the job.
+Lighting is what makes a scene change land physically rather than only audibly, and it is the
+one part of the table the app could plausibly drive.
+
+**The scoping decision that makes this small.** Trigger **scenes you have already defined in
+Home Assistant** — do not control individual lights. Then HA owns colours, brightness,
+transitions, groups and per-bulb capabilities, and the app stores one string per scene. Go the
+other way and you are building an entity picker, a colour model and capability handling, and
+it stops being a small feature.
+
+So a scene grows one optional field:
+
+```ts
+{ …scene, haScene?: string }   // e.g. 'scene.tavern_warm'
+```
+
+and entering the scene fires one request:
+
+```
+POST http://homeassistant.local:8123/api/services/scene/turn_on
+Authorization: Bearer <long-lived token>
+Content-Type: application/json
+
+{ "entity_id": "scene.tavern_warm" }
+```
+
+The token comes from the HA profile page. That is the entire integration — the call is the
+easy part.
+
+**The actual work is three bits of plumbing:**
+
+1. **CORS on the web build.** A browser fetch to HA is cross-origin. Either add
+   `cors_allowed_origins` to HA's `http:` config, or proxy through the Fastify server.
+   Prefer the proxy — it also keeps the token out of the browser, in gitignored
+   `config.local.json` rather than in client storage.
+2. **Cleartext HTTP on Android.** The Capacitor WebView serves from `https://localhost`, so
+   `http://192.168.x.x:8123` is both mixed content and cleartext-blocked. Needs a manifest
+   exception — a real step, and one to take deliberately given the manifest was just stripped
+   back when Chromecast was removed.
+3. **Token storage.** Same pattern as the Drive client ID (`@capacitor/preferences`).
+
+**A simpler alternative worth considering: HA webhooks.** `POST /api/webhook/<id>` needs no
+token at all — you create an automation in HA triggered by that webhook. One webhook per
+scene, and the id is effectively a secret in a URL, but it removes credential storage
+entirely and is less code again.
+
+**One caveat worth stating plainly.** This is the same *shape* as the Chromecast feature that
+never worked: the app talking to something else on the LAN. It is much simpler — one HTTP POST
+to a fixed host you configure, versus device discovery, an on-device media server and a
+receiver app — so the risk is far lower. But "works on my Wi-Fi, not on yours" is the same
+class of problem, and it is worth knowing that going in.
+
+**The design rule.** A deck press must never block or fail because Home Assistant is
+unreachable. Fire and forget, toast on failure, never await. The scene's music and ambience
+must land whether or not the lights do.
+
+**Effort:** a settings block for base URL and token, an optional field on scenes, one
+fire-and-forget POST. A few hundred lines — an evening or two, not a week. The request builder
+is pure and unit-testable against a fake fetch, in the same style the cast manager was tested.
+
 ## 2b. Session clock and scene timing
 
 There is no timer anywhere in the app today. Add the smallest useful one:
@@ -208,7 +270,9 @@ Worth recording so these don't get re-suggested:
 # Suggested order
 
 1. **Turn card with nag-until-used chips** (§1) — the one combat ask, and self-contained.
-2. **Scenes with enter/exit** (§2a) — biggest pacing win, and 2b comes free with it.
+2. **Scenes with enter/exit** (§2a) — biggest pacing win, and 2b comes free with it. Add the
+   Home Assistant call once scenes exist, not before: it is one optional field on a scene,
+   and building it standalone would mean building the hook twice.
 3. **Running order from `## ` headings** (§2c) — highest value per line of code in the
    document, because the data already exists.
 4. **One-press capture** (§3) — small, and it's what light prep is missing.
