@@ -26,6 +26,10 @@ import { starterDeck } from '../deck/starter';
 import { runDeckAction, type DeckActionDeps } from '../deck/actions';
 import DeckButtonView from '../deck/DeckButtonView';
 import ButtonEditor from '../deck/ButtonEditor';
+import { getActiveSceneState } from '../scene/store';
+import RunningOrderDrawer from '../session/RunningOrderDrawer';
+import SceneLibraryManager from '../scene/SceneLibraryManager';
+import BottomSheet from '../components/BottomSheet';
 
 export default function DeckPage() {
   const navigate = useNavigate();
@@ -36,6 +40,19 @@ export default function DeckPage() {
   const [activePageIndex, setActivePageIndex] = useState(0);
   const [editMode, setEditMode] = useState(false);
   const [editingButton, setEditingButton] = useState<DeckButton | null>(null);
+  const [activeSceneId, setActiveSceneId] = useState<string | null>(null);
+  const [isRunningOrderOpen, setIsRunningOrderOpen] = useState(false);
+  const [isScenesModalOpen, setIsScenesModalOpen] = useState(false);
+
+  useEffect(() => {
+    void getActiveSceneState().then((s) => setActiveSceneId(s.sceneId));
+    const onSceneChanged = (e: Event) => {
+      const detail = (e as CustomEvent<{ sceneId: string | null }>).detail;
+      setActiveSceneId(detail?.sceneId ?? null);
+    };
+    window.addEventListener('ttrpg-scene-changed', onSceneChanged);
+    return () => window.removeEventListener('ttrpg-scene-changed', onSceneChanged);
+  }, []);
 
   useEffect(() => {
     let cancelled = false;
@@ -204,12 +221,17 @@ export default function DeckPage() {
   };
 
   const checkIsLit = (btn: DeckButton): boolean => {
+    if (btn.action.kind === 'scene') {
+      return activeSceneId === btn.action.sceneId;
+    }
     if (btn.action.kind === 'sfxLoop') {
       return sfx.activeLoops.includes(btn.action.sig);
     }
     if (btn.action.kind === 'macro') {
       return btn.action.actions.some(
-        (a) => a.kind === 'sfxLoop' && sfx.activeLoops.includes(a.sig),
+        (a) =>
+          (a.kind === 'sfxLoop' && sfx.activeLoops.includes(a.sig)) ||
+          (a.kind === 'scene' && activeSceneId === a.sceneId),
       );
     }
     return false;
@@ -232,6 +254,13 @@ export default function DeckPage() {
       <div className="page-header">
         <h1>Stream Deck</h1>
         <div className="header-actions">
+          <button
+            className="chip"
+            onClick={() => setIsScenesModalOpen(true)}
+            title="Open Scenes Library"
+          >
+            🎭 Scenes
+          </button>
           <button
             className={`chip ${editMode ? 'chip-on' : ''}`}
             onClick={() => setEditMode(!editMode)}
@@ -266,6 +295,12 @@ export default function DeckPage() {
           </>
         )}
       </div>
+
+      <RunningOrderDrawer
+        isOpen={isRunningOrderOpen}
+        onToggle={() => setIsRunningOrderOpen(!isRunningOrderOpen)}
+        onNavigateNotes={(path) => navigate(`/notes?path=${encodeURIComponent(path)}`)}
+      />
 
       <div className="deck-grid-container" style={{ marginTop: '16px' }}>
         <DndContext
@@ -312,6 +347,18 @@ export default function DeckPage() {
           onDelete={handleDeleteButton}
           onClose={() => setEditingButton(null)}
         />
+      )}
+
+      {isScenesModalOpen && (
+        <BottomSheet
+          isOpen={isScenesModalOpen}
+          onClose={() => setIsScenesModalOpen(false)}
+          title="Scenes Library"
+        >
+          <div style={{ padding: '8px 0' }}>
+            <SceneLibraryManager onClose={() => setIsScenesModalOpen(false)} />
+          </div>
+        </BottomSheet>
       )}
     </div>
   );

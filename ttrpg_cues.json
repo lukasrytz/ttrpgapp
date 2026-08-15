@@ -1,0 +1,5625 @@
+{
+  "schema_version": 1,
+  "generated_at": "2026-08-15T15:29:50.877988+00:00",
+  "channels": [
+    "dm",
+    "t1",
+    "t2",
+    "t3",
+    "t4"
+  ],
+  "systems": [
+    {
+      "id": "dnd5e",
+      "label": "D&D 5e",
+      "description": "High fantasy adventure with warm torch amber, deep shadow blues, and arcane violet.",
+      "key_hue": 32.0,
+      "fill_hue": 232.0,
+      "accent_hue": 275.0
+    },
+    {
+      "id": "cthulhu",
+      "label": "Call of Cthulhu",
+      "description": "1920s cosmic horror with sickly gaslight, decaying greens, and dried arterial blood.",
+      "key_hue": 44.0,
+      "fill_hue": 150.0,
+      "accent_hue": 18.0
+    },
+    {
+      "id": "mothership",
+      "label": "Mothership",
+      "description": "Sci-fi survival horror with terminal cyan, void vacuum blue, and flashing alert reds.",
+      "key_hue": 190.0,
+      "fill_hue": 220.0,
+      "accent_hue": 0.0
+    },
+    {
+      "id": "core",
+      "label": "Core / Utility",
+      "description": "Neutral, high-readability utility lighting for rules lookup, table management, and breaks.",
+      "key_hue": 38.0,
+      "fill_hue": 42.0,
+      "accent_hue": 210.0
+    }
+  ],
+  "categories": [
+    "combat",
+    "environment",
+    "exploration",
+    "rest",
+    "social",
+    "suspense",
+    "utility"
+  ],
+  "total_cues": 220,
+  "cues": [
+    {
+      "id": "dnd5e_dungeon_calm",
+      "entity_id": "scene.ttrpg_dnd5e_dungeon_calm",
+      "system": "dnd5e",
+      "mood": "dungeon",
+      "intensity": "calm",
+      "category": "exploration",
+      "label": "D&D 5e \u2014 Dungeon (Calm)",
+      "description": "Guttering torchlight with cold shadow beyond the circle.",
+      "tags": [
+        "indoor",
+        "dark",
+        "exploration",
+        "subterranean"
+      ],
+      "transition_s": 3.0,
+      "readable": true,
+      "fx": "script.ttrpg_fx_torch_flicker",
+      "preview": [
+        "#623f17",
+        "#2c3857",
+        "#2c3457",
+        "#393c66",
+        "#393966"
+      ]
+    },
+    {
+      "id": "dnd5e_dungeon_tense",
+      "entity_id": "scene.ttrpg_dnd5e_dungeon_tense",
+      "system": "dnd5e",
+      "mood": "dungeon",
+      "intensity": "tense",
+      "category": "exploration",
+      "label": "D&D 5e \u2014 Dungeon (Tense)",
+      "description": "Guttering torchlight with cold shadow beyond the circle.",
+      "tags": [
+        "indoor",
+        "dark",
+        "exploration",
+        "subterranean"
+      ],
+      "transition_s": 3.0,
+      "readable": true,
+      "fx": "script.ttrpg_fx_torch_flicker",
+      "preview": [
+        "#73430c",
+        "#2b3c66",
+        "#2b3666",
+        "#2b3066",
+        "#2c2b66"
+      ]
+    },
+    {
+      "id": "dnd5e_dungeon_dire",
+      "entity_id": "scene.ttrpg_dnd5e_dungeon_dire",
+      "system": "dnd5e",
+      "mood": "dungeon",
+      "intensity": "dire",
+      "category": "exploration",
+      "label": "D&D 5e \u2014 Dungeon (Dire)",
+      "description": "Guttering torchlight with cold shadow beyond the circle.",
+      "tags": [
+        "indoor",
+        "dark",
+        "exploration",
+        "subterranean"
+      ],
+      "transition_s": 3.0,
+      "readable": true,
+      "fx": "script.ttrpg_fx_torch_flicker",
+      "preview": [
+        "#844600",
+        "#283e75",
+        "#283675",
+        "#282e75",
+        "#292875"
+      ]
+    },
+    {
+      "id": "dnd5e_cavern_calm",
+      "entity_id": "scene.ttrpg_dnd5e_cavern_calm",
+      "system": "dnd5e",
+      "mood": "cavern",
+      "intensity": "calm",
+      "category": "exploration",
+      "label": "D&D 5e \u2014 Deep Cavern (Calm)",
+      "description": "Damp subterranean stone, bioluminescent patches, echoing depth.",
+      "tags": [
+        "subterranean",
+        "damp",
+        "dark",
+        "exploration"
+      ],
+      "transition_s": 3.5,
+      "readable": true,
+      "fx": "script.ttrpg_fx_drift",
+      "preview": [
+        "#1c224c",
+        "#4f2261",
+        "#3f2261",
+        "#4f2261",
+        "#3f2261"
+      ]
+    },
+    {
+      "id": "dnd5e_cavern_tense",
+      "entity_id": "scene.ttrpg_dnd5e_cavern_tense",
+      "system": "dnd5e",
+      "mood": "cavern",
+      "intensity": "tense",
+      "category": "exploration",
+      "label": "D&D 5e \u2014 Deep Cavern (Tense)",
+      "description": "Damp subterranean stone, bioluminescent patches, echoing depth.",
+      "tags": [
+        "subterranean",
+        "damp",
+        "dark",
+        "exploration"
+      ],
+      "transition_s": 3.5,
+      "readable": true,
+      "fx": "script.ttrpg_fx_drift",
+      "preview": [
+        "#182059",
+        "#591c72",
+        "#431c72",
+        "#591c72",
+        "#431c72"
+      ]
+    },
+    {
+      "id": "dnd5e_cavern_dire",
+      "entity_id": "scene.ttrpg_dnd5e_cavern_dire",
+      "system": "dnd5e",
+      "mood": "cavern",
+      "intensity": "dire",
+      "category": "exploration",
+      "label": "D&D 5e \u2014 Deep Cavern (Dire)",
+      "description": "Damp subterranean stone, bioluminescent patches, echoing depth.",
+      "tags": [
+        "subterranean",
+        "damp",
+        "dark",
+        "exploration"
+      ],
+      "transition_s": 3.5,
+      "readable": true,
+      "fx": "script.ttrpg_fx_drift",
+      "preview": [
+        "#101c67",
+        "#611282",
+        "#451282",
+        "#611282",
+        "#451282"
+      ]
+    },
+    {
+      "id": "dnd5e_wilderness_calm",
+      "entity_id": "scene.ttrpg_dnd5e_wilderness_calm",
+      "system": "dnd5e",
+      "mood": "wilderness",
+      "intensity": "calm",
+      "category": "exploration",
+      "label": "D&D 5e \u2014 Wilderness Trek (Calm)",
+      "description": "Open canopy, shifting wind, distant natural horizons.",
+      "tags": [
+        "outdoor",
+        "nature",
+        "travel"
+      ],
+      "transition_s": 4.0,
+      "readable": true,
+      "fx": null,
+      "preview": [
+        "#82613c",
+        "#475277",
+        "#474f77",
+        "#474c77",
+        "#474977"
+      ]
+    },
+    {
+      "id": "dnd5e_wilderness_tense",
+      "entity_id": "scene.ttrpg_dnd5e_wilderness_tense",
+      "system": "dnd5e",
+      "mood": "wilderness",
+      "intensity": "tense",
+      "category": "exploration",
+      "label": "D&D 5e \u2014 Wilderness Trek (Tense)",
+      "description": "Open canopy, shifting wind, distant natural horizons.",
+      "tags": [
+        "outdoor",
+        "nature",
+        "travel"
+      ],
+      "transition_s": 4.0,
+      "readable": true,
+      "fx": null,
+      "preview": [
+        "#996c39",
+        "#4a598c",
+        "#4a558c",
+        "#4a518c",
+        "#4a4c8c"
+      ]
+    },
+    {
+      "id": "dnd5e_wilderness_dire",
+      "entity_id": "scene.ttrpg_dnd5e_wilderness_dire",
+      "system": "dnd5e",
+      "mood": "wilderness",
+      "intensity": "dire",
+      "category": "exploration",
+      "label": "D&D 5e \u2014 Wilderness Trek (Dire)",
+      "description": "Open canopy, shifting wind, distant natural horizons.",
+      "tags": [
+        "outdoor",
+        "nature",
+        "travel"
+      ],
+      "transition_s": 4.0,
+      "readable": true,
+      "fx": null,
+      "preview": [
+        "#b07531",
+        "#4a5fa1",
+        "#4a59a1",
+        "#4a53a1",
+        "#4a4da1"
+      ]
+    },
+    {
+      "id": "dnd5e_ruins_calm",
+      "entity_id": "scene.ttrpg_dnd5e_ruins_calm",
+      "system": "dnd5e",
+      "mood": "ruins",
+      "intensity": "calm",
+      "category": "exploration",
+      "label": "D&D 5e \u2014 Ancient Ruins (Calm)",
+      "description": "Crumbling monoliths, forgotten inscriptions, dusty shafts of light.",
+      "tags": [
+        "indoor",
+        "mystery",
+        "ancient",
+        "exploration"
+      ],
+      "transition_s": 3.0,
+      "readable": true,
+      "fx": null,
+      "preview": [
+        "#6c4d28",
+        "#363662",
+        "#364062",
+        "#364062",
+        "#363662"
+      ]
+    },
+    {
+      "id": "dnd5e_ruins_tense",
+      "entity_id": "scene.ttrpg_dnd5e_ruins_tense",
+      "system": "dnd5e",
+      "mood": "ruins",
+      "intensity": "tense",
+      "category": "exploration",
+      "label": "D&D 5e \u2014 Ancient Ruins (Tense)",
+      "description": "Crumbling monoliths, forgotten inscriptions, dusty shafts of light.",
+      "tags": [
+        "indoor",
+        "mystery",
+        "ancient",
+        "exploration"
+      ],
+      "transition_s": 3.0,
+      "readable": true,
+      "fx": null,
+      "preview": [
+        "#805422",
+        "#373773",
+        "#374473",
+        "#374473",
+        "#373773"
+      ]
+    },
+    {
+      "id": "dnd5e_ruins_dire",
+      "entity_id": "scene.ttrpg_dnd5e_ruins_dire",
+      "system": "dnd5e",
+      "mood": "ruins",
+      "intensity": "dire",
+      "category": "exploration",
+      "label": "D&D 5e \u2014 Ancient Ruins (Dire)",
+      "description": "Crumbling monoliths, forgotten inscriptions, dusty shafts of light.",
+      "tags": [
+        "indoor",
+        "mystery",
+        "ancient",
+        "exploration"
+      ],
+      "transition_s": 3.0,
+      "readable": true,
+      "fx": null,
+      "preview": [
+        "#935917",
+        "#353584",
+        "#354784",
+        "#354784",
+        "#353584"
+      ]
+    },
+    {
+      "id": "dnd5e_city_streets_calm",
+      "entity_id": "scene.ttrpg_dnd5e_city_streets_calm",
+      "system": "dnd5e",
+      "mood": "city_streets",
+      "intensity": "calm",
+      "category": "exploration",
+      "label": "D&D 5e \u2014 City Streets & Alleys (Calm)",
+      "description": "Cobblestone reflection, flickering street lamps, murky alleyways.",
+      "tags": [
+        "urban",
+        "night",
+        "stealth"
+      ],
+      "transition_s": 2.5,
+      "readable": true,
+      "fx": null,
+      "preview": [
+        "#775227",
+        "#313068",
+        "#304068",
+        "#313068",
+        "#304068"
+      ]
+    },
+    {
+      "id": "dnd5e_city_streets_tense",
+      "entity_id": "scene.ttrpg_dnd5e_city_streets_tense",
+      "system": "dnd5e",
+      "mood": "city_streets",
+      "intensity": "tense",
+      "category": "exploration",
+      "label": "D&D 5e \u2014 City Streets & Alleys (Tense)",
+      "description": "Cobblestone reflection, flickering street lamps, murky alleyways.",
+      "tags": [
+        "urban",
+        "night",
+        "stealth"
+      ],
+      "transition_s": 2.5,
+      "readable": true,
+      "fx": null,
+      "preview": [
+        "#8c591e",
+        "#2f2d7a",
+        "#2d437a",
+        "#2f2d7a",
+        "#2d437a"
+      ]
+    },
+    {
+      "id": "dnd5e_city_streets_dire",
+      "entity_id": "scene.ttrpg_dnd5e_city_streets_dire",
+      "system": "dnd5e",
+      "mood": "city_streets",
+      "intensity": "dire",
+      "category": "exploration",
+      "label": "D&D 5e \u2014 City Streets & Alleys (Dire)",
+      "description": "Cobblestone reflection, flickering street lamps, murky alleyways.",
+      "tags": [
+        "urban",
+        "night",
+        "stealth"
+      ],
+      "transition_s": 2.5,
+      "readable": true,
+      "fx": null,
+      "preview": [
+        "#a15e10",
+        "#29278d",
+        "#27448d",
+        "#29278d",
+        "#27448d"
+      ]
+    },
+    {
+      "id": "dnd5e_combat_skirmish",
+      "entity_id": "scene.ttrpg_dnd5e_combat_skirmish",
+      "system": "dnd5e",
+      "mood": "combat",
+      "intensity": "skirmish",
+      "category": "combat",
+      "label": "D&D 5e \u2014 Standard Combat (Skirmish)",
+      "description": "High tension, clear initiative visibility, aggressive contrast.",
+      "tags": [
+        "combat",
+        "action",
+        "high_energy"
+      ],
+      "transition_s": 0.4,
+      "readable": true,
+      "fx": "script.ttrpg_fx_pulse_slow",
+      "preview": [
+        "#7a13c3",
+        "#ac8a3a",
+        "#ac643a",
+        "#ac8a3a",
+        "#ac643a"
+      ]
+    },
+    {
+      "id": "dnd5e_combat_pitched",
+      "entity_id": "scene.ttrpg_dnd5e_combat_pitched",
+      "system": "dnd5e",
+      "mood": "combat",
+      "intensity": "pitched",
+      "category": "combat",
+      "label": "D&D 5e \u2014 Standard Combat (Pitched)",
+      "description": "High tension, clear initiative visibility, aggressive contrast.",
+      "tags": [
+        "combat",
+        "action",
+        "high_energy"
+      ],
+      "transition_s": 0.4,
+      "readable": true,
+      "fx": "script.ttrpg_fx_pulse_slow",
+      "preview": [
+        "#8500e4",
+        "#c99a2e",
+        "#c9672e",
+        "#c99a2e",
+        "#c9672e"
+      ]
+    },
+    {
+      "id": "dnd5e_combat_boss",
+      "entity_id": "scene.ttrpg_dnd5e_combat_boss",
+      "system": "dnd5e",
+      "mood": "combat",
+      "intensity": "boss",
+      "category": "combat",
+      "label": "D&D 5e \u2014 Standard Combat (Boss)",
+      "description": "High tension, clear initiative visibility, aggressive contrast.",
+      "tags": [
+        "combat",
+        "action",
+        "high_energy"
+      ],
+      "transition_s": 0.4,
+      "readable": true,
+      "fx": "script.ttrpg_fx_pulse_slow",
+      "preview": [
+        "#9500ff",
+        "#e5a91d",
+        "#e5661d",
+        "#e5a91d",
+        "#e5661d"
+      ]
+    },
+    {
+      "id": "dnd5e_stealth_strike_calm",
+      "entity_id": "scene.ttrpg_dnd5e_stealth_strike_calm",
+      "system": "dnd5e",
+      "mood": "stealth_strike",
+      "intensity": "calm",
+      "category": "combat",
+      "label": "D&D 5e \u2014 Stealth & Ambush (Calm)",
+      "description": "Deep shadows, focused target spotlight, poised for the strike.",
+      "tags": [
+        "combat",
+        "stealth",
+        "dark"
+      ],
+      "transition_s": 0.8,
+      "readable": true,
+      "fx": null,
+      "preview": [
+        "#561982",
+        "#273457",
+        "#343d66",
+        "#343966",
+        "#343466"
+      ]
+    },
+    {
+      "id": "dnd5e_stealth_strike_tense",
+      "entity_id": "scene.ttrpg_dnd5e_stealth_strike_tense",
+      "system": "dnd5e",
+      "mood": "stealth_strike",
+      "intensity": "tense",
+      "category": "combat",
+      "label": "D&D 5e \u2014 Stealth & Ambush (Tense)",
+      "description": "Deep shadows, focused target spotlight, poised for the strike.",
+      "tags": [
+        "combat",
+        "stealth",
+        "dark"
+      ],
+      "transition_s": 0.8,
+      "readable": true,
+      "fx": null,
+      "preview": [
+        "#5d0899",
+        "#243564",
+        "#243064",
+        "#242a64",
+        "#242564"
+      ]
+    },
+    {
+      "id": "dnd5e_stealth_strike_dire",
+      "entity_id": "scene.ttrpg_dnd5e_stealth_strike_dire",
+      "system": "dnd5e",
+      "mood": "stealth_strike",
+      "intensity": "dire",
+      "category": "combat",
+      "label": "D&D 5e \u2014 Stealth & Ambush (Dire)",
+      "description": "Deep shadows, focused target spotlight, poised for the strike.",
+      "tags": [
+        "combat",
+        "stealth",
+        "dark"
+      ],
+      "transition_s": 0.8,
+      "readable": true,
+      "fx": null,
+      "preview": [
+        "#6700b0",
+        "#1f3472",
+        "#1f2d72",
+        "#1f2672",
+        "#1f2072"
+      ]
+    },
+    {
+      "id": "dnd5e_boss_fight_skirmish",
+      "entity_id": "scene.ttrpg_dnd5e_boss_fight_skirmish",
+      "system": "dnd5e",
+      "mood": "boss_fight",
+      "intensity": "skirmish",
+      "category": "combat",
+      "label": "D&D 5e \u2014 Climactic Boss Encounter (Skirmish)",
+      "description": "Overwhelming presence, pulsating hazard, heightened stakes.",
+      "tags": [
+        "combat",
+        "boss",
+        "climax"
+      ],
+      "transition_s": 0.3,
+      "readable": true,
+      "fx": "script.ttrpg_fx_heartbeat",
+      "preview": [
+        "#840bda",
+        "#9323b8",
+        "#6123b8",
+        "#9323b8",
+        "#6123b8"
+      ]
+    },
+    {
+      "id": "dnd5e_boss_fight_pitched",
+      "entity_id": "scene.ttrpg_dnd5e_boss_fight_pitched",
+      "system": "dnd5e",
+      "mood": "boss_fight",
+      "intensity": "pitched",
+      "category": "combat",
+      "label": "D&D 5e \u2014 Climactic Boss Encounter (Pitched)",
+      "description": "Overwhelming presence, pulsating hazard, heightened stakes.",
+      "tags": [
+        "combat",
+        "boss",
+        "climax"
+      ],
+      "transition_s": 0.3,
+      "readable": true,
+      "fx": "script.ttrpg_fx_heartbeat",
+      "preview": [
+        "#9400fe",
+        "#a40ed6",
+        "#610ed6",
+        "#a40ed6",
+        "#610ed6"
+      ]
+    },
+    {
+      "id": "dnd5e_boss_fight_boss",
+      "entity_id": "scene.ttrpg_dnd5e_boss_fight_boss",
+      "system": "dnd5e",
+      "mood": "boss_fight",
+      "intensity": "boss",
+      "category": "combat",
+      "label": "D&D 5e \u2014 Climactic Boss Encounter (Boss)",
+      "description": "Overwhelming presence, pulsating hazard, heightened stakes.",
+      "tags": [
+        "combat",
+        "boss",
+        "climax"
+      ],
+      "transition_s": 0.3,
+      "readable": true,
+      "fx": "script.ttrpg_fx_heartbeat",
+      "preview": [
+        "#9500ff",
+        "#b800f5",
+        "#6600f5",
+        "#b800f5",
+        "#6600f5"
+      ]
+    },
+    {
+      "id": "dnd5e_desperation_tense",
+      "entity_id": "scene.ttrpg_dnd5e_desperation_tense",
+      "system": "dnd5e",
+      "mood": "desperation",
+      "intensity": "tense",
+      "category": "combat",
+      "label": "D&D 5e \u2014 Last Stand / Desperation (Tense)",
+      "description": "Low health, cornered party, failing defenses.",
+      "tags": [
+        "combat",
+        "danger",
+        "critical"
+      ],
+      "transition_s": 0.5,
+      "readable": true,
+      "fx": "script.ttrpg_fx_heartbeat",
+      "preview": [
+        "#6800b2",
+        "#29277b",
+        "#1a2d69",
+        "#1a2d69",
+        "#29277b"
+      ]
+    },
+    {
+      "id": "dnd5e_desperation_dire",
+      "entity_id": "scene.ttrpg_dnd5e_desperation_dire",
+      "system": "dnd5e",
+      "mood": "desperation",
+      "intensity": "dire",
+      "category": "combat",
+      "label": "D&D 5e \u2014 Last Stand / Desperation (Dire)",
+      "description": "Low health, cornered party, failing defenses.",
+      "tags": [
+        "combat",
+        "danger",
+        "critical"
+      ],
+      "transition_s": 0.5,
+      "readable": true,
+      "fx": "script.ttrpg_fx_heartbeat",
+      "preview": [
+        "#7800cd",
+        "#121078",
+        "#102978",
+        "#102978",
+        "#121078"
+      ]
+    },
+    {
+      "id": "dnd5e_tavern_calm",
+      "entity_id": "scene.ttrpg_dnd5e_tavern_calm",
+      "system": "dnd5e",
+      "mood": "tavern",
+      "intensity": "calm",
+      "category": "social",
+      "label": "D&D 5e \u2014 Tavern / Canteen (Calm)",
+      "description": "Warm hearthfire, lively chatter, clinking flagons, comfortable intimacy.",
+      "tags": [
+        "social",
+        "warm",
+        "safe",
+        "indoor"
+      ],
+      "transition_s": 2.0,
+      "readable": true,
+      "fx": "script.ttrpg_fx_torch_flicker",
+      "preview": [
+        "#98652a",
+        "#8d603a",
+        "#8d643a",
+        "#8d693a",
+        "#8d6d3a"
+      ]
+    },
+    {
+      "id": "dnd5e_tavern_tense",
+      "entity_id": "scene.ttrpg_dnd5e_tavern_tense",
+      "system": "dnd5e",
+      "mood": "tavern",
+      "intensity": "tense",
+      "category": "social",
+      "label": "D&D 5e \u2014 Tavern / Canteen (Tense)",
+      "description": "Warm hearthfire, lively chatter, clinking flagons, comfortable intimacy.",
+      "tags": [
+        "social",
+        "warm",
+        "safe",
+        "indoor"
+      ],
+      "transition_s": 2.0,
+      "readable": true,
+      "fx": "script.ttrpg_fx_torch_flicker",
+      "preview": [
+        "#b26d1d",
+        "#a66835",
+        "#a66e35",
+        "#a67435",
+        "#a67a35"
+      ]
+    },
+    {
+      "id": "dnd5e_royal_court_calm",
+      "entity_id": "scene.ttrpg_dnd5e_royal_court_calm",
+      "system": "dnd5e",
+      "mood": "royal_court",
+      "intensity": "calm",
+      "category": "social",
+      "label": "D&D 5e \u2014 Royal Court / High Council (Calm)",
+      "description": "Opulent marble, vaulted ceilings, high stakes diplomacy.",
+      "tags": [
+        "social",
+        "formal",
+        "bright"
+      ],
+      "transition_s": 2.5,
+      "readable": true,
+      "fx": null,
+      "preview": [
+        "#ad8d67",
+        "#784d98",
+        "#784d98",
+        "#784d98",
+        "#784d98"
+      ]
+    },
+    {
+      "id": "dnd5e_royal_court_tense",
+      "entity_id": "scene.ttrpg_dnd5e_royal_court_tense",
+      "system": "dnd5e",
+      "mood": "royal_court",
+      "intensity": "tense",
+      "category": "social",
+      "label": "D&D 5e \u2014 Royal Court / High Council (Tense)",
+      "description": "Opulent marble, vaulted ceilings, high stakes diplomacy.",
+      "tags": [
+        "social",
+        "formal",
+        "bright"
+      ],
+      "transition_s": 2.5,
+      "readable": true,
+      "fx": null,
+      "preview": [
+        "#cc9f6c",
+        "#884bb2",
+        "#884bb2",
+        "#884bb2",
+        "#884bb2"
+      ]
+    },
+    {
+      "id": "dnd5e_royal_court_dire",
+      "entity_id": "scene.ttrpg_dnd5e_royal_court_dire",
+      "system": "dnd5e",
+      "mood": "royal_court",
+      "intensity": "dire",
+      "category": "social",
+      "label": "D&D 5e \u2014 Royal Court / High Council (Dire)",
+      "description": "Opulent marble, vaulted ceilings, high stakes diplomacy.",
+      "tags": [
+        "social",
+        "formal",
+        "bright"
+      ],
+      "transition_s": 2.5,
+      "readable": true,
+      "fx": null,
+      "preview": [
+        "#ebaf6c",
+        "#9546cd",
+        "#9546cd",
+        "#9546cd",
+        "#9546cd"
+      ]
+    },
+    {
+      "id": "dnd5e_investigation_calm",
+      "entity_id": "scene.ttrpg_dnd5e_investigation_calm",
+      "system": "dnd5e",
+      "mood": "investigation",
+      "intensity": "calm",
+      "category": "social",
+      "label": "D&D 5e \u2014 Investigation & Interrogation (Calm)",
+      "description": "Focused downlight, sharp questioning, gathering clues.",
+      "tags": [
+        "social",
+        "mystery",
+        "focus"
+      ],
+      "transition_s": 1.5,
+      "readable": true,
+      "fx": null,
+      "preview": [
+        "#8d755a",
+        "#4a4d6c",
+        "#4a506c",
+        "#4a506c",
+        "#4a4d6c"
+      ]
+    },
+    {
+      "id": "dnd5e_investigation_tense",
+      "entity_id": "scene.ttrpg_dnd5e_investigation_tense",
+      "system": "dnd5e",
+      "mood": "investigation",
+      "intensity": "tense",
+      "category": "social",
+      "label": "D&D 5e \u2014 Investigation & Interrogation (Tense)",
+      "description": "Focused downlight, sharp questioning, gathering clues.",
+      "tags": [
+        "social",
+        "mystery",
+        "focus"
+      ],
+      "transition_s": 1.5,
+      "readable": true,
+      "fx": null,
+      "preview": [
+        "#a68560",
+        "#515480",
+        "#515980",
+        "#515980",
+        "#515480"
+      ]
+    },
+    {
+      "id": "dnd5e_investigation_dire",
+      "entity_id": "scene.ttrpg_dnd5e_investigation_dire",
+      "system": "dnd5e",
+      "mood": "investigation",
+      "intensity": "dire",
+      "category": "social",
+      "label": "D&D 5e \u2014 Investigation & Interrogation (Dire)",
+      "description": "Focused downlight, sharp questioning, gathering clues.",
+      "tags": [
+        "social",
+        "mystery",
+        "focus"
+      ],
+      "transition_s": 1.5,
+      "readable": true,
+      "fx": null,
+      "preview": [
+        "#bf9463",
+        "#555993",
+        "#556093",
+        "#556093",
+        "#555993"
+      ]
+    },
+    {
+      "id": "dnd5e_dread_calm",
+      "entity_id": "scene.ttrpg_dnd5e_dread_calm",
+      "system": "dnd5e",
+      "mood": "dread",
+      "intensity": "calm",
+      "category": "suspense",
+      "label": "D&D 5e \u2014 Creeping Dread (Calm)",
+      "description": "Unsettling hush, encroaching entity, breathing darkness.",
+      "tags": [
+        "horror",
+        "suspense",
+        "dark"
+      ],
+      "transition_s": 5.0,
+      "readable": true,
+      "fx": "script.ttrpg_fx_pulse_slow",
+      "preview": [
+        "#0f1436",
+        "#333b54",
+        "#333954",
+        "#333654",
+        "#404163"
+      ]
+    },
+    {
+      "id": "dnd5e_dread_tense",
+      "entity_id": "scene.ttrpg_dnd5e_dread_tense",
+      "system": "dnd5e",
+      "mood": "dread",
+      "intensity": "tense",
+      "category": "suspense",
+      "label": "D&D 5e \u2014 Creeping Dread (Tense)",
+      "description": "Unsettling hush, encroaching entity, breathing darkness.",
+      "tags": [
+        "horror",
+        "suspense",
+        "dark"
+      ],
+      "transition_s": 5.0,
+      "readable": true,
+      "fx": "script.ttrpg_fx_pulse_slow",
+      "preview": [
+        "#0a1140",
+        "#343f60",
+        "#343c60",
+        "#343860",
+        "#343560"
+      ]
+    },
+    {
+      "id": "dnd5e_dread_dire",
+      "entity_id": "scene.ttrpg_dnd5e_dread_dire",
+      "system": "dnd5e",
+      "mood": "dread",
+      "intensity": "dire",
+      "category": "suspense",
+      "label": "D&D 5e \u2014 Creeping Dread (Dire)",
+      "description": "Unsettling hush, encroaching entity, breathing darkness.",
+      "tags": [
+        "horror",
+        "suspense",
+        "dark"
+      ],
+      "transition_s": 5.0,
+      "readable": true,
+      "fx": "script.ttrpg_fx_pulse_slow",
+      "preview": [
+        "#030c49",
+        "#26345c",
+        "#262f5c",
+        "#33396c",
+        "#33346c"
+      ]
+    },
+    {
+      "id": "dnd5e_lurking_shadow_tense",
+      "entity_id": "scene.ttrpg_dnd5e_lurking_shadow_tense",
+      "system": "dnd5e",
+      "mood": "lurking_shadow",
+      "intensity": "tense",
+      "category": "suspense",
+      "label": "D&D 5e \u2014 Lurking Shadow (Tense)",
+      "description": "Peripheral movement, failing sensors, breath held.",
+      "tags": [
+        "horror",
+        "stealth",
+        "monster"
+      ],
+      "transition_s": 3.0,
+      "readable": true,
+      "fx": "script.ttrpg_fx_drift",
+      "preview": [
+        "#2e044c",
+        "#363669",
+        "#293659",
+        "#363669",
+        "#293659"
+      ]
+    },
+    {
+      "id": "dnd5e_lurking_shadow_dire",
+      "entity_id": "scene.ttrpg_dnd5e_lurking_shadow_dire",
+      "system": "dnd5e",
+      "mood": "lurking_shadow",
+      "intensity": "dire",
+      "category": "suspense",
+      "label": "D&D 5e \u2014 Lurking Shadow (Dire)",
+      "description": "Peripheral movement, failing sensors, breath held.",
+      "tags": [
+        "horror",
+        "stealth",
+        "monster"
+      ],
+      "transition_s": 3.0,
+      "readable": true,
+      "fx": "script.ttrpg_fx_drift",
+      "preview": [
+        "#330058",
+        "#272764",
+        "#273764",
+        "#272764",
+        "#273764"
+      ]
+    },
+    {
+      "id": "dnd5e_ritual_calm",
+      "entity_id": "scene.ttrpg_dnd5e_ritual_calm",
+      "system": "dnd5e",
+      "mood": "ritual",
+      "intensity": "calm",
+      "category": "suspense",
+      "label": "D&D 5e \u2014 Occult Ritual / Countdown (Calm)",
+      "description": "Chanting resonance, unholy runes glowing in sequence.",
+      "tags": [
+        "magic",
+        "horror",
+        "ritual"
+      ],
+      "transition_s": 1.5,
+      "readable": true,
+      "fx": "script.ttrpg_fx_sanity_distort",
+      "preview": [
+        "#6918a3",
+        "#4f1762",
+        "#482472",
+        "#482472",
+        "#4f1762"
+      ]
+    },
+    {
+      "id": "dnd5e_ritual_tense",
+      "entity_id": "scene.ttrpg_dnd5e_ritual_tense",
+      "system": "dnd5e",
+      "mood": "ritual",
+      "intensity": "tense",
+      "category": "suspense",
+      "label": "D&D 5e \u2014 Occult Ritual / Countdown (Tense)",
+      "description": "Chanting resonance, unholy runes glowing in sequence.",
+      "tags": [
+        "magic",
+        "horror",
+        "ritual"
+      ],
+      "transition_s": 1.5,
+      "readable": true,
+      "fx": "script.ttrpg_fx_sanity_distort",
+      "preview": [
+        "#7000bf",
+        "#590c73",
+        "#3c0c73",
+        "#3c0c73",
+        "#590c73"
+      ]
+    },
+    {
+      "id": "dnd5e_ritual_dire",
+      "entity_id": "scene.ttrpg_dnd5e_ritual_dire",
+      "system": "dnd5e",
+      "mood": "ritual",
+      "intensity": "dire",
+      "category": "suspense",
+      "label": "D&D 5e \u2014 Occult Ritual / Countdown (Dire)",
+      "description": "Chanting resonance, unholy runes glowing in sequence.",
+      "tags": [
+        "magic",
+        "horror",
+        "ritual"
+      ],
+      "transition_s": 1.5,
+      "readable": true,
+      "fx": "script.ttrpg_fx_sanity_distort",
+      "preview": [
+        "#8000dc",
+        "#630084",
+        "#3e0084",
+        "#3e0084",
+        "#630084"
+      ]
+    },
+    {
+      "id": "dnd5e_campfire_calm",
+      "entity_id": "scene.ttrpg_dnd5e_campfire_calm",
+      "system": "dnd5e",
+      "mood": "campfire",
+      "intensity": "calm",
+      "category": "rest",
+      "label": "D&D 5e \u2014 Campfire / Night Rest (Calm)",
+      "description": "Embers crackling in the darkness, soothing warmth on tired eyes.",
+      "tags": [
+        "rest",
+        "night",
+        "warm",
+        "outdoor"
+      ],
+      "transition_s": 4.0,
+      "readable": true,
+      "fx": "script.ttrpg_fx_torch_flicker",
+      "preview": [
+        "#6c4619",
+        "#5b381e",
+        "#5b3c1e",
+        "#5b401e",
+        "#5b451e"
+      ]
+    },
+    {
+      "id": "dnd5e_campfire_tense",
+      "entity_id": "scene.ttrpg_dnd5e_campfire_tense",
+      "system": "dnd5e",
+      "mood": "campfire",
+      "intensity": "tense",
+      "category": "rest",
+      "label": "D&D 5e \u2014 Campfire / Night Rest (Tense)",
+      "description": "Embers crackling in the darkness, soothing warmth on tired eyes.",
+      "tags": [
+        "rest",
+        "night",
+        "warm",
+        "outdoor"
+      ],
+      "transition_s": 4.0,
+      "readable": true,
+      "fx": "script.ttrpg_fx_torch_flicker",
+      "preview": [
+        "#804a0e",
+        "#6b3b17",
+        "#6b4117",
+        "#6b4717",
+        "#6b4c17"
+      ]
+    },
+    {
+      "id": "dnd5e_sanctuary_calm",
+      "entity_id": "scene.ttrpg_dnd5e_sanctuary_calm",
+      "system": "dnd5e",
+      "mood": "sanctuary",
+      "intensity": "calm",
+      "category": "rest",
+      "label": "D&D 5e \u2014 Sanctuary / Holy Ground (Calm)",
+      "description": "Divine protection, hallowed warmth, reprieve from the storm.",
+      "tags": [
+        "rest",
+        "safe",
+        "divine",
+        "bright"
+      ],
+      "transition_s": 3.0,
+      "readable": true,
+      "fx": null,
+      "preview": [
+        "#98856f",
+        "#8d7e6d",
+        "#8d7e6d",
+        "#8d7e6d",
+        "#8d7e6d"
+      ]
+    },
+    {
+      "id": "dnd5e_storm_calm",
+      "entity_id": "scene.ttrpg_dnd5e_storm_calm",
+      "system": "dnd5e",
+      "mood": "storm",
+      "intensity": "calm",
+      "category": "environment",
+      "label": "D&D 5e \u2014 Thunderstorm / Tempest (Calm)",
+      "description": "Howling rain, overcast darkness, sudden lightning strikes.",
+      "tags": [
+        "weather",
+        "outdoor",
+        "storm",
+        "hazard"
+      ],
+      "transition_s": 1.0,
+      "readable": true,
+      "fx": "script.ttrpg_fx_lightning",
+      "preview": [
+        "#202757",
+        "#38386a",
+        "#2b375a",
+        "#38386a",
+        "#2b375a"
+      ]
+    },
+    {
+      "id": "dnd5e_storm_tense",
+      "entity_id": "scene.ttrpg_dnd5e_storm_tense",
+      "system": "dnd5e",
+      "mood": "storm",
+      "intensity": "tense",
+      "category": "environment",
+      "label": "D&D 5e \u2014 Thunderstorm / Tempest (Tense)",
+      "description": "Howling rain, overcast darkness, sudden lightning strikes.",
+      "tags": [
+        "weather",
+        "outdoor",
+        "storm",
+        "hazard"
+      ],
+      "transition_s": 1.0,
+      "readable": true,
+      "fx": "script.ttrpg_fx_lightning",
+      "preview": [
+        "#1b2566",
+        "#292969",
+        "#293969",
+        "#292969",
+        "#293969"
+      ]
+    },
+    {
+      "id": "dnd5e_storm_dire",
+      "entity_id": "scene.ttrpg_dnd5e_storm_dire",
+      "system": "dnd5e",
+      "mood": "storm",
+      "intensity": "dire",
+      "category": "environment",
+      "label": "D&D 5e \u2014 Thunderstorm / Tempest (Dire)",
+      "description": "Howling rain, overcast darkness, sudden lightning strikes.",
+      "tags": [
+        "weather",
+        "outdoor",
+        "storm",
+        "hazard"
+      ],
+      "transition_s": 1.0,
+      "readable": true,
+      "fx": "script.ttrpg_fx_lightning",
+      "preview": [
+        "#132075",
+        "#242478",
+        "#172b67",
+        "#242478",
+        "#172b67"
+      ]
+    },
+    {
+      "id": "dnd5e_toxic_haze_tense",
+      "entity_id": "scene.ttrpg_dnd5e_toxic_haze_tense",
+      "system": "dnd5e",
+      "mood": "toxic_haze",
+      "intensity": "tense",
+      "category": "environment",
+      "label": "D&D 5e \u2014 Toxic Haze / Biohazard (Tense)",
+      "description": "Corrosive fumes, warning claxons, compromised containment.",
+      "tags": [
+        "hazard",
+        "sci_fi",
+        "poison"
+      ],
+      "transition_s": 1.2,
+      "readable": true,
+      "fx": "script.ttrpg_fx_alert_sweep",
+      "preview": [
+        "#6409a6",
+        "#450f8c",
+        "#520f8c",
+        "#5e0f8c",
+        "#6b0f8c"
+      ]
+    },
+    {
+      "id": "dnd5e_toxic_haze_dire",
+      "entity_id": "scene.ttrpg_dnd5e_toxic_haze_dire",
+      "system": "dnd5e",
+      "mood": "toxic_haze",
+      "intensity": "dire",
+      "category": "environment",
+      "label": "D&D 5e \u2014 Toxic Haze / Biohazard (Dire)",
+      "description": "Corrosive fumes, warning claxons, compromised containment.",
+      "tags": [
+        "hazard",
+        "sci_fi",
+        "poison"
+      ],
+      "transition_s": 1.2,
+      "readable": true,
+      "fx": "script.ttrpg_fx_alert_sweep",
+      "preview": [
+        "#6f00bf",
+        "#4600a1",
+        "#5600a1",
+        "#6600a1",
+        "#7600a1"
+      ]
+    },
+    {
+      "id": "dnd5e_space_void_calm",
+      "entity_id": "scene.ttrpg_dnd5e_space_void_calm",
+      "system": "dnd5e",
+      "mood": "space_void",
+      "intensity": "calm",
+      "category": "environment",
+      "label": "D&D 5e \u2014 Deep Space / Cold Vacuum (Calm)",
+      "description": "Pitch void, sterile status monitors, silent expanse.",
+      "tags": [
+        "space",
+        "cold",
+        "sci_fi"
+      ],
+      "transition_s": 4.0,
+      "readable": true,
+      "fx": "script.ttrpg_fx_drift",
+      "preview": [
+        "#0f1641",
+        "#452f20",
+        "#453220",
+        "#453620",
+        "#453920"
+      ]
+    },
+    {
+      "id": "dnd5e_space_void_tense",
+      "entity_id": "scene.ttrpg_dnd5e_space_void_tense",
+      "system": "dnd5e",
+      "mood": "space_void",
+      "intensity": "tense",
+      "category": "environment",
+      "label": "D&D 5e \u2014 Deep Space / Cold Vacuum (Tense)",
+      "description": "Pitch void, sterile status monitors, silent expanse.",
+      "tags": [
+        "space",
+        "cold",
+        "sci_fi"
+      ],
+      "transition_s": 4.0,
+      "readable": true,
+      "fx": "script.ttrpg_fx_drift",
+      "preview": [
+        "#08114c",
+        "#52331e",
+        "#52371e",
+        "#523c1e",
+        "#52401e"
+      ]
+    },
+    {
+      "id": "dnd5e_blackout_dire",
+      "entity_id": "scene.ttrpg_dnd5e_blackout_dire",
+      "system": "dnd5e",
+      "mood": "blackout",
+      "intensity": "dire",
+      "category": "suspense",
+      "label": "D&D 5e \u2014 Total Blackout (Dire)",
+      "description": "Complete power loss, emergency indicator minimums.",
+      "tags": [
+        "horror",
+        "darkness",
+        "cinematic"
+      ],
+      "transition_s": 0.5,
+      "readable": false,
+      "fx": null,
+      "preview": [
+        "#000000",
+        "#09000f",
+        "#09000f",
+        "#09000f",
+        "#09000f"
+      ]
+    },
+    {
+      "id": "dnd5e_rules_lookup_standard",
+      "entity_id": "scene.ttrpg_dnd5e_rules_lookup_standard",
+      "system": "dnd5e",
+      "mood": "rules_lookup",
+      "intensity": "standard",
+      "category": "utility",
+      "label": "D&D 5e \u2014 Rules Lookup / Table Management (Standard)",
+      "description": "High readability, neutral balanced light for reading books and sheets.",
+      "tags": [
+        "utility",
+        "reading",
+        "bright"
+      ],
+      "transition_s": 1.0,
+      "readable": true,
+      "fx": null,
+      "preview": [
+        "#d9cab8",
+        "#d9cfc3",
+        "#d9cfc3",
+        "#d9cfc3",
+        "#d9cfc3"
+      ]
+    },
+    {
+      "id": "dnd5e_intermission_standard",
+      "entity_id": "scene.ttrpg_dnd5e_intermission_standard",
+      "system": "dnd5e",
+      "mood": "intermission",
+      "intensity": "standard",
+      "category": "utility",
+      "label": "D&D 5e \u2014 Intermission / Snack Break (Standard)",
+      "description": "Relaxed ambient warm white light for session pauses.",
+      "tags": [
+        "utility",
+        "break",
+        "warm"
+      ],
+      "transition_s": 2.0,
+      "readable": true,
+      "fx": null,
+      "preview": [
+        "#b29e86",
+        "#b29e86",
+        "#b29e86",
+        "#b29e86",
+        "#b29e86"
+      ]
+    },
+    {
+      "id": "cthulhu_dungeon_calm",
+      "entity_id": "scene.ttrpg_cthulhu_dungeon_calm",
+      "system": "cthulhu",
+      "mood": "dungeon",
+      "intensity": "calm",
+      "category": "exploration",
+      "label": "Call of Cthulhu \u2014 Dungeon (Calm)",
+      "description": "Guttering torchlight with cold shadow beyond the circle.",
+      "tags": [
+        "indoor",
+        "dark",
+        "exploration",
+        "subterranean"
+      ],
+      "transition_s": 3.0,
+      "readable": true,
+      "fx": "script.ttrpg_fx_torch_flicker",
+      "preview": [
+        "#756844",
+        "#4c6856",
+        "#4c6858",
+        "#4c685b",
+        "#4c685e"
+      ]
+    },
+    {
+      "id": "cthulhu_dungeon_tense",
+      "entity_id": "scene.ttrpg_cthulhu_dungeon_tense",
+      "system": "cthulhu",
+      "mood": "dungeon",
+      "intensity": "tense",
+      "category": "exploration",
+      "label": "Call of Cthulhu \u2014 Dungeon (Tense)",
+      "description": "Guttering torchlight with cold shadow beyond the circle.",
+      "tags": [
+        "indoor",
+        "dark",
+        "exploration",
+        "subterranean"
+      ],
+      "transition_s": 3.0,
+      "readable": true,
+      "fx": "script.ttrpg_fx_torch_flicker",
+      "preview": [
+        "#8a7846",
+        "#547a61",
+        "#547a65",
+        "#547a69",
+        "#547a6d"
+      ]
+    },
+    {
+      "id": "cthulhu_dungeon_dire",
+      "entity_id": "scene.ttrpg_cthulhu_dungeon_dire",
+      "system": "cthulhu",
+      "mood": "dungeon",
+      "intensity": "dire",
+      "category": "exploration",
+      "label": "Call of Cthulhu \u2014 Dungeon (Dire)",
+      "description": "Guttering torchlight with cold shadow beyond the circle.",
+      "tags": [
+        "indoor",
+        "dark",
+        "exploration",
+        "subterranean"
+      ],
+      "transition_s": 3.0,
+      "readable": true,
+      "fx": "script.ttrpg_fx_torch_flicker",
+      "preview": [
+        "#9e8746",
+        "#5a8d6c",
+        "#5a8d71",
+        "#5a8d76",
+        "#5a8d7b"
+      ]
+    },
+    {
+      "id": "cthulhu_cavern_calm",
+      "entity_id": "scene.ttrpg_cthulhu_cavern_calm",
+      "system": "cthulhu",
+      "mood": "cavern",
+      "intensity": "calm",
+      "category": "exploration",
+      "label": "Call of Cthulhu \u2014 Deep Cavern (Calm)",
+      "description": "Damp subterranean stone, bioluminescent patches, echoing depth.",
+      "tags": [
+        "subterranean",
+        "damp",
+        "dark",
+        "exploration"
+      ],
+      "transition_s": 3.5,
+      "readable": true,
+      "fx": "script.ttrpg_fx_drift",
+      "preview": [
+        "#3b5b4b",
+        "#634c3c",
+        "#63433c",
+        "#634c3c",
+        "#63433c"
+      ]
+    },
+    {
+      "id": "cthulhu_cavern_tense",
+      "entity_id": "scene.ttrpg_cthulhu_cavern_tense",
+      "system": "cthulhu",
+      "mood": "cavern",
+      "intensity": "tense",
+      "category": "exploration",
+      "label": "Call of Cthulhu \u2014 Deep Cavern (Tense)",
+      "description": "Damp subterranean stone, bioluminescent patches, echoing depth.",
+      "tags": [
+        "subterranean",
+        "damp",
+        "dark",
+        "exploration"
+      ],
+      "transition_s": 3.5,
+      "readable": true,
+      "fx": "script.ttrpg_fx_drift",
+      "preview": [
+        "#406b55",
+        "#74553f",
+        "#74483f",
+        "#74553f",
+        "#74483f"
+      ]
+    },
+    {
+      "id": "cthulhu_cavern_dire",
+      "entity_id": "scene.ttrpg_cthulhu_cavern_dire",
+      "system": "cthulhu",
+      "mood": "cavern",
+      "intensity": "dire",
+      "category": "exploration",
+      "label": "Call of Cthulhu \u2014 Deep Cavern (Dire)",
+      "description": "Damp subterranean stone, bioluminescent patches, echoing depth.",
+      "tags": [
+        "subterranean",
+        "damp",
+        "dark",
+        "exploration"
+      ],
+      "transition_s": 3.5,
+      "readable": true,
+      "fx": "script.ttrpg_fx_drift",
+      "preview": [
+        "#427b5f",
+        "#865d3f",
+        "#864b3f",
+        "#865d3f",
+        "#864b3f"
+      ]
+    },
+    {
+      "id": "cthulhu_wilderness_calm",
+      "entity_id": "scene.ttrpg_cthulhu_wilderness_calm",
+      "system": "cthulhu",
+      "mood": "wilderness",
+      "intensity": "calm",
+      "category": "exploration",
+      "label": "Call of Cthulhu \u2014 Wilderness Trek (Calm)",
+      "description": "Open canopy, shifting wind, distant natural horizons.",
+      "tags": [
+        "outdoor",
+        "nature",
+        "travel"
+      ],
+      "transition_s": 4.0,
+      "readable": true,
+      "fx": null,
+      "preview": [
+        "#9c906e",
+        "#6f8f7c",
+        "#6f8f7e",
+        "#6f8f80",
+        "#6f8f82"
+      ]
+    },
+    {
+      "id": "cthulhu_wilderness_tense",
+      "entity_id": "scene.ttrpg_cthulhu_wilderness_tense",
+      "system": "cthulhu",
+      "mood": "wilderness",
+      "intensity": "tense",
+      "category": "exploration",
+      "label": "Call of Cthulhu \u2014 Wilderness Trek (Tense)",
+      "description": "Open canopy, shifting wind, distant natural horizons.",
+      "tags": [
+        "outdoor",
+        "nature",
+        "travel"
+      ],
+      "transition_s": 4.0,
+      "readable": true,
+      "fx": null,
+      "preview": [
+        "#b8a778",
+        "#7da88e",
+        "#7da891",
+        "#7da894",
+        "#7da897"
+      ]
+    },
+    {
+      "id": "cthulhu_wilderness_dire",
+      "entity_id": "scene.ttrpg_cthulhu_wilderness_dire",
+      "system": "cthulhu",
+      "mood": "wilderness",
+      "intensity": "dire",
+      "category": "exploration",
+      "label": "Call of Cthulhu \u2014 Wilderness Trek (Dire)",
+      "description": "Open canopy, shifting wind, distant natural horizons.",
+      "tags": [
+        "outdoor",
+        "nature",
+        "travel"
+      ],
+      "transition_s": 4.0,
+      "readable": true,
+      "fx": null,
+      "preview": [
+        "#d3bd80",
+        "#88c29f",
+        "#88c2a3",
+        "#88c2a7",
+        "#88c2ab"
+      ]
+    },
+    {
+      "id": "cthulhu_ruins_calm",
+      "entity_id": "scene.ttrpg_cthulhu_ruins_calm",
+      "system": "cthulhu",
+      "mood": "ruins",
+      "intensity": "calm",
+      "category": "exploration",
+      "label": "Call of Cthulhu \u2014 Ancient Ruins (Calm)",
+      "description": "Crumbling monoliths, forgotten inscriptions, dusty shafts of light.",
+      "tags": [
+        "indoor",
+        "mystery",
+        "ancient",
+        "exploration"
+      ],
+      "transition_s": 3.0,
+      "readable": true,
+      "fx": null,
+      "preview": [
+        "#827655",
+        "#58756a",
+        "#587564",
+        "#587564",
+        "#58756a"
+      ]
+    },
+    {
+      "id": "cthulhu_ruins_tense",
+      "entity_id": "scene.ttrpg_cthulhu_ruins_tense",
+      "system": "cthulhu",
+      "mood": "ruins",
+      "intensity": "tense",
+      "category": "exploration",
+      "label": "Call of Cthulhu \u2014 Ancient Ruins (Tense)",
+      "description": "Crumbling monoliths, forgotten inscriptions, dusty shafts of light.",
+      "tags": [
+        "indoor",
+        "mystery",
+        "ancient",
+        "exploration"
+      ],
+      "transition_s": 3.0,
+      "readable": true,
+      "fx": null,
+      "preview": [
+        "#99895b",
+        "#628a7b",
+        "#628a72",
+        "#628a72",
+        "#628a7b"
+      ]
+    },
+    {
+      "id": "cthulhu_ruins_dire",
+      "entity_id": "scene.ttrpg_cthulhu_ruins_dire",
+      "system": "cthulhu",
+      "mood": "ruins",
+      "intensity": "dire",
+      "category": "exploration",
+      "label": "Call of Cthulhu \u2014 Ancient Ruins (Dire)",
+      "description": "Crumbling monoliths, forgotten inscriptions, dusty shafts of light.",
+      "tags": [
+        "indoor",
+        "mystery",
+        "ancient",
+        "exploration"
+      ],
+      "transition_s": 3.0,
+      "readable": true,
+      "fx": null,
+      "preview": [
+        "#b09a5f",
+        "#6a9e8b",
+        "#6a9e7f",
+        "#6a9e7f",
+        "#6a9e8b"
+      ]
+    },
+    {
+      "id": "cthulhu_city_streets_calm",
+      "entity_id": "scene.ttrpg_cthulhu_city_streets_calm",
+      "system": "cthulhu",
+      "mood": "city_streets",
+      "intensity": "calm",
+      "category": "exploration",
+      "label": "Call of Cthulhu \u2014 City Streets & Alleys (Calm)",
+      "description": "Cobblestone reflection, flickering street lamps, murky alleyways.",
+      "tags": [
+        "urban",
+        "night",
+        "stealth"
+      ],
+      "transition_s": 2.5,
+      "readable": true,
+      "fx": null,
+      "preview": [
+        "#8f815a",
+        "#587d70",
+        "#587d65",
+        "#587d70",
+        "#587d65"
+      ]
+    },
+    {
+      "id": "cthulhu_city_streets_tense",
+      "entity_id": "scene.ttrpg_cthulhu_city_streets_tense",
+      "system": "cthulhu",
+      "mood": "city_streets",
+      "intensity": "tense",
+      "category": "exploration",
+      "label": "Call of Cthulhu \u2014 City Streets & Alleys (Tense)",
+      "description": "Cobblestone reflection, flickering street lamps, murky alleyways.",
+      "tags": [
+        "urban",
+        "night",
+        "stealth"
+      ],
+      "transition_s": 2.5,
+      "readable": true,
+      "fx": null,
+      "preview": [
+        "#a8955f",
+        "#609381",
+        "#609372",
+        "#609381",
+        "#609372"
+      ]
+    },
+    {
+      "id": "cthulhu_city_streets_dire",
+      "entity_id": "scene.ttrpg_cthulhu_city_streets_dire",
+      "system": "cthulhu",
+      "mood": "city_streets",
+      "intensity": "dire",
+      "category": "exploration",
+      "label": "Call of Cthulhu \u2014 City Streets & Alleys (Dire)",
+      "description": "Cobblestone reflection, flickering street lamps, murky alleyways.",
+      "tags": [
+        "urban",
+        "night",
+        "stealth"
+      ],
+      "transition_s": 2.5,
+      "readable": true,
+      "fx": null,
+      "preview": [
+        "#c2a862",
+        "#66a992",
+        "#66a97d",
+        "#66a992",
+        "#66a97d"
+      ]
+    },
+    {
+      "id": "cthulhu_combat_skirmish",
+      "entity_id": "scene.ttrpg_cthulhu_combat_skirmish",
+      "system": "cthulhu",
+      "mood": "combat",
+      "intensity": "skirmish",
+      "category": "combat",
+      "label": "Call of Cthulhu \u2014 Standard Combat (Skirmish)",
+      "description": "High tension, clear initiative visibility, aggressive contrast.",
+      "tags": [
+        "combat",
+        "action",
+        "high_energy"
+      ],
+      "transition_s": 0.4,
+      "readable": true,
+      "fx": "script.ttrpg_fx_pulse_slow",
+      "preview": [
+        "#ea9976",
+        "#cfc783",
+        "#cfae83",
+        "#cfc783",
+        "#cfae83"
+      ]
+    },
+    {
+      "id": "cthulhu_combat_pitched",
+      "entity_id": "scene.ttrpg_cthulhu_combat_pitched",
+      "system": "cthulhu",
+      "mood": "combat",
+      "intensity": "pitched",
+      "category": "combat",
+      "label": "Call of Cthulhu \u2014 Standard Combat (Pitched)",
+      "description": "High tension, clear initiative visibility, aggressive contrast.",
+      "tags": [
+        "combat",
+        "action",
+        "high_energy"
+      ],
+      "transition_s": 0.4,
+      "readable": true,
+      "fx": "script.ttrpg_fx_pulse_slow",
+      "preview": [
+        "#ff986c",
+        "#f1e78b",
+        "#f1c58b",
+        "#f1e78b",
+        "#f1c58b"
+      ]
+    },
+    {
+      "id": "cthulhu_combat_boss",
+      "entity_id": "scene.ttrpg_cthulhu_combat_boss",
+      "system": "cthulhu",
+      "mood": "combat",
+      "intensity": "boss",
+      "category": "combat",
+      "label": "Call of Cthulhu \u2014 Standard Combat (Boss)",
+      "description": "High tension, clear initiative visibility, aggressive contrast.",
+      "tags": [
+        "combat",
+        "action",
+        "high_energy"
+      ],
+      "transition_s": 0.4,
+      "readable": true,
+      "fx": "script.ttrpg_fx_pulse_slow",
+      "preview": [
+        "#ff8a58",
+        "#fff384",
+        "#ffca84",
+        "#fff384",
+        "#ffca84"
+      ]
+    },
+    {
+      "id": "cthulhu_stealth_strike_calm",
+      "entity_id": "scene.ttrpg_cthulhu_stealth_strike_calm",
+      "system": "cthulhu",
+      "mood": "stealth_strike",
+      "intensity": "calm",
+      "category": "combat",
+      "label": "Call of Cthulhu \u2014 Stealth & Ambush (Calm)",
+      "description": "Deep shadows, focused target spotlight, poised for the strike.",
+      "tags": [
+        "combat",
+        "stealth",
+        "dark"
+      ],
+      "transition_s": 0.8,
+      "readable": true,
+      "fx": null,
+      "preview": [
+        "#9c6b57",
+        "#2e4938",
+        "#2e493a",
+        "#2e493c",
+        "#2e493f"
+      ]
+    },
+    {
+      "id": "cthulhu_stealth_strike_tense",
+      "entity_id": "scene.ttrpg_cthulhu_stealth_strike_tense",
+      "system": "cthulhu",
+      "mood": "stealth_strike",
+      "intensity": "tense",
+      "category": "combat",
+      "label": "Call of Cthulhu \u2014 Stealth & Ambush (Tense)",
+      "description": "Deep shadows, focused target spotlight, poised for the strike.",
+      "tags": [
+        "combat",
+        "stealth",
+        "dark"
+      ],
+      "transition_s": 0.8,
+      "readable": true,
+      "fx": null,
+      "preview": [
+        "#b87558",
+        "#31563e",
+        "#315642",
+        "#315645",
+        "#315648"
+      ]
+    },
+    {
+      "id": "cthulhu_stealth_strike_dire",
+      "entity_id": "scene.ttrpg_cthulhu_stealth_strike_dire",
+      "system": "cthulhu",
+      "mood": "stealth_strike",
+      "intensity": "dire",
+      "category": "combat",
+      "label": "Call of Cthulhu \u2014 Stealth & Ambush (Dire)",
+      "description": "Deep shadows, focused target spotlight, poised for the strike.",
+      "tags": [
+        "combat",
+        "stealth",
+        "dark"
+      ],
+      "transition_s": 0.8,
+      "readable": true,
+      "fx": null,
+      "preview": [
+        "#d37b56",
+        "#326344",
+        "#326348",
+        "#32634c",
+        "#326350"
+      ]
+    },
+    {
+      "id": "cthulhu_boss_fight_skirmish",
+      "entity_id": "scene.ttrpg_cthulhu_boss_fight_skirmish",
+      "system": "cthulhu",
+      "mood": "boss_fight",
+      "intensity": "skirmish",
+      "category": "combat",
+      "label": "Call of Cthulhu \u2014 Climactic Boss Encounter (Skirmish)",
+      "description": "Overwhelming presence, pulsating hazard, heightened stakes.",
+      "tags": [
+        "combat",
+        "boss",
+        "climax"
+      ],
+      "transition_s": 0.3,
+      "readable": true,
+      "fx": "script.ttrpg_fx_heartbeat",
+      "preview": [
+        "#ffa27a",
+        "#dca87a",
+        "#dc887a",
+        "#dca87a",
+        "#dc887a"
+      ]
+    },
+    {
+      "id": "cthulhu_boss_fight_pitched",
+      "entity_id": "scene.ttrpg_cthulhu_boss_fight_pitched",
+      "system": "cthulhu",
+      "mood": "boss_fight",
+      "intensity": "pitched",
+      "category": "combat",
+      "label": "Call of Cthulhu \u2014 Climactic Boss Encounter (Pitched)",
+      "description": "Overwhelming presence, pulsating hazard, heightened stakes.",
+      "tags": [
+        "combat",
+        "boss",
+        "climax"
+      ],
+      "transition_s": 0.3,
+      "readable": true,
+      "fx": "script.ttrpg_fx_heartbeat",
+      "preview": [
+        "#ff9365",
+        "#ffb97c",
+        "#ff8d7c",
+        "#ffb97c",
+        "#ff8d7c"
+      ]
+    },
+    {
+      "id": "cthulhu_boss_fight_boss",
+      "entity_id": "scene.ttrpg_cthulhu_boss_fight_boss",
+      "system": "cthulhu",
+      "mood": "boss_fight",
+      "intensity": "boss",
+      "category": "combat",
+      "label": "Call of Cthulhu \u2014 Climactic Boss Encounter (Boss)",
+      "description": "Overwhelming presence, pulsating hazard, heightened stakes.",
+      "tags": [
+        "combat",
+        "boss",
+        "climax"
+      ],
+      "transition_s": 0.3,
+      "readable": true,
+      "fx": "script.ttrpg_fx_heartbeat",
+      "preview": [
+        "#ff8450",
+        "#ffb06a",
+        "#ff7e6a",
+        "#ffb06a",
+        "#ff7e6a"
+      ]
+    },
+    {
+      "id": "cthulhu_desperation_tense",
+      "entity_id": "scene.ttrpg_cthulhu_desperation_tense",
+      "system": "cthulhu",
+      "mood": "desperation",
+      "intensity": "tense",
+      "category": "combat",
+      "label": "Call of Cthulhu \u2014 Last Stand / Desperation (Tense)",
+      "description": "Low health, cornered party, failing defenses.",
+      "tags": [
+        "combat",
+        "danger",
+        "critical"
+      ],
+      "transition_s": 0.5,
+      "readable": true,
+      "fx": "script.ttrpg_fx_heartbeat",
+      "preview": [
+        "#d6805a",
+        "#3a6b5a",
+        "#3a6b4d",
+        "#3a6b4d",
+        "#3a6b5a"
+      ]
+    },
+    {
+      "id": "cthulhu_desperation_dire",
+      "entity_id": "scene.ttrpg_cthulhu_desperation_dire",
+      "system": "cthulhu",
+      "mood": "desperation",
+      "intensity": "dire",
+      "category": "combat",
+      "label": "Call of Cthulhu \u2014 Last Stand / Desperation (Dire)",
+      "description": "Low health, cornered party, failing defenses.",
+      "tags": [
+        "combat",
+        "danger",
+        "critical"
+      ],
+      "transition_s": 0.5,
+      "readable": true,
+      "fx": "script.ttrpg_fx_heartbeat",
+      "preview": [
+        "#f68554",
+        "#3a7b64",
+        "#3a7b54",
+        "#3a7b54",
+        "#3a7b64"
+      ]
+    },
+    {
+      "id": "cthulhu_tavern_calm",
+      "entity_id": "scene.ttrpg_cthulhu_tavern_calm",
+      "system": "cthulhu",
+      "mood": "tavern",
+      "intensity": "calm",
+      "category": "social",
+      "label": "Call of Cthulhu \u2014 Tavern / Canteen (Calm)",
+      "description": "Warm hearthfire, lively chatter, clinking flagons, comfortable intimacy.",
+      "tags": [
+        "social",
+        "warm",
+        "safe",
+        "indoor"
+      ],
+      "transition_s": 2.0,
+      "readable": true,
+      "fx": "script.ttrpg_fx_torch_flicker",
+      "preview": [
+        "#b6a36e",
+        "#a99673",
+        "#a99973",
+        "#a99c73",
+        "#a99f73"
+      ]
+    },
+    {
+      "id": "cthulhu_tavern_tense",
+      "entity_id": "scene.ttrpg_cthulhu_tavern_tense",
+      "system": "cthulhu",
+      "mood": "tavern",
+      "intensity": "tense",
+      "category": "social",
+      "label": "Call of Cthulhu \u2014 Tavern / Canteen (Tense)",
+      "description": "Warm hearthfire, lively chatter, clinking flagons, comfortable intimacy.",
+      "tags": [
+        "social",
+        "warm",
+        "safe",
+        "indoor"
+      ],
+      "transition_s": 2.0,
+      "readable": true,
+      "fx": "script.ttrpg_fx_torch_flicker",
+      "preview": [
+        "#d6bc73",
+        "#c7ad7c",
+        "#c7b17c",
+        "#c7b57c",
+        "#c7b97c"
+      ]
+    },
+    {
+      "id": "cthulhu_royal_court_calm",
+      "entity_id": "scene.ttrpg_cthulhu_royal_court_calm",
+      "system": "cthulhu",
+      "mood": "royal_court",
+      "intensity": "calm",
+      "category": "social",
+      "label": "Call of Cthulhu \u2014 Royal Court / High Council (Calm)",
+      "description": "Opulent marble, vaulted ceilings, high stakes diplomacy.",
+      "tags": [
+        "social",
+        "formal",
+        "bright"
+      ],
+      "transition_s": 2.5,
+      "readable": true,
+      "fx": null,
+      "preview": [
+        "#d0c4a2",
+        "#b69385",
+        "#b69385",
+        "#b69385",
+        "#b69385"
+      ]
+    },
+    {
+      "id": "cthulhu_royal_court_tense",
+      "entity_id": "scene.ttrpg_cthulhu_royal_court_tense",
+      "system": "cthulhu",
+      "mood": "royal_court",
+      "intensity": "tense",
+      "category": "social",
+      "label": "Call of Cthulhu \u2014 Royal Court / High Council (Tense)",
+      "description": "Opulent marble, vaulted ceilings, high stakes diplomacy.",
+      "tags": [
+        "social",
+        "formal",
+        "bright"
+      ],
+      "transition_s": 2.5,
+      "readable": true,
+      "fx": null,
+      "preview": [
+        "#f5e4b5",
+        "#d6a792",
+        "#d6a792",
+        "#d6a792",
+        "#d6a792"
+      ]
+    },
+    {
+      "id": "cthulhu_royal_court_dire",
+      "entity_id": "scene.ttrpg_cthulhu_royal_court_dire",
+      "system": "cthulhu",
+      "mood": "royal_court",
+      "intensity": "dire",
+      "category": "social",
+      "label": "Call of Cthulhu \u2014 Royal Court / High Council (Dire)",
+      "description": "Opulent marble, vaulted ceilings, high stakes diplomacy.",
+      "tags": [
+        "social",
+        "formal",
+        "bright"
+      ],
+      "transition_s": 2.5,
+      "readable": true,
+      "fx": null,
+      "preview": [
+        "#ffebb3",
+        "#f6b89d",
+        "#f6b89d",
+        "#f6b89d",
+        "#f6b89d"
+      ]
+    },
+    {
+      "id": "cthulhu_investigation_calm",
+      "entity_id": "scene.ttrpg_cthulhu_investigation_calm",
+      "system": "cthulhu",
+      "mood": "investigation",
+      "intensity": "calm",
+      "category": "social",
+      "label": "Call of Cthulhu \u2014 Investigation & Interrogation (Calm)",
+      "description": "Focused downlight, sharp questioning, gathering clues.",
+      "tags": [
+        "social",
+        "mystery",
+        "focus"
+      ],
+      "transition_s": 1.5,
+      "readable": true,
+      "fx": null,
+      "preview": [
+        "#a9a088",
+        "#6c8278",
+        "#6c8276",
+        "#6c8276",
+        "#6c8278"
+      ]
+    },
+    {
+      "id": "cthulhu_investigation_tense",
+      "entity_id": "scene.ttrpg_cthulhu_investigation_tense",
+      "system": "cthulhu",
+      "mood": "investigation",
+      "intensity": "tense",
+      "category": "social",
+      "label": "Call of Cthulhu \u2014 Investigation & Interrogation (Tense)",
+      "description": "Focused downlight, sharp questioning, gathering clues.",
+      "tags": [
+        "social",
+        "mystery",
+        "focus"
+      ],
+      "transition_s": 1.5,
+      "readable": true,
+      "fx": null,
+      "preview": [
+        "#c7bb99",
+        "#7a998c",
+        "#7a9988",
+        "#7a9988",
+        "#7a998c"
+      ]
+    },
+    {
+      "id": "cthulhu_investigation_dire",
+      "entity_id": "scene.ttrpg_cthulhu_investigation_dire",
+      "system": "cthulhu",
+      "mood": "investigation",
+      "intensity": "dire",
+      "category": "social",
+      "label": "Call of Cthulhu \u2014 Investigation & Interrogation (Dire)",
+      "description": "Focused downlight, sharp questioning, gathering clues.",
+      "tags": [
+        "social",
+        "mystery",
+        "focus"
+      ],
+      "transition_s": 1.5,
+      "readable": true,
+      "fx": null,
+      "preview": [
+        "#e5d5a8",
+        "#87b09e",
+        "#87b09a",
+        "#87b09a",
+        "#87b09e"
+      ]
+    },
+    {
+      "id": "cthulhu_dread_calm",
+      "entity_id": "scene.ttrpg_cthulhu_dread_calm",
+      "system": "cthulhu",
+      "mood": "dread",
+      "intensity": "calm",
+      "category": "suspense",
+      "label": "Call of Cthulhu \u2014 Creeping Dread (Calm)",
+      "description": "Unsettling hush, encroaching entity, breathing darkness.",
+      "tags": [
+        "horror",
+        "suspense",
+        "dark"
+      ],
+      "transition_s": 5.0,
+      "readable": true,
+      "fx": "script.ttrpg_fx_pulse_slow",
+      "preview": [
+        "#274134",
+        "#28392f",
+        "#283930",
+        "#283931",
+        "#283933"
+      ]
+    },
+    {
+      "id": "cthulhu_dread_tense",
+      "entity_id": "scene.ttrpg_cthulhu_dread_tense",
+      "system": "cthulhu",
+      "mood": "dread",
+      "intensity": "tense",
+      "category": "suspense",
+      "label": "Call of Cthulhu \u2014 Creeping Dread (Tense)",
+      "description": "Unsettling hush, encroaching entity, breathing darkness.",
+      "tags": [
+        "horror",
+        "suspense",
+        "dark"
+      ],
+      "transition_s": 5.0,
+      "readable": true,
+      "fx": "script.ttrpg_fx_pulse_slow",
+      "preview": [
+        "#294c3b",
+        "#2c4335",
+        "#2c4337",
+        "#2c4339",
+        "#2c433a"
+      ]
+    },
+    {
+      "id": "cthulhu_dread_dire",
+      "entity_id": "scene.ttrpg_cthulhu_dread_dire",
+      "system": "cthulhu",
+      "mood": "dread",
+      "intensity": "dire",
+      "category": "suspense",
+      "label": "Call of Cthulhu \u2014 Creeping Dread (Dire)",
+      "description": "Unsettling hush, encroaching entity, breathing darkness.",
+      "tags": [
+        "horror",
+        "suspense",
+        "dark"
+      ],
+      "transition_s": 5.0,
+      "readable": true,
+      "fx": "script.ttrpg_fx_pulse_slow",
+      "preview": [
+        "#2a5841",
+        "#2f4d3b",
+        "#2f4d3d",
+        "#2f4d3f",
+        "#2f4d42"
+      ]
+    },
+    {
+      "id": "cthulhu_lurking_shadow_tense",
+      "entity_id": "scene.ttrpg_cthulhu_lurking_shadow_tense",
+      "system": "cthulhu",
+      "mood": "lurking_shadow",
+      "intensity": "tense",
+      "category": "suspense",
+      "label": "Call of Cthulhu \u2014 Lurking Shadow (Tense)",
+      "description": "Peripheral movement, failing sensors, breath held.",
+      "tags": [
+        "horror",
+        "stealth",
+        "monster"
+      ],
+      "transition_s": 3.0,
+      "readable": true,
+      "fx": "script.ttrpg_fx_drift",
+      "preview": [
+        "#5c3a2c",
+        "#243d34",
+        "#243d2e",
+        "#243d34",
+        "#243d2e"
+      ]
+    },
+    {
+      "id": "cthulhu_lurking_shadow_dire",
+      "entity_id": "scene.ttrpg_cthulhu_lurking_shadow_dire",
+      "system": "cthulhu",
+      "mood": "lurking_shadow",
+      "intensity": "dire",
+      "category": "suspense",
+      "label": "Call of Cthulhu \u2014 Lurking Shadow (Dire)",
+      "description": "Peripheral movement, failing sensors, breath held.",
+      "tags": [
+        "horror",
+        "stealth",
+        "monster"
+      ],
+      "transition_s": 3.0,
+      "readable": true,
+      "fx": "script.ttrpg_fx_drift",
+      "preview": [
+        "#6a3e2b",
+        "#26463a",
+        "#264632",
+        "#26463a",
+        "#264632"
+      ]
+    },
+    {
+      "id": "cthulhu_ritual_calm",
+      "entity_id": "scene.ttrpg_cthulhu_ritual_calm",
+      "system": "cthulhu",
+      "mood": "ritual",
+      "intensity": "calm",
+      "category": "suspense",
+      "label": "Call of Cthulhu \u2014 Occult Ritual / Countdown (Calm)",
+      "description": "Chanting resonance, unholy runes glowing in sequence.",
+      "tags": [
+        "magic",
+        "horror",
+        "ritual"
+      ],
+      "transition_s": 1.5,
+      "readable": true,
+      "fx": "script.ttrpg_fx_sanity_distort",
+      "preview": [
+        "#c38367",
+        "#755b44",
+        "#754d44",
+        "#754d44",
+        "#755b44"
+      ]
+    },
+    {
+      "id": "cthulhu_ritual_tense",
+      "entity_id": "scene.ttrpg_cthulhu_ritual_tense",
+      "system": "cthulhu",
+      "mood": "ritual",
+      "intensity": "tense",
+      "category": "suspense",
+      "label": "Call of Cthulhu \u2014 Occult Ritual / Countdown (Tense)",
+      "description": "Chanting resonance, unholy runes glowing in sequence.",
+      "tags": [
+        "magic",
+        "horror",
+        "ritual"
+      ],
+      "transition_s": 1.5,
+      "readable": true,
+      "fx": "script.ttrpg_fx_sanity_distort",
+      "preview": [
+        "#e58d68",
+        "#8a6646",
+        "#8a5246",
+        "#8a5246",
+        "#8a6646"
+      ]
+    },
+    {
+      "id": "cthulhu_ritual_dire",
+      "entity_id": "scene.ttrpg_cthulhu_ritual_dire",
+      "system": "cthulhu",
+      "mood": "ritual",
+      "intensity": "dire",
+      "category": "suspense",
+      "label": "Call of Cthulhu \u2014 Occult Ritual / Countdown (Dire)",
+      "description": "Chanting resonance, unholy runes glowing in sequence.",
+      "tags": [
+        "magic",
+        "horror",
+        "ritual"
+      ],
+      "transition_s": 1.5,
+      "readable": true,
+      "fx": "script.ttrpg_fx_sanity_distort",
+      "preview": [
+        "#ff8f5f",
+        "#9e6f46",
+        "#9e5646",
+        "#9e5646",
+        "#9e6f46"
+      ]
+    },
+    {
+      "id": "cthulhu_campfire_calm",
+      "entity_id": "scene.ttrpg_cthulhu_campfire_calm",
+      "system": "cthulhu",
+      "mood": "campfire",
+      "intensity": "calm",
+      "category": "rest",
+      "label": "Call of Cthulhu \u2014 Campfire / Night Rest (Calm)",
+      "description": "Embers crackling in the darkness, soothing warmth on tired eyes.",
+      "tags": [
+        "rest",
+        "night",
+        "warm",
+        "outdoor"
+      ],
+      "transition_s": 4.0,
+      "readable": true,
+      "fx": "script.ttrpg_fx_torch_flicker",
+      "preview": [
+        "#82734b",
+        "#6d5e45",
+        "#6d6145",
+        "#6d6445",
+        "#6d6645"
+      ]
+    },
+    {
+      "id": "cthulhu_campfire_tense",
+      "entity_id": "scene.ttrpg_cthulhu_campfire_tense",
+      "system": "cthulhu",
+      "mood": "campfire",
+      "intensity": "tense",
+      "category": "rest",
+      "label": "Call of Cthulhu \u2014 Campfire / Night Rest (Tense)",
+      "description": "Embers crackling in the darkness, soothing warmth on tired eyes.",
+      "tags": [
+        "rest",
+        "night",
+        "warm",
+        "outdoor"
+      ],
+      "transition_s": 4.0,
+      "readable": true,
+      "fx": "script.ttrpg_fx_torch_flicker",
+      "preview": [
+        "#99854e",
+        "#816c49",
+        "#817049",
+        "#817449",
+        "#817749"
+      ]
+    },
+    {
+      "id": "cthulhu_sanctuary_calm",
+      "entity_id": "scene.ttrpg_cthulhu_sanctuary_calm",
+      "system": "cthulhu",
+      "mood": "sanctuary",
+      "intensity": "calm",
+      "category": "rest",
+      "label": "Call of Cthulhu \u2014 Sanctuary / Holy Ground (Calm)",
+      "description": "Divine protection, hallowed warmth, reprieve from the storm.",
+      "tags": [
+        "rest",
+        "safe",
+        "divine",
+        "bright"
+      ],
+      "transition_s": 3.0,
+      "readable": true,
+      "fx": null,
+      "preview": [
+        "#b6af9b",
+        "#a9a394",
+        "#a9a394",
+        "#a9a394",
+        "#a9a394"
+      ]
+    },
+    {
+      "id": "cthulhu_storm_calm",
+      "entity_id": "scene.ttrpg_cthulhu_storm_calm",
+      "system": "cthulhu",
+      "mood": "storm",
+      "intensity": "calm",
+      "category": "environment",
+      "label": "Call of Cthulhu \u2014 Thunderstorm / Tempest (Calm)",
+      "description": "Howling rain, overcast darkness, sudden lightning strikes.",
+      "tags": [
+        "weather",
+        "outdoor",
+        "storm",
+        "hazard"
+      ],
+      "transition_s": 1.0,
+      "readable": true,
+      "fx": "script.ttrpg_fx_lightning",
+      "preview": [
+        "#446856",
+        "#3e5b50",
+        "#3e5b49",
+        "#3e5b50",
+        "#3e5b49"
+      ]
+    },
+    {
+      "id": "cthulhu_storm_tense",
+      "entity_id": "scene.ttrpg_cthulhu_storm_tense",
+      "system": "cthulhu",
+      "mood": "storm",
+      "intensity": "tense",
+      "category": "environment",
+      "label": "Call of Cthulhu \u2014 Thunderstorm / Tempest (Tense)",
+      "description": "Howling rain, overcast darkness, sudden lightning strikes.",
+      "tags": [
+        "weather",
+        "outdoor",
+        "storm",
+        "hazard"
+      ],
+      "transition_s": 1.0,
+      "readable": true,
+      "fx": "script.ttrpg_fx_lightning",
+      "preview": [
+        "#497a62",
+        "#436b5c",
+        "#436b52",
+        "#436b5c",
+        "#436b52"
+      ]
+    },
+    {
+      "id": "cthulhu_storm_dire",
+      "entity_id": "scene.ttrpg_cthulhu_storm_dire",
+      "system": "cthulhu",
+      "mood": "storm",
+      "intensity": "dire",
+      "category": "environment",
+      "label": "Call of Cthulhu \u2014 Thunderstorm / Tempest (Dire)",
+      "description": "Howling rain, overcast darkness, sudden lightning strikes.",
+      "tags": [
+        "weather",
+        "outdoor",
+        "storm",
+        "hazard"
+      ],
+      "transition_s": 1.0,
+      "readable": true,
+      "fx": "script.ttrpg_fx_lightning",
+      "preview": [
+        "#4c8d6c",
+        "#467b67",
+        "#467b5a",
+        "#467b67",
+        "#467b5a"
+      ]
+    },
+    {
+      "id": "cthulhu_toxic_haze_tense",
+      "entity_id": "scene.ttrpg_cthulhu_toxic_haze_tense",
+      "system": "cthulhu",
+      "mood": "toxic_haze",
+      "intensity": "tense",
+      "category": "environment",
+      "label": "Call of Cthulhu \u2014 Toxic Haze / Biohazard (Tense)",
+      "description": "Corrosive fumes, warning claxons, compromised containment.",
+      "tags": [
+        "hazard",
+        "sci_fi",
+        "poison"
+      ],
+      "transition_s": 1.2,
+      "readable": true,
+      "fx": "script.ttrpg_fx_alert_sweep",
+      "preview": [
+        "#c77f60",
+        "#a86256",
+        "#a86a56",
+        "#a87356",
+        "#a87b56"
+      ]
+    },
+    {
+      "id": "cthulhu_toxic_haze_dire",
+      "entity_id": "scene.ttrpg_cthulhu_toxic_haze_dire",
+      "system": "cthulhu",
+      "mood": "toxic_haze",
+      "intensity": "dire",
+      "category": "environment",
+      "label": "Call of Cthulhu \u2014 Toxic Haze / Biohazard (Dire)",
+      "description": "Corrosive fumes, warning claxons, compromised containment.",
+      "tags": [
+        "hazard",
+        "sci_fi",
+        "poison"
+      ],
+      "transition_s": 1.2,
+      "readable": true,
+      "fx": "script.ttrpg_fx_alert_sweep",
+      "preview": [
+        "#e5865d",
+        "#c26555",
+        "#c27055",
+        "#c27b55",
+        "#c28655"
+      ]
+    },
+    {
+      "id": "cthulhu_space_void_calm",
+      "entity_id": "scene.ttrpg_cthulhu_space_void_calm",
+      "system": "cthulhu",
+      "mood": "space_void",
+      "intensity": "calm",
+      "category": "environment",
+      "label": "Call of Cthulhu \u2014 Deep Space / Cold Vacuum (Calm)",
+      "description": "Pitch void, sterile status monitors, silent expanse.",
+      "tags": [
+        "space",
+        "cold",
+        "sci_fi"
+      ],
+      "transition_s": 4.0,
+      "readable": true,
+      "fx": "script.ttrpg_fx_drift",
+      "preview": [
+        "#2d4e3e",
+        "#53493b",
+        "#534c3b",
+        "#534e3b",
+        "#53503b"
+      ]
+    },
+    {
+      "id": "cthulhu_space_void_tense",
+      "entity_id": "scene.ttrpg_cthulhu_space_void_tense",
+      "system": "cthulhu",
+      "mood": "space_void",
+      "intensity": "tense",
+      "category": "environment",
+      "label": "Call of Cthulhu \u2014 Deep Space / Cold Vacuum (Tense)",
+      "description": "Pitch void, sterile status monitors, silent expanse.",
+      "tags": [
+        "space",
+        "cold",
+        "sci_fi"
+      ],
+      "transition_s": 4.0,
+      "readable": true,
+      "fx": "script.ttrpg_fx_drift",
+      "preview": [
+        "#2f5c45",
+        "#625440",
+        "#625740",
+        "#625a40",
+        "#625d40"
+      ]
+    },
+    {
+      "id": "cthulhu_blackout_dire",
+      "entity_id": "scene.ttrpg_cthulhu_blackout_dire",
+      "system": "cthulhu",
+      "mood": "blackout",
+      "intensity": "dire",
+      "category": "suspense",
+      "label": "Call of Cthulhu \u2014 Total Blackout (Dire)",
+      "description": "Complete power loss, emergency indicator minimums.",
+      "tags": [
+        "horror",
+        "darkness",
+        "cinematic"
+      ],
+      "transition_s": 0.5,
+      "readable": false,
+      "fx": null,
+      "preview": [
+        "#000000",
+        "#120a07",
+        "#120a07",
+        "#120a07",
+        "#120a07"
+      ]
+    },
+    {
+      "id": "cthulhu_rules_lookup_standard",
+      "entity_id": "scene.ttrpg_cthulhu_rules_lookup_standard",
+      "system": "cthulhu",
+      "mood": "rules_lookup",
+      "intensity": "standard",
+      "category": "utility",
+      "label": "Call of Cthulhu \u2014 Rules Lookup / Table Management (Standard)",
+      "description": "High readability, neutral balanced light for reading books and sheets.",
+      "tags": [
+        "utility",
+        "reading",
+        "bright"
+      ],
+      "transition_s": 1.0,
+      "readable": true,
+      "fx": null,
+      "preview": [
+        "#fff9ea",
+        "#fffbf1",
+        "#fffbf1",
+        "#fffbf1",
+        "#fffbf1"
+      ]
+    },
+    {
+      "id": "cthulhu_intermission_standard",
+      "entity_id": "scene.ttrpg_cthulhu_intermission_standard",
+      "system": "cthulhu",
+      "mood": "intermission",
+      "intensity": "standard",
+      "category": "utility",
+      "label": "Call of Cthulhu \u2014 Intermission / Snack Break (Standard)",
+      "description": "Relaxed ambient warm white light for session pauses.",
+      "tags": [
+        "utility",
+        "break",
+        "warm"
+      ],
+      "transition_s": 2.0,
+      "readable": true,
+      "fx": null,
+      "preview": [
+        "#d6ceb9",
+        "#d6ceb9",
+        "#d6ceb9",
+        "#d6ceb9",
+        "#d6ceb9"
+      ]
+    },
+    {
+      "id": "mothership_dungeon_calm",
+      "entity_id": "scene.ttrpg_mothership_dungeon_calm",
+      "system": "mothership",
+      "mood": "dungeon",
+      "intensity": "calm",
+      "category": "exploration",
+      "label": "Mothership \u2014 Dungeon (Calm)",
+      "description": "Guttering torchlight with cold shadow beyond the circle.",
+      "tags": [
+        "indoor",
+        "dark",
+        "exploration",
+        "subterranean"
+      ],
+      "transition_s": 3.0,
+      "readable": true,
+      "fx": "script.ttrpg_fx_torch_flicker",
+      "preview": [
+        "#066f84",
+        "#2d5075",
+        "#2d4875",
+        "#2d4175",
+        "#2d3a75"
+      ]
+    },
+    {
+      "id": "mothership_dungeon_tense",
+      "entity_id": "scene.ttrpg_mothership_dungeon_tense",
+      "system": "mothership",
+      "mood": "dungeon",
+      "intensity": "tense",
+      "category": "exploration",
+      "label": "Mothership \u2014 Dungeon (Tense)",
+      "description": "Guttering torchlight with cold shadow beyond the circle.",
+      "tags": [
+        "indoor",
+        "dark",
+        "exploration",
+        "subterranean"
+      ],
+      "transition_s": 3.0,
+      "readable": true,
+      "fx": "script.ttrpg_fx_torch_flicker",
+      "preview": [
+        "#00819b",
+        "#26568a",
+        "#264d8a",
+        "#26428a",
+        "#26398a"
+      ]
+    },
+    {
+      "id": "mothership_dungeon_dire",
+      "entity_id": "scene.ttrpg_mothership_dungeon_dire",
+      "system": "mothership",
+      "mood": "dungeon",
+      "intensity": "dire",
+      "category": "exploration",
+      "label": "Mothership \u2014 Dungeon (Dire)",
+      "description": "Guttering torchlight with cold shadow beyond the circle.",
+      "tags": [
+        "indoor",
+        "dark",
+        "exploration",
+        "subterranean"
+      ],
+      "transition_s": 3.0,
+      "readable": true,
+      "fx": "script.ttrpg_fx_torch_flicker",
+      "preview": [
+        "#0094b2",
+        "#1c5b9e",
+        "#1c4e9e",
+        "#1c419e",
+        "#1c349e"
+      ]
+    },
+    {
+      "id": "mothership_cavern_calm",
+      "entity_id": "scene.ttrpg_mothership_cavern_calm",
+      "system": "mothership",
+      "mood": "cavern",
+      "intensity": "calm",
+      "category": "exploration",
+      "label": "Mothership \u2014 Deep Cavern (Calm)",
+      "description": "Damp subterranean stone, bioluminescent patches, echoing depth.",
+      "tags": [
+        "subterranean",
+        "damp",
+        "dark",
+        "exploration"
+      ],
+      "transition_s": 3.5,
+      "readable": true,
+      "fx": "script.ttrpg_fx_drift",
+      "preview": [
+        "#163166",
+        "#6f180b",
+        "#6f0b18",
+        "#6f180b",
+        "#6f0b18"
+      ]
+    },
+    {
+      "id": "mothership_cavern_tense",
+      "entity_id": "scene.ttrpg_mothership_cavern_tense",
+      "system": "mothership",
+      "mood": "cavern",
+      "intensity": "tense",
+      "category": "exploration",
+      "label": "Mothership \u2014 Deep Cavern (Tense)",
+      "description": "Damp subterranean stone, bioluminescent patches, echoing depth.",
+      "tags": [
+        "subterranean",
+        "damp",
+        "dark",
+        "exploration"
+      ],
+      "transition_s": 3.5,
+      "readable": true,
+      "fx": "script.ttrpg_fx_drift",
+      "preview": [
+        "#0a2f78",
+        "#831000",
+        "#830010",
+        "#831000",
+        "#830010"
+      ]
+    },
+    {
+      "id": "mothership_cavern_dire",
+      "entity_id": "scene.ttrpg_mothership_cavern_dire",
+      "system": "mothership",
+      "mood": "cavern",
+      "intensity": "dire",
+      "category": "exploration",
+      "label": "Mothership \u2014 Deep Cavern (Dire)",
+      "description": "Damp subterranean stone, bioluminescent patches, echoing depth.",
+      "tags": [
+        "subterranean",
+        "damp",
+        "dark",
+        "exploration"
+      ],
+      "transition_s": 3.5,
+      "readable": true,
+      "fx": "script.ttrpg_fx_drift",
+      "preview": [
+        "#002e8b",
+        "#961300",
+        "#960013",
+        "#961300",
+        "#960013"
+      ]
+    },
+    {
+      "id": "mothership_wilderness_calm",
+      "entity_id": "scene.ttrpg_mothership_wilderness_calm",
+      "system": "mothership",
+      "mood": "wilderness",
+      "intensity": "calm",
+      "category": "exploration",
+      "label": "Mothership \u2014 Wilderness Trek (Calm)",
+      "description": "Open canopy, shifting wind, distant natural horizons.",
+      "tags": [
+        "outdoor",
+        "nature",
+        "travel"
+      ],
+      "transition_s": 4.0,
+      "readable": true,
+      "fx": null,
+      "preview": [
+        "#399cb0",
+        "#4f73a1",
+        "#4f6da1",
+        "#4f68a1",
+        "#4f62a1"
+      ]
+    },
+    {
+      "id": "mothership_wilderness_tense",
+      "entity_id": "scene.ttrpg_mothership_wilderness_tense",
+      "system": "mothership",
+      "mood": "wilderness",
+      "intensity": "tense",
+      "category": "exploration",
+      "label": "Mothership \u2014 Wilderness Trek (Tense)",
+      "description": "Open canopy, shifting wind, distant natural horizons.",
+      "tags": [
+        "outdoor",
+        "nature",
+        "travel"
+      ],
+      "transition_s": 4.0,
+      "readable": true,
+      "fx": null,
+      "preview": [
+        "#2cb3cf",
+        "#4e7ebd",
+        "#4e77bd",
+        "#4e6fbd",
+        "#4e68bd"
+      ]
+    },
+    {
+      "id": "mothership_wilderness_dire",
+      "entity_id": "scene.ttrpg_mothership_wilderness_dire",
+      "system": "mothership",
+      "mood": "wilderness",
+      "intensity": "dire",
+      "category": "exploration",
+      "label": "Mothership \u2014 Wilderness Trek (Dire)",
+      "description": "Open canopy, shifting wind, distant natural horizons.",
+      "tags": [
+        "outdoor",
+        "nature",
+        "travel"
+      ],
+      "transition_s": 4.0,
+      "readable": true,
+      "fx": null,
+      "preview": [
+        "#18caee",
+        "#4786da",
+        "#477dda",
+        "#4773da",
+        "#4769da"
+      ]
+    },
+    {
+      "id": "mothership_ruins_calm",
+      "entity_id": "scene.ttrpg_mothership_ruins_calm",
+      "system": "mothership",
+      "mood": "ruins",
+      "intensity": "calm",
+      "category": "exploration",
+      "label": "Mothership \u2014 Ancient Ruins (Calm)",
+      "description": "Crumbling monoliths, forgotten inscriptions, dusty shafts of light.",
+      "tags": [
+        "indoor",
+        "mystery",
+        "ancient",
+        "exploration"
+      ],
+      "transition_s": 3.0,
+      "readable": true,
+      "fx": null,
+      "preview": [
+        "#1f7f92",
+        "#3a4884",
+        "#3a5984",
+        "#3a5984",
+        "#3a4884"
+      ]
+    },
+    {
+      "id": "mothership_ruins_tense",
+      "entity_id": "scene.ttrpg_mothership_ruins_tense",
+      "system": "mothership",
+      "mood": "ruins",
+      "intensity": "tense",
+      "category": "exploration",
+      "label": "Mothership \u2014 Ancient Ruins (Tense)",
+      "description": "Crumbling monoliths, forgotten inscriptions, dusty shafts of light.",
+      "tags": [
+        "indoor",
+        "mystery",
+        "ancient",
+        "exploration"
+      ],
+      "transition_s": 3.0,
+      "readable": true,
+      "fx": null,
+      "preview": [
+        "#0e92ac",
+        "#354a9b",
+        "#35619b",
+        "#35619b",
+        "#354a9b"
+      ]
+    },
+    {
+      "id": "mothership_ruins_dire",
+      "entity_id": "scene.ttrpg_mothership_ruins_dire",
+      "system": "mothership",
+      "mood": "ruins",
+      "intensity": "dire",
+      "category": "exploration",
+      "label": "Mothership \u2014 Ancient Ruins (Dire)",
+      "description": "Crumbling monoliths, forgotten inscriptions, dusty shafts of light.",
+      "tags": [
+        "indoor",
+        "mystery",
+        "ancient",
+        "exploration"
+      ],
+      "transition_s": 3.0,
+      "readable": true,
+      "fx": null,
+      "preview": [
+        "#00a5c6",
+        "#2d47b2",
+        "#2d66b2",
+        "#2d66b2",
+        "#2d47b2"
+      ]
+    },
+    {
+      "id": "mothership_city_streets_calm",
+      "entity_id": "scene.ttrpg_mothership_city_streets_calm",
+      "system": "mothership",
+      "mood": "city_streets",
+      "intensity": "calm",
+      "category": "exploration",
+      "label": "Mothership \u2014 City Streets & Alleys (Calm)",
+      "description": "Cobblestone reflection, flickering street lamps, murky alleyways.",
+      "tags": [
+        "urban",
+        "night",
+        "stealth"
+      ],
+      "transition_s": 2.5,
+      "readable": true,
+      "fx": null,
+      "preview": [
+        "#198aa1",
+        "#2e3f8c",
+        "#2e5b8c",
+        "#2e3f8c",
+        "#2e5b8c"
+      ]
+    },
+    {
+      "id": "mothership_city_streets_tense",
+      "entity_id": "scene.ttrpg_mothership_city_streets_tense",
+      "system": "mothership",
+      "mood": "city_streets",
+      "intensity": "tense",
+      "category": "exploration",
+      "label": "Mothership \u2014 City Streets & Alleys (Tense)",
+      "description": "Cobblestone reflection, flickering street lamps, murky alleyways.",
+      "tags": [
+        "urban",
+        "night",
+        "stealth"
+      ],
+      "transition_s": 2.5,
+      "readable": true,
+      "fx": null,
+      "preview": [
+        "#039ebd",
+        "#233ba5",
+        "#2362a5",
+        "#233ba5",
+        "#2362a5"
+      ]
+    },
+    {
+      "id": "mothership_city_streets_dire",
+      "entity_id": "scene.ttrpg_mothership_city_streets_dire",
+      "system": "mothership",
+      "mood": "city_streets",
+      "intensity": "dire",
+      "category": "exploration",
+      "label": "Mothership \u2014 City Streets & Alleys (Dire)",
+      "description": "Cobblestone reflection, flickering street lamps, murky alleyways.",
+      "tags": [
+        "urban",
+        "night",
+        "stealth"
+      ],
+      "transition_s": 2.5,
+      "readable": true,
+      "fx": null,
+      "preview": [
+        "#00b5da",
+        "#1332be",
+        "#1366be",
+        "#1332be",
+        "#1366be"
+      ]
+    },
+    {
+      "id": "mothership_combat_skirmish",
+      "entity_id": "scene.ttrpg_mothership_combat_skirmish",
+      "system": "mothership",
+      "mood": "combat",
+      "intensity": "skirmish",
+      "category": "combat",
+      "label": "Mothership \u2014 Standard Combat (Skirmish)",
+      "description": "High tension, clear initiative visibility, aggressive contrast.",
+      "tags": [
+        "combat",
+        "action",
+        "high_energy"
+      ],
+      "transition_s": 0.4,
+      "readable": true,
+      "fx": "script.ttrpg_fx_pulse_slow",
+      "preview": [
+        "#ff0000",
+        "#27a8e8",
+        "#27e8e8",
+        "#27a8e8",
+        "#27e8e8"
+      ]
+    },
+    {
+      "id": "mothership_combat_pitched",
+      "entity_id": "scene.ttrpg_mothership_combat_pitched",
+      "system": "mothership",
+      "mood": "combat",
+      "intensity": "pitched",
+      "category": "combat",
+      "label": "Mothership \u2014 Standard Combat (Pitched)",
+      "description": "High tension, clear initiative visibility, aggressive contrast.",
+      "tags": [
+        "combat",
+        "action",
+        "high_energy"
+      ],
+      "transition_s": 0.4,
+      "readable": true,
+      "fx": "script.ttrpg_fx_pulse_slow",
+      "preview": [
+        "#ff0000",
+        "#0aadff",
+        "#0affff",
+        "#0aadff",
+        "#0affff"
+      ]
+    },
+    {
+      "id": "mothership_combat_boss",
+      "entity_id": "scene.ttrpg_mothership_combat_boss",
+      "system": "mothership",
+      "mood": "combat",
+      "intensity": "boss",
+      "category": "combat",
+      "label": "Mothership \u2014 Standard Combat (Boss)",
+      "description": "High tension, clear initiative visibility, aggressive contrast.",
+      "tags": [
+        "combat",
+        "action",
+        "high_energy"
+      ],
+      "transition_s": 0.4,
+      "readable": true,
+      "fx": "script.ttrpg_fx_pulse_slow",
+      "preview": [
+        "#ff0000",
+        "#00aaff",
+        "#00ffff",
+        "#00aaff",
+        "#00ffff"
+      ]
+    },
+    {
+      "id": "mothership_stealth_strike_calm",
+      "entity_id": "scene.ttrpg_mothership_stealth_strike_calm",
+      "system": "mothership",
+      "mood": "stealth_strike",
+      "intensity": "calm",
+      "category": "combat",
+      "label": "Mothership \u2014 Stealth & Ambush (Calm)",
+      "description": "Deep shadows, focused target spotlight, poised for the strike.",
+      "tags": [
+        "combat",
+        "stealth",
+        "dark"
+      ],
+      "transition_s": 0.8,
+      "readable": true,
+      "fx": null,
+      "preview": [
+        "#b00000",
+        "#173961",
+        "#173361",
+        "#243b72",
+        "#243472"
+      ]
+    },
+    {
+      "id": "mothership_stealth_strike_tense",
+      "entity_id": "scene.ttrpg_mothership_stealth_strike_tense",
+      "system": "mothership",
+      "mood": "stealth_strike",
+      "intensity": "tense",
+      "category": "combat",
+      "label": "Mothership \u2014 Stealth & Ambush (Tense)",
+      "description": "Deep shadows, focused target spotlight, poised for the strike.",
+      "tags": [
+        "combat",
+        "stealth",
+        "dark"
+      ],
+      "transition_s": 0.8,
+      "readable": true,
+      "fx": null,
+      "preview": [
+        "#cf0000",
+        "#0d3b71",
+        "#0d3371",
+        "#0d2a71",
+        "#0d2271"
+      ]
+    },
+    {
+      "id": "mothership_stealth_strike_dire",
+      "entity_id": "scene.ttrpg_mothership_stealth_strike_dire",
+      "system": "mothership",
+      "mood": "stealth_strike",
+      "intensity": "dire",
+      "category": "combat",
+      "label": "Mothership \u2014 Stealth & Ambush (Dire)",
+      "description": "Deep shadows, focused target spotlight, poised for the strike.",
+      "tags": [
+        "combat",
+        "stealth",
+        "dark"
+      ],
+      "transition_s": 0.8,
+      "readable": true,
+      "fx": null,
+      "preview": [
+        "#ee0000",
+        "#00336f",
+        "#0d3981",
+        "#0d2f81",
+        "#0d2581"
+      ]
+    },
+    {
+      "id": "mothership_boss_fight_skirmish",
+      "entity_id": "scene.ttrpg_mothership_boss_fight_skirmish",
+      "system": "mothership",
+      "mood": "boss_fight",
+      "intensity": "skirmish",
+      "category": "combat",
+      "label": "Mothership \u2014 Climactic Boss Encounter (Skirmish)",
+      "description": "Overwhelming presence, pulsating hazard, heightened stakes.",
+      "tags": [
+        "combat",
+        "boss",
+        "climax"
+      ],
+      "transition_s": 0.3,
+      "readable": true,
+      "fx": "script.ttrpg_fx_heartbeat",
+      "preview": [
+        "#ff0000",
+        "#f82900",
+        "#f80029",
+        "#f82900",
+        "#f80029"
+      ]
+    },
+    {
+      "id": "mothership_boss_fight_pitched",
+      "entity_id": "scene.ttrpg_mothership_boss_fight_pitched",
+      "system": "mothership",
+      "mood": "boss_fight",
+      "intensity": "pitched",
+      "category": "combat",
+      "label": "Mothership \u2014 Climactic Boss Encounter (Pitched)",
+      "description": "Overwhelming presence, pulsating hazard, heightened stakes.",
+      "tags": [
+        "combat",
+        "boss",
+        "climax"
+      ],
+      "transition_s": 0.3,
+      "readable": true,
+      "fx": "script.ttrpg_fx_heartbeat",
+      "preview": [
+        "#ff0000",
+        "#ff2a00",
+        "#ff002b",
+        "#ff2a00",
+        "#ff002b"
+      ]
+    },
+    {
+      "id": "mothership_boss_fight_boss",
+      "entity_id": "scene.ttrpg_mothership_boss_fight_boss",
+      "system": "mothership",
+      "mood": "boss_fight",
+      "intensity": "boss",
+      "category": "combat",
+      "label": "Mothership \u2014 Climactic Boss Encounter (Boss)",
+      "description": "Overwhelming presence, pulsating hazard, heightened stakes.",
+      "tags": [
+        "combat",
+        "boss",
+        "climax"
+      ],
+      "transition_s": 0.3,
+      "readable": true,
+      "fx": "script.ttrpg_fx_heartbeat",
+      "preview": [
+        "#ff0000",
+        "#ff2a00",
+        "#ff002b",
+        "#ff2a00",
+        "#ff002b"
+      ]
+    },
+    {
+      "id": "mothership_desperation_tense",
+      "entity_id": "scene.ttrpg_mothership_desperation_tense",
+      "system": "mothership",
+      "mood": "desperation",
+      "intensity": "tense",
+      "category": "combat",
+      "label": "Mothership \u2014 Last Stand / Desperation (Tense)",
+      "description": "Low health, cornered party, failing defenses.",
+      "tags": [
+        "combat",
+        "danger",
+        "critical"
+      ],
+      "transition_s": 0.5,
+      "readable": true,
+      "fx": "script.ttrpg_fx_heartbeat",
+      "preview": [
+        "#f10000",
+        "#0e258c",
+        "#003578",
+        "#003578",
+        "#0e258c"
+      ]
+    },
+    {
+      "id": "mothership_desperation_dire",
+      "entity_id": "scene.ttrpg_mothership_desperation_dire",
+      "system": "mothership",
+      "mood": "desperation",
+      "intensity": "dire",
+      "category": "combat",
+      "label": "Mothership \u2014 Last Stand / Desperation (Dire)",
+      "description": "Low health, cornered party, failing defenses.",
+      "tags": [
+        "combat",
+        "danger",
+        "critical"
+      ],
+      "transition_s": 0.5,
+      "readable": true,
+      "fx": "script.ttrpg_fx_heartbeat",
+      "preview": [
+        "#ff0000",
+        "#00198b",
+        "#003d8b",
+        "#003d8b",
+        "#00198b"
+      ]
+    },
+    {
+      "id": "mothership_tavern_calm",
+      "entity_id": "scene.ttrpg_mothership_tavern_calm",
+      "system": "mothership",
+      "mood": "tavern",
+      "intensity": "calm",
+      "category": "social",
+      "label": "Mothership \u2014 Tavern / Canteen (Calm)",
+      "description": "Warm hearthfire, lively chatter, clinking flagons, comfortable intimacy.",
+      "tags": [
+        "social",
+        "warm",
+        "safe",
+        "indoor"
+      ],
+      "transition_s": 2.0,
+      "readable": true,
+      "fx": "script.ttrpg_fx_torch_flicker",
+      "preview": [
+        "#14aecd",
+        "#33b3be",
+        "#33abbe",
+        "#33a3be",
+        "#339bbe"
+      ]
+    },
+    {
+      "id": "mothership_tavern_tense",
+      "entity_id": "scene.ttrpg_mothership_tavern_tense",
+      "system": "mothership",
+      "mood": "tavern",
+      "intensity": "tense",
+      "category": "social",
+      "label": "Mothership \u2014 Tavern / Canteen (Tense)",
+      "description": "Warm hearthfire, lively chatter, clinking flagons, comfortable intimacy.",
+      "tags": [
+        "social",
+        "warm",
+        "safe",
+        "indoor"
+      ],
+      "transition_s": 2.0,
+      "readable": true,
+      "fx": "script.ttrpg_fx_torch_flicker",
+      "preview": [
+        "#00c9f1",
+        "#21d0e0",
+        "#21c5e0",
+        "#21bbe0",
+        "#21b0e0"
+      ]
+    },
+    {
+      "id": "mothership_royal_court_calm",
+      "entity_id": "scene.ttrpg_mothership_royal_court_calm",
+      "system": "mothership",
+      "mood": "royal_court",
+      "intensity": "calm",
+      "category": "social",
+      "label": "Mothership \u2014 Royal Court / High Council (Calm)",
+      "description": "Opulent marble, vaulted ceilings, high stakes diplomacy.",
+      "tags": [
+        "social",
+        "formal",
+        "bright"
+      ],
+      "transition_s": 2.5,
+      "readable": true,
+      "fx": null,
+      "preview": [
+        "#74d6ea",
+        "#cd4e4e",
+        "#cd4e4e",
+        "#cd4e4e",
+        "#cd4e4e"
+      ]
+    },
+    {
+      "id": "mothership_royal_court_tense",
+      "entity_id": "scene.ttrpg_mothership_royal_court_tense",
+      "system": "mothership",
+      "mood": "royal_court",
+      "intensity": "tense",
+      "category": "social",
+      "label": "Mothership \u2014 Royal Court / High Council (Tense)",
+      "description": "Opulent marble, vaulted ceilings, high stakes diplomacy.",
+      "tags": [
+        "social",
+        "formal",
+        "bright"
+      ],
+      "transition_s": 2.5,
+      "readable": true,
+      "fx": null,
+      "preview": [
+        "#68e6ff",
+        "#f14343",
+        "#f14343",
+        "#f14343",
+        "#f14343"
+      ]
+    },
+    {
+      "id": "mothership_royal_court_dire",
+      "entity_id": "scene.ttrpg_mothership_royal_court_dire",
+      "system": "mothership",
+      "mood": "royal_court",
+      "intensity": "dire",
+      "category": "social",
+      "label": "Mothership \u2014 Royal Court / High Council (Dire)",
+      "description": "Opulent marble, vaulted ceilings, high stakes diplomacy.",
+      "tags": [
+        "social",
+        "formal",
+        "bright"
+      ],
+      "transition_s": 2.5,
+      "readable": true,
+      "fx": null,
+      "preview": [
+        "#53e2ff",
+        "#ff2d2d",
+        "#ff2d2d",
+        "#ff2d2d",
+        "#ff2d2d"
+      ]
+    },
+    {
+      "id": "mothership_investigation_calm",
+      "entity_id": "scene.ttrpg_mothership_investigation_calm",
+      "system": "mothership",
+      "mood": "investigation",
+      "intensity": "calm",
+      "category": "social",
+      "label": "Mothership \u2014 Investigation & Interrogation (Calm)",
+      "description": "Focused downlight, sharp questioning, gathering clues.",
+      "tags": [
+        "social",
+        "mystery",
+        "focus"
+      ],
+      "transition_s": 1.5,
+      "readable": true,
+      "fx": null,
+      "preview": [
+        "#69b0be",
+        "#596892",
+        "#596f92",
+        "#596f92",
+        "#596892"
+      ]
+    },
+    {
+      "id": "mothership_investigation_tense",
+      "entity_id": "scene.ttrpg_mothership_investigation_tense",
+      "system": "mothership",
+      "mood": "investigation",
+      "intensity": "tense",
+      "category": "social",
+      "label": "Mothership \u2014 Investigation & Interrogation (Tense)",
+      "description": "Focused downlight, sharp questioning, gathering clues.",
+      "tags": [
+        "social",
+        "mystery",
+        "focus"
+      ],
+      "transition_s": 1.5,
+      "readable": true,
+      "fx": null,
+      "preview": [
+        "#6acce0",
+        "#5d72ac",
+        "#5d7bac",
+        "#5d7bac",
+        "#5d72ac"
+      ]
+    },
+    {
+      "id": "mothership_investigation_dire",
+      "entity_id": "scene.ttrpg_mothership_investigation_dire",
+      "system": "mothership",
+      "mood": "investigation",
+      "intensity": "dire",
+      "category": "social",
+      "label": "Mothership \u2014 Investigation & Interrogation (Dire)",
+      "description": "Focused downlight, sharp questioning, gathering clues.",
+      "tags": [
+        "social",
+        "mystery",
+        "focus"
+      ],
+      "transition_s": 1.5,
+      "readable": true,
+      "fx": null,
+      "preview": [
+        "#66e5ff",
+        "#5e7ac6",
+        "#5e86c6",
+        "#5e86c6",
+        "#5e7ac6"
+      ]
+    },
+    {
+      "id": "mothership_dread_calm",
+      "entity_id": "scene.ttrpg_mothership_dread_calm",
+      "system": "mothership",
+      "mood": "dread",
+      "intensity": "calm",
+      "category": "suspense",
+      "label": "Mothership \u2014 Creeping Dread (Calm)",
+      "description": "Unsettling hush, encroaching entity, breathing darkness.",
+      "tags": [
+        "horror",
+        "suspense",
+        "dark"
+      ],
+      "transition_s": 5.0,
+      "readable": true,
+      "fx": "script.ttrpg_fx_pulse_slow",
+      "preview": [
+        "#071d49",
+        "#2a405c",
+        "#2a3c5c",
+        "#2a385c",
+        "#2a345c"
+      ]
+    },
+    {
+      "id": "mothership_dread_tense",
+      "entity_id": "scene.ttrpg_mothership_dread_tense",
+      "system": "mothership",
+      "mood": "dread",
+      "intensity": "tense",
+      "category": "suspense",
+      "label": "Mothership \u2014 Creeping Dread (Tense)",
+      "description": "Unsettling hush, encroaching entity, breathing darkness.",
+      "tags": [
+        "horror",
+        "suspense",
+        "dark"
+      ],
+      "transition_s": 5.0,
+      "readable": true,
+      "fx": "script.ttrpg_fx_pulse_slow",
+      "preview": [
+        "#001d56",
+        "#1a375a",
+        "#263f6a",
+        "#263a6a",
+        "#26356a"
+      ]
+    },
+    {
+      "id": "mothership_dread_dire",
+      "entity_id": "scene.ttrpg_mothership_dread_dire",
+      "system": "mothership",
+      "mood": "dread",
+      "intensity": "dire",
+      "category": "suspense",
+      "label": "Mothership \u2014 Creeping Dread (Dire)",
+      "description": "Unsettling hush, encroaching entity, breathing darkness.",
+      "tags": [
+        "horror",
+        "suspense",
+        "dark"
+      ],
+      "transition_s": 5.0,
+      "readable": true,
+      "fx": "script.ttrpg_fx_pulse_slow",
+      "preview": [
+        "#002163",
+        "#143967",
+        "#143367",
+        "#142c67",
+        "#213478"
+      ]
+    },
+    {
+      "id": "mothership_lurking_shadow_tense",
+      "entity_id": "scene.ttrpg_mothership_lurking_shadow_tense",
+      "system": "mothership",
+      "mood": "lurking_shadow",
+      "intensity": "tense",
+      "category": "suspense",
+      "label": "Mothership \u2014 Lurking Shadow (Tense)",
+      "description": "Peripheral movement, failing sensors, breath held.",
+      "tags": [
+        "horror",
+        "stealth",
+        "monster"
+      ],
+      "transition_s": 3.0,
+      "readable": true,
+      "fx": "script.ttrpg_fx_drift",
+      "preview": [
+        "#670000",
+        "#263572",
+        "#193b61",
+        "#263572",
+        "#193b61"
+      ]
+    },
+    {
+      "id": "mothership_lurking_shadow_dire",
+      "entity_id": "scene.ttrpg_mothership_lurking_shadow_dire",
+      "system": "mothership",
+      "mood": "lurking_shadow",
+      "intensity": "dire",
+      "category": "suspense",
+      "label": "Mothership \u2014 Lurking Shadow (Dire)",
+      "description": "Peripheral movement, failing sensors, breath held.",
+      "tags": [
+        "horror",
+        "stealth",
+        "monster"
+      ],
+      "transition_s": 3.0,
+      "readable": true,
+      "fx": "script.ttrpg_fx_drift",
+      "preview": [
+        "#770000",
+        "#15276e",
+        "#153f6e",
+        "#15276e",
+        "#153f6e"
+      ]
+    },
+    {
+      "id": "mothership_ritual_calm",
+      "entity_id": "scene.ttrpg_mothership_ritual_calm",
+      "system": "mothership",
+      "mood": "ritual",
+      "intensity": "calm",
+      "category": "suspense",
+      "label": "Mothership \u2014 Occult Ritual / Countdown (Calm)",
+      "description": "Chanting resonance, unholy runes glowing in sequence.",
+      "tags": [
+        "magic",
+        "horror",
+        "ritual"
+      ],
+      "transition_s": 1.5,
+      "readable": true,
+      "fx": "script.ttrpg_fx_sanity_distort",
+      "preview": [
+        "#db0000",
+        "#841b06",
+        "#840614",
+        "#840614",
+        "#841b06"
+      ]
+    },
+    {
+      "id": "mothership_ritual_tense",
+      "entity_id": "scene.ttrpg_mothership_ritual_tense",
+      "system": "mothership",
+      "mood": "ritual",
+      "intensity": "tense",
+      "category": "suspense",
+      "label": "Mothership \u2014 Occult Ritual / Countdown (Tense)",
+      "description": "Chanting resonance, unholy runes glowing in sequence.",
+      "tags": [
+        "magic",
+        "horror",
+        "ritual"
+      ],
+      "transition_s": 1.5,
+      "readable": true,
+      "fx": "script.ttrpg_fx_sanity_distort",
+      "preview": [
+        "#ff0000",
+        "#9b1a00",
+        "#9b0012",
+        "#9b0012",
+        "#9b1a00"
+      ]
+    },
+    {
+      "id": "mothership_ritual_dire",
+      "entity_id": "scene.ttrpg_mothership_ritual_dire",
+      "system": "mothership",
+      "mood": "ritual",
+      "intensity": "dire",
+      "category": "suspense",
+      "label": "Mothership \u2014 Occult Ritual / Countdown (Dire)",
+      "description": "Chanting resonance, unholy runes glowing in sequence.",
+      "tags": [
+        "magic",
+        "horror",
+        "ritual"
+      ],
+      "transition_s": 1.5,
+      "readable": true,
+      "fx": "script.ttrpg_fx_sanity_distort",
+      "preview": [
+        "#ff0000",
+        "#b21e00",
+        "#b20015",
+        "#b20015",
+        "#b21e00"
+      ]
+    },
+    {
+      "id": "mothership_campfire_calm",
+      "entity_id": "scene.ttrpg_mothership_campfire_calm",
+      "system": "mothership",
+      "mood": "campfire",
+      "intensity": "calm",
+      "category": "rest",
+      "label": "Mothership \u2014 Campfire / Night Rest (Calm)",
+      "description": "Embers crackling in the darkness, soothing warmth on tired eyes.",
+      "tags": [
+        "rest",
+        "night",
+        "warm",
+        "outdoor"
+      ],
+      "transition_s": 4.0,
+      "readable": true,
+      "fx": "script.ttrpg_fx_torch_flicker",
+      "preview": [
+        "#067b92",
+        "#13747b",
+        "#136d7b",
+        "#13667b",
+        "#135f7b"
+      ]
+    },
+    {
+      "id": "mothership_campfire_tense",
+      "entity_id": "scene.ttrpg_mothership_campfire_tense",
+      "system": "mothership",
+      "mood": "campfire",
+      "intensity": "tense",
+      "category": "rest",
+      "label": "Mothership \u2014 Campfire / Night Rest (Tense)",
+      "description": "Embers crackling in the darkness, soothing warmth on tired eyes.",
+      "tags": [
+        "rest",
+        "night",
+        "warm",
+        "outdoor"
+      ],
+      "transition_s": 4.0,
+      "readable": true,
+      "fx": "script.ttrpg_fx_torch_flicker",
+      "preview": [
+        "#008fac",
+        "#028791",
+        "#027e91",
+        "#027491",
+        "#026b91"
+      ]
+    },
+    {
+      "id": "mothership_sanctuary_calm",
+      "entity_id": "scene.ttrpg_mothership_sanctuary_calm",
+      "system": "mothership",
+      "mood": "sanctuary",
+      "intensity": "calm",
+      "category": "rest",
+      "label": "Mothership \u2014 Sanctuary / Holy Ground (Calm)",
+      "description": "Divine protection, hallowed warmth, reprieve from the storm.",
+      "tags": [
+        "rest",
+        "safe",
+        "divine",
+        "bright"
+      ],
+      "transition_s": 3.0,
+      "readable": true,
+      "fx": null,
+      "preview": [
+        "#88c1cd",
+        "#89b5be",
+        "#89b5be",
+        "#89b5be",
+        "#89b5be"
+      ]
+    },
+    {
+      "id": "mothership_storm_calm",
+      "entity_id": "scene.ttrpg_mothership_storm_calm",
+      "system": "mothership",
+      "mood": "storm",
+      "intensity": "calm",
+      "category": "environment",
+      "label": "Mothership \u2014 Thunderstorm / Tempest (Calm)",
+      "description": "Howling rain, overcast darkness, sudden lightning strikes.",
+      "tags": [
+        "weather",
+        "outdoor",
+        "storm",
+        "hazard"
+      ],
+      "transition_s": 1.0,
+      "readable": true,
+      "fx": "script.ttrpg_fx_lightning",
+      "preview": [
+        "#193875",
+        "#1c2b66",
+        "#1c3e66",
+        "#1c2b66",
+        "#1c3e66"
+      ]
+    },
+    {
+      "id": "mothership_storm_tense",
+      "entity_id": "scene.ttrpg_mothership_storm_tense",
+      "system": "mothership",
+      "mood": "storm",
+      "intensity": "tense",
+      "category": "environment",
+      "label": "Mothership \u2014 Thunderstorm / Tempest (Tense)",
+      "description": "Howling rain, overcast darkness, sudden lightning strikes.",
+      "tags": [
+        "weather",
+        "outdoor",
+        "storm",
+        "hazard"
+      ],
+      "transition_s": 1.0,
+      "readable": true,
+      "fx": "script.ttrpg_fx_lightning",
+      "preview": [
+        "#0b358a",
+        "#122778",
+        "#124178",
+        "#122778",
+        "#124178"
+      ]
+    },
+    {
+      "id": "mothership_storm_dire",
+      "entity_id": "scene.ttrpg_mothership_storm_dire",
+      "system": "mothership",
+      "mood": "storm",
+      "intensity": "dire",
+      "category": "environment",
+      "label": "Mothership \u2014 Thunderstorm / Tempest (Dire)",
+      "description": "Howling rain, overcast darkness, sudden lightning strikes.",
+      "tags": [
+        "weather",
+        "outdoor",
+        "storm",
+        "hazard"
+      ],
+      "transition_s": 1.0,
+      "readable": true,
+      "fx": "script.ttrpg_fx_lightning",
+      "preview": [
+        "#00359e",
+        "#03208b",
+        "#03418b",
+        "#03208b",
+        "#03418b"
+      ]
+    },
+    {
+      "id": "mothership_toxic_haze_tense",
+      "entity_id": "scene.ttrpg_mothership_toxic_haze_tense",
+      "system": "mothership",
+      "mood": "toxic_haze",
+      "intensity": "tense",
+      "category": "environment",
+      "label": "Mothership \u2014 Toxic Haze / Biohazard (Tense)",
+      "description": "Corrosive fumes, warning claxons, compromised containment.",
+      "tags": [
+        "hazard",
+        "sci_fi",
+        "poison"
+      ],
+      "transition_s": 1.2,
+      "readable": true,
+      "fx": "script.ttrpg_fx_alert_sweep",
+      "preview": [
+        "#e00000",
+        "#bd001c",
+        "#bd000a",
+        "#bd0a00",
+        "#bd1c00"
+      ]
+    },
+    {
+      "id": "mothership_toxic_haze_dire",
+      "entity_id": "scene.ttrpg_mothership_toxic_haze_dire",
+      "system": "mothership",
+      "mood": "toxic_haze",
+      "intensity": "dire",
+      "category": "environment",
+      "label": "Mothership \u2014 Toxic Haze / Biohazard (Dire)",
+      "description": "Corrosive fumes, warning claxons, compromised containment.",
+      "tags": [
+        "hazard",
+        "sci_fi",
+        "poison"
+      ],
+      "transition_s": 1.2,
+      "readable": true,
+      "fx": "script.ttrpg_fx_alert_sweep",
+      "preview": [
+        "#ff0000",
+        "#da0021",
+        "#da000b",
+        "#da0b00",
+        "#da2100"
+      ]
+    },
+    {
+      "id": "mothership_space_void_calm",
+      "entity_id": "scene.ttrpg_mothership_space_void_calm",
+      "system": "mothership",
+      "mood": "space_void",
+      "intensity": "calm",
+      "category": "environment",
+      "label": "Mothership \u2014 Deep Space / Cold Vacuum (Calm)",
+      "description": "Pitch void, sterile status monitors, silent expanse.",
+      "tags": [
+        "space",
+        "cold",
+        "sci_fi"
+      ],
+      "transition_s": 4.0,
+      "readable": true,
+      "fx": "script.ttrpg_fx_drift",
+      "preview": [
+        "#042058",
+        "#1e5c5e",
+        "#1e565e",
+        "#1e505e",
+        "#1e4b5e"
+      ]
+    },
+    {
+      "id": "mothership_space_void_tense",
+      "entity_id": "scene.ttrpg_mothership_space_void_tense",
+      "system": "mothership",
+      "mood": "space_void",
+      "intensity": "tense",
+      "category": "environment",
+      "label": "Mothership \u2014 Deep Space / Cold Vacuum (Tense)",
+      "description": "Pitch void, sterile status monitors, silent expanse.",
+      "tags": [
+        "space",
+        "cold",
+        "sci_fi"
+      ],
+      "transition_s": 4.0,
+      "readable": true,
+      "fx": "script.ttrpg_fx_drift",
+      "preview": [
+        "#002267",
+        "#176b6e",
+        "#17646e",
+        "#175c6e",
+        "#17546e"
+      ]
+    },
+    {
+      "id": "mothership_blackout_dire",
+      "entity_id": "scene.ttrpg_mothership_blackout_dire",
+      "system": "mothership",
+      "mood": "blackout",
+      "intensity": "dire",
+      "category": "suspense",
+      "label": "Mothership \u2014 Total Blackout (Dire)",
+      "description": "Complete power loss, emergency indicator minimums.",
+      "tags": [
+        "horror",
+        "darkness",
+        "cinematic"
+      ],
+      "transition_s": 0.5,
+      "readable": false,
+      "fx": null,
+      "preview": [
+        "#000000",
+        "#140000",
+        "#140000",
+        "#140000",
+        "#140000"
+      ]
+    },
+    {
+      "id": "mothership_rules_lookup_standard",
+      "entity_id": "scene.ttrpg_mothership_rules_lookup_standard",
+      "system": "mothership",
+      "mood": "rules_lookup",
+      "intensity": "standard",
+      "category": "utility",
+      "label": "Mothership \u2014 Rules Lookup / Table Management (Standard)",
+      "description": "High readability, neutral balanced light for reading books and sheets.",
+      "tags": [
+        "utility",
+        "reading",
+        "bright"
+      ],
+      "transition_s": 1.0,
+      "readable": true,
+      "fx": null,
+      "preview": [
+        "#cff7ff",
+        "#dffaff",
+        "#dffaff",
+        "#dffaff",
+        "#dffaff"
+      ]
+    },
+    {
+      "id": "mothership_intermission_standard",
+      "entity_id": "scene.ttrpg_mothership_intermission_standard",
+      "system": "mothership",
+      "mood": "intermission",
+      "intensity": "standard",
+      "category": "utility",
+      "label": "Mothership \u2014 Intermission / Snack Break (Standard)",
+      "description": "Relaxed ambient warm white light for session pauses.",
+      "tags": [
+        "utility",
+        "break",
+        "warm"
+      ],
+      "transition_s": 2.0,
+      "readable": true,
+      "fx": null,
+      "preview": [
+        "#a6e4f1",
+        "#a6e4f1",
+        "#a6e4f1",
+        "#a6e4f1",
+        "#a6e4f1"
+      ]
+    },
+    {
+      "id": "core_dungeon_calm",
+      "entity_id": "scene.ttrpg_core_dungeon_calm",
+      "system": "core",
+      "mood": "dungeon",
+      "intensity": "calm",
+      "category": "exploration",
+      "label": "Core / Utility \u2014 Dungeon (Calm)",
+      "description": "Guttering torchlight with cold shadow beyond the circle.",
+      "tags": [
+        "indoor",
+        "dark",
+        "exploration",
+        "subterranean"
+      ],
+      "transition_s": 3.0,
+      "readable": true,
+      "fx": "script.ttrpg_fx_torch_flicker",
+      "preview": [
+        "#625c53",
+        "#57534e",
+        "#57544e",
+        "#57554e",
+        "#57554e"
+      ]
+    },
+    {
+      "id": "core_dungeon_tense",
+      "entity_id": "scene.ttrpg_core_dungeon_tense",
+      "system": "core",
+      "mood": "dungeon",
+      "intensity": "tense",
+      "category": "exploration",
+      "label": "Core / Utility \u2014 Dungeon (Tense)",
+      "description": "Guttering torchlight with cold shadow beyond the circle.",
+      "tags": [
+        "indoor",
+        "dark",
+        "exploration",
+        "subterranean"
+      ],
+      "transition_s": 3.0,
+      "readable": true,
+      "fx": "script.ttrpg_fx_torch_flicker",
+      "preview": [
+        "#736b5e",
+        "#66615a",
+        "#66625a",
+        "#66635a",
+        "#66645a"
+      ]
+    },
+    {
+      "id": "core_dungeon_dire",
+      "entity_id": "scene.ttrpg_core_dungeon_dire",
+      "system": "core",
+      "mood": "dungeon",
+      "intensity": "dire",
+      "category": "exploration",
+      "label": "Core / Utility \u2014 Dungeon (Dire)",
+      "description": "Guttering torchlight with cold shadow beyond the circle.",
+      "tags": [
+        "indoor",
+        "dark",
+        "exploration",
+        "subterranean"
+      ],
+      "transition_s": 3.0,
+      "readable": true,
+      "fx": "script.ttrpg_fx_torch_flicker",
+      "preview": [
+        "#847a69",
+        "#756e66",
+        "#757066",
+        "#757166",
+        "#757366"
+      ]
+    },
+    {
+      "id": "core_cavern_calm",
+      "entity_id": "scene.ttrpg_core_cavern_calm",
+      "system": "core",
+      "mood": "cavern",
+      "intensity": "calm",
+      "category": "exploration",
+      "label": "Core / Utility \u2014 Deep Cavern (Calm)",
+      "description": "Damp subterranean stone, bioluminescent patches, echoing depth.",
+      "tags": [
+        "subterranean",
+        "damp",
+        "dark",
+        "exploration"
+      ],
+      "transition_s": 3.5,
+      "readable": true,
+      "fx": "script.ttrpg_fx_drift",
+      "preview": [
+        "#4c4942",
+        "#474b52",
+        "#474e52",
+        "#474b52",
+        "#474e52"
+      ]
+    },
+    {
+      "id": "core_cavern_tense",
+      "entity_id": "scene.ttrpg_core_cavern_tense",
+      "system": "core",
+      "mood": "cavern",
+      "intensity": "tense",
+      "category": "exploration",
+      "label": "Core / Utility \u2014 Deep Cavern (Tense)",
+      "description": "Damp subterranean stone, bioluminescent patches, echoing depth.",
+      "tags": [
+        "subterranean",
+        "damp",
+        "dark",
+        "exploration"
+      ],
+      "transition_s": 3.5,
+      "readable": true,
+      "fx": "script.ttrpg_fx_drift",
+      "preview": [
+        "#59554c",
+        "#515761",
+        "#515b61",
+        "#515761",
+        "#515b61"
+      ]
+    },
+    {
+      "id": "core_cavern_dire",
+      "entity_id": "scene.ttrpg_core_cavern_dire",
+      "system": "core",
+      "mood": "cavern",
+      "intensity": "dire",
+      "category": "exploration",
+      "label": "Core / Utility \u2014 Deep Cavern (Dire)",
+      "description": "Damp subterranean stone, bioluminescent patches, echoing depth.",
+      "tags": [
+        "subterranean",
+        "damp",
+        "dark",
+        "exploration"
+      ],
+      "transition_s": 3.5,
+      "readable": true,
+      "fx": "script.ttrpg_fx_drift",
+      "preview": [
+        "#676155",
+        "#5a626f",
+        "#5a676f",
+        "#5a626f",
+        "#5a676f"
+      ]
+    },
+    {
+      "id": "core_wilderness_calm",
+      "entity_id": "scene.ttrpg_core_wilderness_calm",
+      "system": "core",
+      "mood": "wilderness",
+      "intensity": "calm",
+      "category": "exploration",
+      "label": "Core / Utility \u2014 Wilderness Trek (Calm)",
+      "description": "Open canopy, shifting wind, distant natural horizons.",
+      "tags": [
+        "outdoor",
+        "nature",
+        "travel"
+      ],
+      "transition_s": 4.0,
+      "readable": true,
+      "fx": null,
+      "preview": [
+        "#827d74",
+        "#77736e",
+        "#77746e",
+        "#77756e",
+        "#77756e"
+      ]
+    },
+    {
+      "id": "core_wilderness_tense",
+      "entity_id": "scene.ttrpg_core_wilderness_tense",
+      "system": "core",
+      "mood": "wilderness",
+      "intensity": "tense",
+      "category": "exploration",
+      "label": "Core / Utility \u2014 Wilderness Trek (Tense)",
+      "description": "Open canopy, shifting wind, distant natural horizons.",
+      "tags": [
+        "outdoor",
+        "nature",
+        "travel"
+      ],
+      "transition_s": 4.0,
+      "readable": true,
+      "fx": null,
+      "preview": [
+        "#999286",
+        "#8c877f",
+        "#8c887f",
+        "#8c897f",
+        "#8c8a7f"
+      ]
+    },
+    {
+      "id": "core_wilderness_dire",
+      "entity_id": "scene.ttrpg_core_wilderness_dire",
+      "system": "core",
+      "mood": "wilderness",
+      "intensity": "dire",
+      "category": "exploration",
+      "label": "Core / Utility \u2014 Wilderness Trek (Dire)",
+      "description": "Open canopy, shifting wind, distant natural horizons.",
+      "tags": [
+        "outdoor",
+        "nature",
+        "travel"
+      ],
+      "transition_s": 4.0,
+      "readable": true,
+      "fx": null,
+      "preview": [
+        "#b0a797",
+        "#a19a90",
+        "#a19b90",
+        "#a19d90",
+        "#a19e90"
+      ]
+    },
+    {
+      "id": "core_ruins_calm",
+      "entity_id": "scene.ttrpg_core_ruins_calm",
+      "system": "core",
+      "mood": "ruins",
+      "intensity": "calm",
+      "category": "exploration",
+      "label": "Core / Utility \u2014 Ancient Ruins (Calm)",
+      "description": "Crumbling monoliths, forgotten inscriptions, dusty shafts of light.",
+      "tags": [
+        "indoor",
+        "mystery",
+        "ancient",
+        "exploration"
+      ],
+      "transition_s": 3.0,
+      "readable": true,
+      "fx": null,
+      "preview": [
+        "#6c675f",
+        "#626059",
+        "#625e59",
+        "#625e59",
+        "#626059"
+      ]
+    },
+    {
+      "id": "core_ruins_tense",
+      "entity_id": "scene.ttrpg_core_ruins_tense",
+      "system": "core",
+      "mood": "ruins",
+      "intensity": "tense",
+      "category": "exploration",
+      "label": "Core / Utility \u2014 Ancient Ruins (Tense)",
+      "description": "Crumbling monoliths, forgotten inscriptions, dusty shafts of light.",
+      "tags": [
+        "indoor",
+        "mystery",
+        "ancient",
+        "exploration"
+      ],
+      "transition_s": 3.0,
+      "readable": true,
+      "fx": null,
+      "preview": [
+        "#80796d",
+        "#737167",
+        "#736e67",
+        "#736e67",
+        "#737167"
+      ]
+    },
+    {
+      "id": "core_ruins_dire",
+      "entity_id": "scene.ttrpg_core_ruins_dire",
+      "system": "core",
+      "mood": "ruins",
+      "intensity": "dire",
+      "category": "exploration",
+      "label": "Core / Utility \u2014 Ancient Ruins (Dire)",
+      "description": "Crumbling monoliths, forgotten inscriptions, dusty shafts of light.",
+      "tags": [
+        "indoor",
+        "mystery",
+        "ancient",
+        "exploration"
+      ],
+      "transition_s": 3.0,
+      "readable": true,
+      "fx": null,
+      "preview": [
+        "#938a7a",
+        "#848174",
+        "#847e74",
+        "#847e74",
+        "#848174"
+      ]
+    },
+    {
+      "id": "core_city_streets_calm",
+      "entity_id": "scene.ttrpg_core_city_streets_calm",
+      "system": "core",
+      "mood": "city_streets",
+      "intensity": "calm",
+      "category": "exploration",
+      "label": "Core / Utility \u2014 City Streets & Alleys (Calm)",
+      "description": "Cobblestone reflection, flickering street lamps, murky alleyways.",
+      "tags": [
+        "urban",
+        "night",
+        "stealth"
+      ],
+      "transition_s": 2.5,
+      "readable": true,
+      "fx": null,
+      "preview": [
+        "#777167",
+        "#68665d",
+        "#68635d",
+        "#68665d",
+        "#68635d"
+      ]
+    },
+    {
+      "id": "core_city_streets_tense",
+      "entity_id": "scene.ttrpg_core_city_streets_tense",
+      "system": "core",
+      "mood": "city_streets",
+      "intensity": "tense",
+      "category": "exploration",
+      "label": "Core / Utility \u2014 City Streets & Alleys (Tense)",
+      "description": "Cobblestone reflection, flickering street lamps, murky alleyways.",
+      "tags": [
+        "urban",
+        "night",
+        "stealth"
+      ],
+      "transition_s": 2.5,
+      "readable": true,
+      "fx": null,
+      "preview": [
+        "#8c8476",
+        "#7a786b",
+        "#7a736b",
+        "#7a786b",
+        "#7a736b"
+      ]
+    },
+    {
+      "id": "core_city_streets_dire",
+      "entity_id": "scene.ttrpg_core_city_streets_dire",
+      "system": "core",
+      "mood": "city_streets",
+      "intensity": "dire",
+      "category": "exploration",
+      "label": "Core / Utility \u2014 City Streets & Alleys (Dire)",
+      "description": "Cobblestone reflection, flickering street lamps, murky alleyways.",
+      "tags": [
+        "urban",
+        "night",
+        "stealth"
+      ],
+      "transition_s": 2.5,
+      "readable": true,
+      "fx": null,
+      "preview": [
+        "#a19784",
+        "#8d8a78",
+        "#8d8478",
+        "#8d8a78",
+        "#8d8478"
+      ]
+    },
+    {
+      "id": "core_combat_skirmish",
+      "entity_id": "scene.ttrpg_core_combat_skirmish",
+      "system": "core",
+      "mood": "combat",
+      "intensity": "skirmish",
+      "category": "combat",
+      "label": "Core / Utility \u2014 Standard Combat (Skirmish)",
+      "description": "High tension, clear initiative visibility, aggressive contrast.",
+      "tags": [
+        "combat",
+        "action",
+        "high_energy"
+      ],
+      "transition_s": 0.4,
+      "readable": true,
+      "fx": "script.ttrpg_fx_pulse_slow",
+      "preview": [
+        "#a0b1c3",
+        "#aca895",
+        "#aca095",
+        "#aca895",
+        "#aca095"
+      ]
+    },
+    {
+      "id": "core_combat_pitched",
+      "entity_id": "scene.ttrpg_core_combat_pitched",
+      "system": "core",
+      "mood": "combat",
+      "intensity": "pitched",
+      "category": "combat",
+      "label": "Core / Utility \u2014 Standard Combat (Pitched)",
+      "description": "High tension, clear initiative visibility, aggressive contrast.",
+      "tags": [
+        "combat",
+        "action",
+        "high_energy"
+      ],
+      "transition_s": 0.4,
+      "readable": true,
+      "fx": "script.ttrpg_fx_pulse_slow",
+      "preview": [
+        "#b4cce4",
+        "#c9c3aa",
+        "#c9b8aa",
+        "#c9c3aa",
+        "#c9b8aa"
+      ]
+    },
+    {
+      "id": "core_combat_boss",
+      "entity_id": "scene.ttrpg_core_combat_boss",
+      "system": "core",
+      "mood": "combat",
+      "intensity": "boss",
+      "category": "combat",
+      "label": "Core / Utility \u2014 Standard Combat (Boss)",
+      "description": "High tension, clear initiative visibility, aggressive contrast.",
+      "tags": [
+        "combat",
+        "action",
+        "high_energy"
+      ],
+      "transition_s": 0.4,
+      "readable": true,
+      "fx": "script.ttrpg_fx_pulse_slow",
+      "preview": [
+        "#c2e1ff",
+        "#e5ddbd",
+        "#e5d0bd",
+        "#e5ddbd",
+        "#e5d0bd"
+      ]
+    },
+    {
+      "id": "core_stealth_strike_calm",
+      "entity_id": "scene.ttrpg_core_stealth_strike_calm",
+      "system": "core",
+      "mood": "stealth_strike",
+      "intensity": "calm",
+      "category": "combat",
+      "label": "Core / Utility \u2014 Stealth & Ambush (Calm)",
+      "description": "Deep shadows, focused target spotlight, poised for the strike.",
+      "tags": [
+        "combat",
+        "stealth",
+        "dark"
+      ],
+      "transition_s": 0.8,
+      "readable": true,
+      "fx": null,
+      "preview": [
+        "#6d7882",
+        "#3d3934",
+        "#3d3a34",
+        "#3d3b34",
+        "#3d3b34"
+      ]
+    },
+    {
+      "id": "core_stealth_strike_tense",
+      "entity_id": "scene.ttrpg_core_stealth_strike_tense",
+      "system": "core",
+      "mood": "stealth_strike",
+      "intensity": "tense",
+      "category": "combat",
+      "label": "Core / Utility \u2014 Stealth & Ambush (Tense)",
+      "description": "Deep shadows, focused target spotlight, poised for the strike.",
+      "tags": [
+        "combat",
+        "stealth",
+        "dark"
+      ],
+      "transition_s": 0.8,
+      "readable": true,
+      "fx": null,
+      "preview": [
+        "#7c8b99",
+        "#47433c",
+        "#47443c",
+        "#47453c",
+        "#47453c"
+      ]
+    },
+    {
+      "id": "core_stealth_strike_dire",
+      "entity_id": "scene.ttrpg_core_stealth_strike_dire",
+      "system": "core",
+      "mood": "stealth_strike",
+      "intensity": "dire",
+      "category": "combat",
+      "label": "Core / Utility \u2014 Stealth & Ambush (Dire)",
+      "description": "Deep shadows, focused target spotlight, poised for the strike.",
+      "tags": [
+        "combat",
+        "stealth",
+        "dark"
+      ],
+      "transition_s": 0.8,
+      "readable": true,
+      "fx": null,
+      "preview": [
+        "#8a9db0",
+        "#524c43",
+        "#524d43",
+        "#524e43",
+        "#525043"
+      ]
+    },
+    {
+      "id": "core_boss_fight_skirmish",
+      "entity_id": "scene.ttrpg_core_boss_fight_skirmish",
+      "system": "core",
+      "mood": "boss_fight",
+      "intensity": "skirmish",
+      "category": "combat",
+      "label": "Core / Utility \u2014 Climactic Boss Encounter (Skirmish)",
+      "description": "Overwhelming presence, pulsating hazard, heightened stakes.",
+      "tags": [
+        "combat",
+        "boss",
+        "climax"
+      ],
+      "transition_s": 0.3,
+      "readable": true,
+      "fx": "script.ttrpg_fx_heartbeat",
+      "preview": [
+        "#b1c5da",
+        "#9aa4b8",
+        "#9aaeb8",
+        "#9aa4b8",
+        "#9aaeb8"
+      ]
+    },
+    {
+      "id": "core_boss_fight_pitched",
+      "entity_id": "scene.ttrpg_core_boss_fight_pitched",
+      "system": "core",
+      "mood": "boss_fight",
+      "intensity": "pitched",
+      "category": "combat",
+      "label": "Core / Utility \u2014 Climactic Boss Encounter (Pitched)",
+      "description": "Overwhelming presence, pulsating hazard, heightened stakes.",
+      "tags": [
+        "combat",
+        "boss",
+        "climax"
+      ],
+      "transition_s": 0.3,
+      "readable": true,
+      "fx": "script.ttrpg_fx_heartbeat",
+      "preview": [
+        "#c6e2fe",
+        "#aebbd6",
+        "#aec9d6",
+        "#aebbd6",
+        "#aec9d6"
+      ]
+    },
+    {
+      "id": "core_boss_fight_boss",
+      "entity_id": "scene.ttrpg_core_boss_fight_boss",
+      "system": "core",
+      "mood": "boss_fight",
+      "intensity": "boss",
+      "category": "combat",
+      "label": "Core / Utility \u2014 Climactic Boss Encounter (Boss)",
+      "description": "Overwhelming presence, pulsating hazard, heightened stakes.",
+      "tags": [
+        "combat",
+        "boss",
+        "climax"
+      ],
+      "transition_s": 0.3,
+      "readable": true,
+      "fx": "script.ttrpg_fx_heartbeat",
+      "preview": [
+        "#bfdfff",
+        "#c1d2f5",
+        "#c1e3f5",
+        "#c1d2f5",
+        "#c1e3f5"
+      ]
+    },
+    {
+      "id": "core_desperation_tense",
+      "entity_id": "scene.ttrpg_core_desperation_tense",
+      "system": "core",
+      "mood": "desperation",
+      "intensity": "tense",
+      "category": "combat",
+      "label": "Core / Utility \u2014 Last Stand / Desperation (Tense)",
+      "description": "Low health, cornered party, failing defenses.",
+      "tags": [
+        "combat",
+        "danger",
+        "critical"
+      ],
+      "transition_s": 0.5,
+      "readable": true,
+      "fx": "script.ttrpg_fx_heartbeat",
+      "preview": [
+        "#8da0b2",
+        "#59574a",
+        "#59534a",
+        "#59534a",
+        "#59574a"
+      ]
+    },
+    {
+      "id": "core_desperation_dire",
+      "entity_id": "scene.ttrpg_core_desperation_dire",
+      "system": "core",
+      "mood": "desperation",
+      "intensity": "dire",
+      "category": "combat",
+      "label": "Core / Utility \u2014 Last Stand / Desperation (Dire)",
+      "description": "Low health, cornered party, failing defenses.",
+      "tags": [
+        "combat",
+        "danger",
+        "critical"
+      ],
+      "transition_s": 0.5,
+      "readable": true,
+      "fx": "script.ttrpg_fx_heartbeat",
+      "preview": [
+        "#9cb5cd",
+        "#676453",
+        "#675f53",
+        "#675f53",
+        "#676453"
+      ]
+    },
+    {
+      "id": "core_tavern_calm",
+      "entity_id": "scene.ttrpg_core_tavern_calm",
+      "system": "core",
+      "mood": "tavern",
+      "intensity": "calm",
+      "category": "social",
+      "label": "Core / Utility \u2014 Tavern / Canteen (Calm)",
+      "description": "Warm hearthfire, lively chatter, clinking flagons, comfortable intimacy.",
+      "tags": [
+        "social",
+        "warm",
+        "safe",
+        "indoor"
+      ],
+      "transition_s": 2.0,
+      "readable": true,
+      "fx": "script.ttrpg_fx_torch_flicker",
+      "preview": [
+        "#989082",
+        "#8d857c",
+        "#8d867c",
+        "#8d877c",
+        "#8d887c"
+      ]
+    },
+    {
+      "id": "core_tavern_tense",
+      "entity_id": "scene.ttrpg_core_tavern_tense",
+      "system": "core",
+      "mood": "tavern",
+      "intensity": "tense",
+      "category": "social",
+      "label": "Core / Utility \u2014 Tavern / Canteen (Tense)",
+      "description": "Warm hearthfire, lively chatter, clinking flagons, comfortable intimacy.",
+      "tags": [
+        "social",
+        "warm",
+        "safe",
+        "indoor"
+      ],
+      "transition_s": 2.0,
+      "readable": true,
+      "fx": "script.ttrpg_fx_torch_flicker",
+      "preview": [
+        "#b2a895",
+        "#a69c8f",
+        "#a69d8f",
+        "#a69e8f",
+        "#a69f8f"
+      ]
+    },
+    {
+      "id": "core_royal_court_calm",
+      "entity_id": "scene.ttrpg_core_royal_court_calm",
+      "system": "core",
+      "mood": "royal_court",
+      "intensity": "calm",
+      "category": "social",
+      "label": "Core / Utility \u2014 Royal Court / High Council (Calm)",
+      "description": "Opulent marble, vaulted ceilings, high stakes diplomacy.",
+      "tags": [
+        "social",
+        "formal",
+        "bright"
+      ],
+      "transition_s": 2.5,
+      "readable": true,
+      "fx": null,
+      "preview": [
+        "#ada89f",
+        "#899098",
+        "#899098",
+        "#899098",
+        "#899098"
+      ]
+    },
+    {
+      "id": "core_royal_court_tense",
+      "entity_id": "scene.ttrpg_core_royal_court_tense",
+      "system": "core",
+      "mood": "royal_court",
+      "intensity": "tense",
+      "category": "social",
+      "label": "Core / Utility \u2014 Royal Court / High Council (Tense)",
+      "description": "Opulent marble, vaulted ceilings, high stakes diplomacy.",
+      "tags": [
+        "social",
+        "formal",
+        "bright"
+      ],
+      "transition_s": 2.5,
+      "readable": true,
+      "fx": null,
+      "preview": [
+        "#ccc5b9",
+        "#9ea8b2",
+        "#9ea8b2",
+        "#9ea8b2",
+        "#9ea8b2"
+      ]
+    },
+    {
+      "id": "core_royal_court_dire",
+      "entity_id": "scene.ttrpg_core_royal_court_dire",
+      "system": "core",
+      "mood": "royal_court",
+      "intensity": "dire",
+      "category": "social",
+      "label": "Core / Utility \u2014 Royal Court / High Council (Dire)",
+      "description": "Opulent marble, vaulted ceilings, high stakes diplomacy.",
+      "tags": [
+        "social",
+        "formal",
+        "bright"
+      ],
+      "transition_s": 2.5,
+      "readable": true,
+      "fx": null,
+      "preview": [
+        "#ebe1d1",
+        "#b2c0cd",
+        "#b2c0cd",
+        "#b2c0cd",
+        "#b2c0cd"
+      ]
+    },
+    {
+      "id": "core_investigation_calm",
+      "entity_id": "scene.ttrpg_core_investigation_calm",
+      "system": "core",
+      "mood": "investigation",
+      "intensity": "calm",
+      "category": "social",
+      "label": "Core / Utility \u2014 Investigation & Interrogation (Calm)",
+      "description": "Focused downlight, sharp questioning, gathering clues.",
+      "tags": [
+        "social",
+        "mystery",
+        "focus"
+      ],
+      "transition_s": 1.5,
+      "readable": true,
+      "fx": null,
+      "preview": [
+        "#8d8983",
+        "#6c6b66",
+        "#6c6a66",
+        "#6c6a66",
+        "#6c6b66"
+      ]
+    },
+    {
+      "id": "core_investigation_tense",
+      "entity_id": "scene.ttrpg_core_investigation_tense",
+      "system": "core",
+      "mood": "investigation",
+      "intensity": "tense",
+      "category": "social",
+      "label": "Core / Utility \u2014 Investigation & Interrogation (Tense)",
+      "description": "Focused downlight, sharp questioning, gathering clues.",
+      "tags": [
+        "social",
+        "mystery",
+        "focus"
+      ],
+      "transition_s": 1.5,
+      "readable": true,
+      "fx": null,
+      "preview": [
+        "#a6a198",
+        "#807d76",
+        "#807c76",
+        "#807c76",
+        "#807d76"
+      ]
+    },
+    {
+      "id": "core_investigation_dire",
+      "entity_id": "scene.ttrpg_core_investigation_dire",
+      "system": "core",
+      "mood": "investigation",
+      "intensity": "dire",
+      "category": "social",
+      "label": "Core / Utility \u2014 Investigation & Interrogation (Dire)",
+      "description": "Focused downlight, sharp questioning, gathering clues.",
+      "tags": [
+        "social",
+        "mystery",
+        "focus"
+      ],
+      "transition_s": 1.5,
+      "readable": true,
+      "fx": null,
+      "preview": [
+        "#bfb8ac",
+        "#939086",
+        "#938e86",
+        "#938e86",
+        "#939086"
+      ]
+    },
+    {
+      "id": "core_dread_calm",
+      "entity_id": "scene.ttrpg_core_dread_calm",
+      "system": "core",
+      "mood": "dread",
+      "intensity": "calm",
+      "category": "suspense",
+      "label": "Core / Utility \u2014 Creeping Dread (Calm)",
+      "description": "Unsettling hush, encroaching entity, breathing darkness.",
+      "tags": [
+        "horror",
+        "suspense",
+        "dark"
+      ],
+      "transition_s": 5.0,
+      "readable": true,
+      "fx": "script.ttrpg_fx_pulse_slow",
+      "preview": [
+        "#36342e",
+        "#302e2b",
+        "#302e2b",
+        "#302e2b",
+        "#302f2b"
+      ]
+    },
+    {
+      "id": "core_dread_tense",
+      "entity_id": "scene.ttrpg_core_dread_tense",
+      "system": "core",
+      "mood": "dread",
+      "intensity": "tense",
+      "category": "suspense",
+      "label": "Core / Utility \u2014 Creeping Dread (Tense)",
+      "description": "Unsettling hush, encroaching entity, breathing darkness.",
+      "tags": [
+        "horror",
+        "suspense",
+        "dark"
+      ],
+      "transition_s": 5.0,
+      "readable": true,
+      "fx": "script.ttrpg_fx_pulse_slow",
+      "preview": [
+        "#403d35",
+        "#383531",
+        "#383631",
+        "#383631",
+        "#383731"
+      ]
+    },
+    {
+      "id": "core_dread_dire",
+      "entity_id": "scene.ttrpg_core_dread_dire",
+      "system": "core",
+      "mood": "dread",
+      "intensity": "dire",
+      "category": "suspense",
+      "label": "Core / Utility \u2014 Creeping Dread (Dire)",
+      "description": "Unsettling hush, encroaching entity, breathing darkness.",
+      "tags": [
+        "horror",
+        "suspense",
+        "dark"
+      ],
+      "transition_s": 5.0,
+      "readable": true,
+      "fx": "script.ttrpg_fx_pulse_slow",
+      "preview": [
+        "#49453b",
+        "#413d37",
+        "#413d37",
+        "#413e37",
+        "#413f37"
+      ]
+    },
+    {
+      "id": "core_lurking_shadow_tense",
+      "entity_id": "scene.ttrpg_core_lurking_shadow_tense",
+      "system": "core",
+      "mood": "lurking_shadow",
+      "intensity": "tense",
+      "category": "suspense",
+      "label": "Core / Utility \u2014 Lurking Shadow (Tense)",
+      "description": "Peripheral movement, failing sensors, breath held.",
+      "tags": [
+        "horror",
+        "stealth",
+        "monster"
+      ],
+      "transition_s": 3.0,
+      "readable": true,
+      "fx": "script.ttrpg_fx_drift",
+      "preview": [
+        "#3e454c",
+        "#33322c",
+        "#33302c",
+        "#33322c",
+        "#33302c"
+      ]
+    },
+    {
+      "id": "core_lurking_shadow_dire",
+      "entity_id": "scene.ttrpg_core_lurking_shadow_dire",
+      "system": "core",
+      "mood": "lurking_shadow",
+      "intensity": "dire",
+      "category": "suspense",
+      "label": "Core / Utility \u2014 Lurking Shadow (Dire)",
+      "description": "Peripheral movement, failing sensors, breath held.",
+      "tags": [
+        "horror",
+        "stealth",
+        "monster"
+      ],
+      "transition_s": 3.0,
+      "readable": true,
+      "fx": "script.ttrpg_fx_drift",
+      "preview": [
+        "#454e58",
+        "#3b3931",
+        "#3b3631",
+        "#3b3931",
+        "#3b3631"
+      ]
+    },
+    {
+      "id": "core_ritual_calm",
+      "entity_id": "scene.ttrpg_core_ritual_calm",
+      "system": "core",
+      "mood": "ritual",
+      "intensity": "calm",
+      "category": "suspense",
+      "label": "Core / Utility \u2014 Occult Ritual / Countdown (Calm)",
+      "description": "Chanting resonance, unholy runes glowing in sequence.",
+      "tags": [
+        "magic",
+        "horror",
+        "ritual"
+      ],
+      "transition_s": 1.5,
+      "readable": true,
+      "fx": "script.ttrpg_fx_sanity_distort",
+      "preview": [
+        "#8795a3",
+        "#535862",
+        "#535c62",
+        "#535c62",
+        "#535862"
+      ]
+    },
+    {
+      "id": "core_ritual_tense",
+      "entity_id": "scene.ttrpg_core_ritual_tense",
+      "system": "core",
+      "mood": "ritual",
+      "intensity": "tense",
+      "category": "suspense",
+      "label": "Core / Utility \u2014 Occult Ritual / Countdown (Tense)",
+      "description": "Chanting resonance, unholy runes glowing in sequence.",
+      "tags": [
+        "magic",
+        "horror",
+        "ritual"
+      ],
+      "transition_s": 1.5,
+      "readable": true,
+      "fx": "script.ttrpg_fx_sanity_distort",
+      "preview": [
+        "#99acbf",
+        "#5e6573",
+        "#5e6b73",
+        "#5e6b73",
+        "#5e6573"
+      ]
+    },
+    {
+      "id": "core_ritual_dire",
+      "entity_id": "scene.ttrpg_core_ritual_dire",
+      "system": "core",
+      "mood": "ritual",
+      "intensity": "dire",
+      "category": "suspense",
+      "label": "Core / Utility \u2014 Occult Ritual / Countdown (Dire)",
+      "description": "Chanting resonance, unholy runes glowing in sequence.",
+      "tags": [
+        "magic",
+        "horror",
+        "ritual"
+      ],
+      "transition_s": 1.5,
+      "readable": true,
+      "fx": "script.ttrpg_fx_sanity_distort",
+      "preview": [
+        "#aac3dc",
+        "#697284",
+        "#697a84",
+        "#697a84",
+        "#697284"
+      ]
+    },
+    {
+      "id": "core_campfire_calm",
+      "entity_id": "scene.ttrpg_core_campfire_calm",
+      "system": "core",
+      "mood": "campfire",
+      "intensity": "calm",
+      "category": "rest",
+      "label": "Core / Utility \u2014 Campfire / Night Rest (Calm)",
+      "description": "Embers crackling in the darkness, soothing warmth on tired eyes.",
+      "tags": [
+        "rest",
+        "night",
+        "warm",
+        "outdoor"
+      ],
+      "transition_s": 4.0,
+      "readable": true,
+      "fx": "script.ttrpg_fx_torch_flicker",
+      "preview": [
+        "#6c665c",
+        "#5b554f",
+        "#5b564f",
+        "#5b574f",
+        "#5b584f"
+      ]
+    },
+    {
+      "id": "core_campfire_tense",
+      "entity_id": "scene.ttrpg_core_campfire_tense",
+      "system": "core",
+      "mood": "campfire",
+      "intensity": "tense",
+      "category": "rest",
+      "label": "Core / Utility \u2014 Campfire / Night Rest (Tense)",
+      "description": "Embers crackling in the darkness, soothing warmth on tired eyes.",
+      "tags": [
+        "rest",
+        "night",
+        "warm",
+        "outdoor"
+      ],
+      "transition_s": 4.0,
+      "readable": true,
+      "fx": "script.ttrpg_fx_torch_flicker",
+      "preview": [
+        "#807769",
+        "#6b635a",
+        "#6b645a",
+        "#6b655a",
+        "#6b675a"
+      ]
+    },
+    {
+      "id": "core_sanctuary_calm",
+      "entity_id": "scene.ttrpg_core_sanctuary_calm",
+      "system": "core",
+      "mood": "sanctuary",
+      "intensity": "calm",
+      "category": "rest",
+      "label": "Core / Utility \u2014 Sanctuary / Holy Ground (Calm)",
+      "description": "Divine protection, hallowed warmth, reprieve from the storm.",
+      "tags": [
+        "rest",
+        "safe",
+        "divine",
+        "bright"
+      ],
+      "transition_s": 3.0,
+      "readable": true,
+      "fx": null,
+      "preview": [
+        "#989590",
+        "#8d8b87",
+        "#8d8b87",
+        "#8d8b87",
+        "#8d8b87"
+      ]
+    },
+    {
+      "id": "core_storm_calm",
+      "entity_id": "scene.ttrpg_core_storm_calm",
+      "system": "core",
+      "mood": "storm",
+      "intensity": "calm",
+      "category": "environment",
+      "label": "Core / Utility \u2014 Thunderstorm / Tempest (Calm)",
+      "description": "Howling rain, overcast darkness, sudden lightning strikes.",
+      "tags": [
+        "weather",
+        "outdoor",
+        "storm",
+        "hazard"
+      ],
+      "transition_s": 1.0,
+      "readable": true,
+      "fx": "script.ttrpg_fx_lightning",
+      "preview": [
+        "#57534c",
+        "#4c4a43",
+        "#4c4843",
+        "#4c4a43",
+        "#4c4843"
+      ]
+    },
+    {
+      "id": "core_storm_tense",
+      "entity_id": "scene.ttrpg_core_storm_tense",
+      "system": "core",
+      "mood": "storm",
+      "intensity": "tense",
+      "category": "environment",
+      "label": "Core / Utility \u2014 Thunderstorm / Tempest (Tense)",
+      "description": "Howling rain, overcast darkness, sudden lightning strikes.",
+      "tags": [
+        "weather",
+        "outdoor",
+        "storm",
+        "hazard"
+      ],
+      "transition_s": 1.0,
+      "readable": true,
+      "fx": "script.ttrpg_fx_lightning",
+      "preview": [
+        "#666257",
+        "#59574d",
+        "#59544d",
+        "#59574d",
+        "#59544d"
+      ]
+    },
+    {
+      "id": "core_storm_dire",
+      "entity_id": "scene.ttrpg_core_storm_dire",
+      "system": "core",
+      "mood": "storm",
+      "intensity": "dire",
+      "category": "environment",
+      "label": "Core / Utility \u2014 Thunderstorm / Tempest (Dire)",
+      "description": "Howling rain, overcast darkness, sudden lightning strikes.",
+      "tags": [
+        "weather",
+        "outdoor",
+        "storm",
+        "hazard"
+      ],
+      "transition_s": 1.0,
+      "readable": true,
+      "fx": "script.ttrpg_fx_lightning",
+      "preview": [
+        "#756f62",
+        "#676457",
+        "#676057",
+        "#676457",
+        "#676057"
+      ]
+    },
+    {
+      "id": "core_toxic_haze_tense",
+      "entity_id": "scene.ttrpg_core_toxic_haze_tense",
+      "system": "core",
+      "mood": "toxic_haze",
+      "intensity": "tense",
+      "category": "environment",
+      "label": "Core / Utility \u2014 Toxic Haze / Biohazard (Tense)",
+      "description": "Corrosive fumes, warning claxons, compromised containment.",
+      "tags": [
+        "hazard",
+        "sci_fi",
+        "poison"
+      ],
+      "transition_s": 1.2,
+      "readable": true,
+      "fx": "script.ttrpg_fx_alert_sweep",
+      "preview": [
+        "#8696a6",
+        "#73838c",
+        "#73818c",
+        "#737e8c",
+        "#737c8c"
+      ]
+    },
+    {
+      "id": "core_toxic_haze_dire",
+      "entity_id": "scene.ttrpg_core_toxic_haze_dire",
+      "system": "core",
+      "mood": "toxic_haze",
+      "intensity": "dire",
+      "category": "environment",
+      "label": "Core / Utility \u2014 Toxic Haze / Biohazard (Dire)",
+      "description": "Corrosive fumes, warning claxons, compromised containment.",
+      "tags": [
+        "hazard",
+        "sci_fi",
+        "poison"
+      ],
+      "transition_s": 1.2,
+      "readable": true,
+      "fx": "script.ttrpg_fx_alert_sweep",
+      "preview": [
+        "#95aabf",
+        "#8096a1",
+        "#8093a1",
+        "#808fa1",
+        "#808ca1"
+      ]
+    },
+    {
+      "id": "core_space_void_calm",
+      "entity_id": "scene.ttrpg_core_space_void_calm",
+      "system": "core",
+      "mood": "space_void",
+      "intensity": "calm",
+      "category": "environment",
+      "label": "Core / Utility \u2014 Deep Space / Cold Vacuum (Calm)",
+      "description": "Pitch void, sterile status monitors, silent expanse.",
+      "tags": [
+        "space",
+        "cold",
+        "sci_fi"
+      ],
+      "transition_s": 4.0,
+      "readable": true,
+      "fx": "script.ttrpg_fx_drift",
+      "preview": [
+        "#413e37",
+        "#45423e",
+        "#45423e",
+        "#45433e",
+        "#45443e"
+      ]
+    },
+    {
+      "id": "core_space_void_tense",
+      "entity_id": "scene.ttrpg_core_space_void_tense",
+      "system": "core",
+      "mood": "space_void",
+      "intensity": "tense",
+      "category": "environment",
+      "label": "Core / Utility \u2014 Deep Space / Cold Vacuum (Tense)",
+      "description": "Pitch void, sterile status monitors, silent expanse.",
+      "tags": [
+        "space",
+        "cold",
+        "sci_fi"
+      ],
+      "transition_s": 4.0,
+      "readable": true,
+      "fx": "script.ttrpg_fx_drift",
+      "preview": [
+        "#4c483f",
+        "#524c47",
+        "#524d47",
+        "#524e47",
+        "#524f47"
+      ]
+    },
+    {
+      "id": "core_blackout_dire",
+      "entity_id": "scene.ttrpg_core_blackout_dire",
+      "system": "core",
+      "mood": "blackout",
+      "intensity": "dire",
+      "category": "suspense",
+      "label": "Core / Utility \u2014 Total Blackout (Dire)",
+      "description": "Complete power loss, emergency indicator minimums.",
+      "tags": [
+        "horror",
+        "darkness",
+        "cinematic"
+      ],
+      "transition_s": 0.5,
+      "readable": false,
+      "fx": null,
+      "preview": [
+        "#000000",
+        "#0b0d0f",
+        "#0b0d0f",
+        "#0b0d0f",
+        "#0b0d0f"
+      ]
+    },
+    {
+      "id": "core_rules_lookup_standard",
+      "entity_id": "scene.ttrpg_core_rules_lookup_standard",
+      "system": "core",
+      "mood": "rules_lookup",
+      "intensity": "standard",
+      "category": "utility",
+      "label": "Core / Utility \u2014 Rules Lookup / Table Management (Standard)",
+      "description": "High readability, neutral balanced light for reading books and sheets.",
+      "tags": [
+        "utility",
+        "reading",
+        "bright"
+      ],
+      "transition_s": 1.0,
+      "readable": true,
+      "fx": null,
+      "preview": [
+        "#d9d6d2",
+        "#d9d7d4",
+        "#d9d7d4",
+        "#d9d7d4",
+        "#d9d7d4"
+      ]
+    },
+    {
+      "id": "core_intermission_standard",
+      "entity_id": "scene.ttrpg_core_intermission_standard",
+      "system": "core",
+      "mood": "intermission",
+      "intensity": "standard",
+      "category": "utility",
+      "label": "Core / Utility \u2014 Intermission / Snack Break (Standard)",
+      "description": "Relaxed ambient warm white light for session pauses.",
+      "tags": [
+        "utility",
+        "break",
+        "warm"
+      ],
+      "transition_s": 2.0,
+      "readable": true,
+      "fx": null,
+      "preview": [
+        "#b2afaa",
+        "#b2afaa",
+        "#b2afaa",
+        "#b2afaa",
+        "#b2afaa"
+      ]
+    }
+  ]
+}

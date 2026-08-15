@@ -1,4 +1,5 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
+import { backend } from '../backend';
 import { showToast } from '../toast';
 import {
   generateNameBatch,
@@ -8,11 +9,12 @@ import {
   type GeneratedName,
   type NPCQuirkFlaw,
 } from './generatorsData';
+import SceneLibraryManager from '../scene/SceneLibraryManager';
 
-type Tab = 'names' | 'quirks';
+type Tab = 'scenes' | 'names' | 'quirks';
 
 export default function GeneratorsPage() {
-  const [activeTab, setActiveTab] = useState<Tab>('names');
+  const [activeTab, setActiveTab] = useState<Tab>('scenes');
 
   // --- Names State ---
   const [raceFilter, setRaceFilter] = useState<string>('Any');
@@ -61,6 +63,12 @@ export default function GeneratorsPage() {
 
       <div className="generator-tabs">
         <button
+          className={`tab-btn ${activeTab === 'scenes' ? 'active' : ''}`}
+          onClick={() => setActiveTab('scenes')}
+        >
+          🎭 Scene Library
+        </button>
+        <button
           className={`tab-btn ${activeTab === 'names' ? 'active' : ''}`}
           onClick={() => setActiveTab('names')}
         >
@@ -70,9 +78,15 @@ export default function GeneratorsPage() {
           className={`tab-btn ${activeTab === 'quirks' ? 'active' : ''}`}
           onClick={() => setActiveTab('quirks')}
         >
-          🎭 Flaws & Quirks
+          🎲 Flaws & Quirks
         </button>
       </div>
+
+      {activeTab === 'scenes' && (
+        <div className="scenes-tab">
+          <SceneLibraryManager />
+        </div>
+      )}
 
       {activeTab === 'names' && (
         <div className="names-tab">

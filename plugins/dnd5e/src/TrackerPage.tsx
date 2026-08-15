@@ -1,12 +1,17 @@
 import { useEffect, useRef, useState } from 'react';
-import { d20, type CompendiumSearchHit } from '@ttrpgapp/shared';
+import { d20, rollDice, type CompendiumSearchHit } from '@ttrpgapp/shared';
 import { getPluginRuntime } from '@ttrpgapp/shared/plugin-client';
 import BottomSheet from './BottomSheet';
+import TurnCard from './TurnCard';
 import { rollHitDice } from './rosters';
+import type { MonsterAbility } from '../scripts/convert';
 import {
   CONDITIONS,
   EMPTY_ENCOUNTER,
   sortedCombatants,
+  nextTurn as advanceTurn,
+  previousTurn as rewindTurn,
+  endCombat as finishCombat,
   type Combatant,
   type Encounter,
 } from './trackerTypes';
@@ -58,6 +63,8 @@ export default function TrackerPage() {
   // BottomSheet states for touch interactions
   const [activeCondition, setActiveCondition] = useState<string | null>(null);
   const [hpSheetCombatant, setHpSheetCombatant] = useState<Combatant | null>(null);
+  const [inspectedAbility, setInspectedAbility] = useState<MonsterAbility | null>(null);
+  const lastTurnRef = useRef<string | null>(null);
 
   const load = () =>
     void getPluginRuntime()
@@ -91,19 +98,74 @@ export default function TrackerPage() {
       combatants: e.combatants.map((c) => (c.id === id ? fn(c) : c)),
     }));
 
+  const order = enc ? sortedCombatants(enc) : [];
+  const active =
+    enc && enc.turnIndex >= 0 && order.length > 0
+      ? order[enc.turnIndex % order.length] ?? null
+      : null;
+
+  useEffect(() => {
+    if (!enc || enc.turnIndex < 0 || !active || !active.monsterRef) return;
+    const currentKey = `${enc.round}:${enc.turnIndex}:${active.id}`;
+    if (lastTurnRef.current === currentKey) return;
+    lastTurnRef.current = currentKey;
+
+    if (!active.usedAbilities || active.usedAbilities.length === 0) return;
+
+    const entry = getPluginRuntime().getCompendiumEntry(
+      active.monsterRef.packId,
+      active.monsterRef.entryId,
+    );
+    const fields = entry?.fields as
+      | {
+          traits?: MonsterAbility[];
+          actions?: MonsterAbility[];
+          legendary?: MonsterAbility[];
+        }
+      | undefined;
+
+    const abilities = [
+      ...(fields?.traits ?? []),
+      ...(fields?.actions ?? []),
+      ...(fields?.legendary ?? []),
+    ];
+
+    const dimmedRecharges = abilities.filter(
+      (a) => a.recharge && active.usedAbilities?.includes(a.name),
+    );
+    if (dimmedRecharges.length === 0) return;
+
+    const recovered: string[] = [];
+    for (const a of dimmedRecharges) {
+      if (!a.recharge) continue;
+      const roll = rollDice('1d6');
+      if (roll.total >= a.recharge.min) {
+        recovered.push(a.name);
+        if (typeof window !== 'undefined') {
+          window.dispatchEvent(
+            new CustomEvent('ttrpg-toast', {
+              detail: {
+                id: `recharge-${Date.now()}-${Math.random().toString(36).slice(2, 6)}`,
+                message: `${active.name}: ${a.name} recharged! (rolled ${roll.total})`,
+                icon: '⚡',
+              },
+            }),
+          );
+        }
+      }
+    }
+
+    if (recovered.length > 0) {
+      updateCombatant(active.id, (prev) => ({
+        ...prev,
+        usedAbilities: (prev.usedAbilities ?? []).filter((u) => !recovered.includes(u)),
+      }));
+    }
+  }, [enc?.round, enc?.turnIndex, active?.id]);
+
   if (!enc) return <div className="page muted">Loading…</div>;
 
-  const order = sortedCombatants(enc);
-  const active = enc.turnIndex >= 0 ? order[enc.turnIndex % order.length] : null;
-
-  const nextTurn = () =>
-    update((e) => {
-      const n = sortedCombatants(e).length;
-      if (n === 0) return e;
-      if (e.turnIndex < 0) return { ...e, round: 1, turnIndex: 0 };
-      const next = e.turnIndex + 1;
-      return next >= n ? { ...e, round: e.round + 1, turnIndex: 0 } : { ...e, turnIndex: next };
-    });
+  const nextTurn = () => update(advanceTurn);
 
   const rollMonsterHp = (c: Combatant) => {
     const rolled = rollHitDice(c.hitDice, c.maxHp);
@@ -126,8 +188,14 @@ export default function TrackerPage() {
           </button>
           <button
             onClick={() => {
-              if (window.confirm('End combat and clear all combatants?'))
-                update(() => EMPTY_ENCOUNTER);
+              if (window.confirm('End combat and clear all combatants?')) {
+                if (enc.round > 0 && typeof window !== 'undefined') {
+                  window.dispatchEvent(
+                    new CustomEvent('ttrpg-combat-ended', { detail: { rounds: enc.round } }),
+                  );
+                }
+                update(finishCombat);
+              }
             }}
             disabled={order.length === 0}
           >
@@ -137,6 +205,21 @@ export default function TrackerPage() {
       </div>
 
       <AddCombatant onAdd={(c) => update((e) => ({ ...e, combatants: [...e.combatants, c] }))} existing={enc.combatants} />
+
+      {active && active.monsterRef && (
+        <TurnCard
+          combatant={active}
+          onToggleUsed={(name) => {
+            updateCombatant(active.id, (prev) => {
+              const current = new Set(prev.usedAbilities ?? []);
+              if (current.has(name)) current.delete(name);
+              else current.add(name);
+              return { ...prev, usedAbilities: Array.from(current) };
+            });
+          }}
+          onInspectAbility={(ability) => setInspectedAbility(ability)}
+        />
+      )}
 
       {order.length === 0 ? (
         <p className="muted">No combatants. Add players and monsters above.</p>
@@ -190,6 +273,42 @@ export default function TrackerPage() {
           </button>
         </div>
       )}
+
+      {/* Monster Ability Inspect BottomSheet */}
+      <BottomSheet
+        isOpen={Boolean(inspectedAbility)}
+        onClose={() => setInspectedAbility(null)}
+        title={inspectedAbility ? inspectedAbility.name.toUpperCase() : ''}
+      >
+        <div className="ability-inspect" style={{ padding: '8px 0' }}>
+          <p style={{ lineHeight: 1.6 }}>{inspectedAbility?.text}</p>
+          {inspectedAbility?.recharge && (
+            <p className="small muted" style={{ marginTop: 12 }}>
+              ⚡ Recharge: {inspectedAbility.recharge.min === 6 ? '6' : `${inspectedAbility.recharge.min}-6`} on a d6 at the start of creature's turn.
+            </p>
+          )}
+          {inspectedAbility?.usesPerDay && (
+            <p className="small muted" style={{ marginTop: 12 }}>
+              ⏳ Uses: {inspectedAbility.usesPerDay} per day.
+            </p>
+          )}
+          {active?.monsterRef && (
+            <div className="header-actions" style={{ marginTop: 16 }}>
+              <button
+                className="primary"
+                onClick={() => {
+                  if (active.monsterRef) {
+                    openEntry(active.monsterRef.packId, active.monsterRef.entryId);
+                    setInspectedAbility(null);
+                  }
+                }}
+              >
+                Open Full Stat Block
+              </button>
+            </div>
+          )}
+        </div>
+      </BottomSheet>
 
       {/* Condition Inspect BottomSheet */}
       <BottomSheet

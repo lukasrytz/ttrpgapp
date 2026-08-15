@@ -1,4 +1,4 @@
-import { Capacitor, registerPlugin } from '@capacitor/core';
+import { Capacitor, CapacitorHttp, registerPlugin } from '@capacitor/core';
 import { Directory, Encoding, Filesystem } from '@capacitor/filesystem';
 import { Preferences } from '@capacitor/preferences';
 import type {
@@ -99,6 +99,22 @@ async function writeJson(file: string, value: unknown): Promise<void> {
     encoding: Encoding.UTF8,
     data: JSON.stringify(value),
   });
+}
+
+function normalizeHaUrl(url: string): string {
+  let u = url.trim();
+  if (!/^https?:\/\//i.test(u)) {
+    u = `http://${u}`;
+  }
+  return u.replace(/\/+$/, '');
+}
+
+function normalizeHaToken(token: string): string {
+  let t = token.trim();
+  if (t.toLowerCase().startsWith('bearer ')) {
+    t = t.slice(7).trim();
+  }
+  return t;
 }
 
 export class CapacitorBackend implements Backend {
@@ -538,5 +554,155 @@ export class CapacitorBackend implements Backend {
   }
   setTombstones(t: Record<string, number>) {
     return prefSet(SYNC_TOMB, t);
+  }
+
+  async triggerHaScene(sceneId: string, transitionSec?: number, fxScript?: string): Promise<void> {
+    const raw = await this.kvGet('settings', 'ha');
+    if (!raw) throw new Error('Home Assistant not configured');
+    let config: { url?: string; token?: string } = {};
+    try {
+      config = JSON.parse(raw) as { url?: string; token?: string };
+    } catch {
+      throw new Error('Home Assistant settings invalid');
+    }
+    const { url, token } = config;
+    if (!url || !token) throw new Error('Home Assistant URL or Token not configured');
+
+    const cleanUrl = normalizeHaUrl(url);
+    const cleanToken = normalizeHaToken(token);
+    const endpoint = `${cleanUrl}/api/services/script/ttrpg_cue`;
+    const payload = {
+      scene_id: sceneId,
+      fx_script: fxScript || 'none',
+      transition_s: transitionSec ?? 2.5,
+    };
+
+    if (Capacitor.isNativePlatform()) {
+      const res = await CapacitorHttp.post({
+        url: endpoint,
+        headers: {
+          Authorization: `Bearer ${cleanToken}`,
+          'Content-Type': 'application/json',
+        },
+        data: payload,
+        connectTimeout: 3000,
+        readTimeout: 3000,
+      });
+      if (res.status < 200 || res.status >= 300) {
+        const text = typeof res.data === 'string' ? res.data : JSON.stringify(res.data);
+        throw new Error(`HA returned ${res.status}: ${text}`);
+      }
+    } else {
+      const res = await fetch(endpoint, {
+        method: 'POST',
+        headers: {
+          Authorization: `Bearer ${cleanToken}`,
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(payload),
+        signal: AbortSignal.timeout(2000),
+      });
+      if (!res.ok) {
+        const text = await res.text().catch(() => '');
+        throw new Error(`HA returned ${res.status}: ${text}`);
+      }
+    }
+  }
+
+  async testHaConnection(urlInput?: string, tokenInput?: string): Promise<void> {
+    let url = urlInput;
+    let token = tokenInput;
+    if (!url || !token) {
+      const raw = await this.kvGet('settings', 'ha');
+      if (raw) {
+        try {
+          const parsed = JSON.parse(raw) as { url?: string; token?: string };
+          url = url || parsed.url;
+          token = token || parsed.token;
+        } catch {
+          // ignore
+        }
+      }
+    }
+    if (!url || !token) throw new Error('Home Assistant URL and Token required');
+
+    const cleanUrl = normalizeHaUrl(url);
+    const cleanToken = normalizeHaToken(token);
+    const endpoint = `${cleanUrl}/api/`;
+
+    if (Capacitor.isNativePlatform()) {
+      try {
+        const res = await CapacitorHttp.get({
+          url: endpoint,
+          headers: {
+            Authorization: `Bearer ${cleanToken}`,
+            'Content-Type': 'application/json',
+          },
+          connectTimeout: 4000,
+          readTimeout: 4000,
+        });
+
+        if (res.status === 401) {
+          throw new Error('Unauthorized (401): Please verify your Long-Lived Access Token');
+        }
+        if (res.status >= 200 && res.status < 300) {
+          return;
+        }
+        // Fallback check to /api/states in case /api/ is restricted
+        const fallback = await CapacitorHttp.get({
+          url: `${cleanUrl}/api/states`,
+          headers: {
+            Authorization: `Bearer ${cleanToken}`,
+            'Content-Type': 'application/json',
+          },
+          connectTimeout: 4000,
+          readTimeout: 4000,
+        });
+        if (fallback.status >= 200 && fallback.status < 300) {
+          return;
+        }
+        throw new Error(`Home Assistant returned status ${res.status || fallback.status}`);
+      } catch (err: unknown) {
+        if (err instanceof Error && err.message.startsWith('Unauthorized')) {
+          throw err;
+        }
+        const msg = err instanceof Error ? err.message : String(err);
+        throw new Error(`Unable to reach Home Assistant at ${cleanUrl} (${msg})`);
+      }
+    } else {
+      try {
+        const res = await fetch(endpoint, {
+          method: 'GET',
+          headers: {
+            Authorization: `Bearer ${cleanToken}`,
+            'Content-Type': 'application/json',
+          },
+          signal: AbortSignal.timeout(3000),
+        });
+
+        if (res.status === 401) {
+          throw new Error('Unauthorized (401): Please verify your Long-Lived Access Token');
+        }
+        if (!res.ok) {
+          const fallback = await fetch(`${cleanUrl}/api/states`, {
+            method: 'GET',
+            headers: {
+              Authorization: `Bearer ${cleanToken}`,
+              'Content-Type': 'application/json',
+            },
+            signal: AbortSignal.timeout(3000),
+          });
+          if (!fallback.ok) {
+            throw new Error(`HA returned status ${res.status}`);
+          }
+        }
+      } catch (err: unknown) {
+        if (err instanceof Error && err.message.startsWith('Unauthorized')) {
+          throw err;
+        }
+        const msg = err instanceof Error ? err.message : String(err);
+        throw new Error(`Unable to reach Home Assistant at ${cleanUrl} (${msg})`);
+      }
+    }
   }
 }

@@ -169,4 +169,45 @@ describe('runDeckAction', () => {
     // Nav must execute last
     expect(order).toEqual(['sfx', 'music', 'nav']);
   });
+
+  it('runs pluginAction when plugin and action exist', async () => {
+    const { deps } = createMockDeps();
+    const runtimeMock = {
+      kvGet: vi.fn().mockResolvedValue(null),
+      kvSet: vi.fn().mockResolvedValue(undefined),
+      searchCompendium: vi.fn(),
+      getCompendiumEntry: vi.fn(),
+      openCompendiumEntry: vi.fn(),
+    };
+
+    const previousWindow = (globalThis as Record<string, unknown>)['window'];
+    const fakeWindow = { __ttrpgappRuntime: runtimeMock };
+    (globalThis as Record<string, unknown>)['window'] = fakeWindow;
+
+    try {
+      runDeckAction(
+        { kind: 'pluginAction', pluginId: 'dnd5e', actionId: 'nextTurn', label: 'Next Turn' },
+        deps,
+      );
+      expect(runtimeMock.kvGet).toHaveBeenCalledWith('dnd5e', 'encounter');
+    } finally {
+      (globalThis as Record<string, unknown>)['window'] = previousWindow;
+    }
+  });
+
+  it('degrades gracefully with a toast when plugin or action is unknown', () => {
+    const { deps } = createMockDeps();
+    const toasts = captureToasts();
+
+    try {
+      runDeckAction(
+        { kind: 'pluginAction', pluginId: 'unknownPlugin', actionId: 'doSomething', label: 'Custom Action' },
+        deps,
+      );
+    } finally {
+      toasts.restore();
+    }
+
+    expect(toasts.messages).toEqual(['Custom Action unavailable']);
+  });
 });

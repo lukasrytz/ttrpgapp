@@ -1,6 +1,6 @@
 import { useMemo, useState } from 'react';
-import { useQuery } from '@tanstack/react-query';
-import type { CompendiumSearchHit, LeafDeckAction, TagDimension } from '@ttrpgapp/shared';
+import { useQuery, useQueryClient } from '@tanstack/react-query';
+import type { CompendiumSearchHit, LeafDeckAction, Scene, TagDimension } from '@ttrpgapp/shared';
 import { DEFAULT_TAG_VOCAB, TAG_DIMENSIONS, trackSignature } from '@ttrpgapp/shared';
 import { backend } from '../backend';
 import { useSfx } from '../player/SfxProvider';
@@ -8,6 +8,8 @@ import { EMPTY_FILTER, fromSerializable, toSerializable } from '../music/filter'
 import FilterChips from '../music/FilterChips';
 import { availableClientPlugins } from '../plugins';
 import { compendiumIndex } from '../compendium';
+import { loadSceneLibrary, saveSceneLibrary } from '../scene/store';
+import SceneEditor from '../scene/SceneEditor';
 
 export interface ActionFormProps {
   value: LeafDeckAction;
@@ -57,6 +59,28 @@ export function defaultLeafAction(kind: LeafDeckAction['kind'], isMacroRow = fal
       return { kind: 'roll', formula: '1d20+5', label: 'd20 Roll' };
     case 'openEncounter':
       return { kind: 'openEncounter', encounterId: '', autoStart: false };
+    case 'pluginAction': {
+      const firstPlugin = availableClientPlugins.find((p) => p.actions && p.actions.length > 0);
+      const firstAction = firstPlugin?.actions?.[0];
+      return {
+        kind: 'pluginAction',
+        pluginId: firstPlugin?.id ?? 'dnd5e',
+        actionId: firstAction?.id ?? 'nextTurn',
+        label: firstAction?.label ?? 'Next Turn',
+      };
+    }
+    case 'scene':
+      return { kind: 'scene', sceneId: '', name: 'Scene' };
+    case 'quickNote':
+      return { kind: 'quickNote', prompt: 'Quick note:', heading: 'In-session Notes' };
+    case 'oracle':
+      return { kind: 'oracle', odds: 'even' };
+    case 'escalate':
+      return { kind: 'escalate' };
+    case 'quickNpc':
+      return { kind: 'quickNpc' };
+    case 'rollTable':
+      return { kind: 'rollTable', notePath: '' };
   }
 }
 
@@ -67,8 +91,18 @@ export default function ActionForm({
   onRemove,
   disabledKinds,
 }: ActionFormProps) {
+  const qc = useQueryClient();
   const sfx = useSfx();
   const [compendiumQuery, setCompendiumQuery] = useState('');
+  const [editingScene, setEditingScene] = useState<Scene | null>(null);
+  const [isSceneEditorOpen, setIsSceneEditorOpen] = useState(false);
+
+  const scenesQuery = useQuery({
+    queryKey: ['scenes'],
+    queryFn: () => loadSceneLibrary(),
+  });
+  const sceneLib = scenesQuery.data ?? { version: 1, scenes: [] };
+  const scenes = sceneLib.scenes;
 
   const tracksQuery = useQuery({
     queryKey: ['tracks'],
@@ -156,6 +190,27 @@ export default function ActionForm({
           </option>
           <option value="roll" disabled={disabledKinds?.has('roll')}>
             Roll Dice
+          </option>
+          <option value="pluginAction" disabled={disabledKinds?.has('pluginAction')}>
+            Plugin Action
+          </option>
+          <option value="scene" disabled={disabledKinds?.has('scene')}>
+            Scene
+          </option>
+          <option value="quickNote" disabled={disabledKinds?.has('quickNote')}>
+            Quick Capture Note
+          </option>
+          <option value="oracle" disabled={disabledKinds?.has('oracle')}>
+            Oracle (Yes/No + Prompt)
+          </option>
+          <option value="escalate" disabled={disabledKinds?.has('escalate')}>
+            Escalate (Combat & Complication)
+          </option>
+          <option value="quickNpc" disabled={disabledKinds?.has('quickNpc')}>
+            Quick NPC on Demand
+          </option>
+          <option value="rollTable" disabled={disabledKinds?.has('rollTable')}>
+            Roll on Note Table
           </option>
         </select>
         {onRemove && (
@@ -511,7 +566,180 @@ export default function ActionForm({
             </label>
           </div>
         )}
+
+        {value.kind === 'pluginAction' && (
+          <div className="form-group" style={{ marginTop: '8px' }}>
+            <label className="small muted">Plugin Action</label>
+            <select
+              value={`${value.pluginId}:${value.actionId}`}
+              onChange={(e) => {
+                const [pId, aId] = e.target.value.split(':');
+                const plug = availableClientPlugins.find((p) => p.id === pId);
+                const act = plug?.actions?.find((a) => a.id === aId);
+                if (pId && aId) {
+                  onChange({
+                    ...value,
+                    pluginId: pId,
+                    actionId: aId,
+                    label: act?.label ?? aId,
+                  });
+                }
+              }}
+            >
+              {availableClientPlugins.flatMap((p) =>
+                (p.actions ?? []).map((a) => (
+                  <option key={`${p.id}:${a.id}`} value={`${p.id}:${a.id}`}>
+                    {p.name}: {a.icon} {a.label}
+                  </option>
+                )),
+              )}
+            </select>
+          </div>
+        )}
+
+        {value.kind === 'scene' && (
+          <div className="form-group" style={{ marginTop: '8px' }}>
+            <label className="small muted">Target Scene</label>
+            <div style={{ display: 'flex', gap: '8px' }}>
+              <select
+                style={{ flex: 1 }}
+                value={value.sceneId}
+                onChange={(e) => {
+                  const sId = e.target.value;
+                  const found = scenes.find((s) => s.id === sId);
+                  onChange({
+                    ...value,
+                    sceneId: sId,
+                    name: found ? found.name : value.name,
+                  });
+                }}
+              >
+                <option value="">-- Select a Scene --</option>
+                {scenes.map((s) => (
+                  <option key={s.id} value={s.id}>
+                    {s.icon} {s.name}
+                  </option>
+                ))}
+              </select>
+              <button
+                type="button"
+                onClick={() => {
+                  const current = scenes.find((s) => s.id === value.sceneId) ?? null;
+                  setEditingScene(current);
+                  setIsSceneEditorOpen(true);
+                }}
+              >
+                {scenes.some((s) => s.id === value.sceneId) ? 'Edit Scene' : '+ New Scene'}
+              </button>
+            </div>
+          </div>
+        )}
+
+        {value.kind === 'quickNote' && (
+          <div className="form-group" style={{ marginTop: '8px', display: 'flex', flexDirection: 'column', gap: '8px' }}>
+            <label>
+              <span className="small muted">Prompt Label</span>
+              <input
+                value={value.prompt ?? ''}
+                onChange={(e) => onChange({ ...value, prompt: e.target.value })}
+                placeholder="e.g. Quick capture note:"
+              />
+            </label>
+            <label>
+              <span className="small muted">Target Heading</span>
+              <input
+                value={value.heading ?? ''}
+                onChange={(e) => onChange({ ...value, heading: e.target.value })}
+                placeholder="e.g. In-session Notes"
+              />
+            </label>
+          </div>
+        )}
+
+        {value.kind === 'oracle' && (
+          <div className="form-group" style={{ marginTop: '8px' }}>
+            <label>
+              <span className="small muted">Probability Odds</span>
+              <select
+                value={value.odds ?? 'even'}
+                onChange={(e) => onChange({ ...value, odds: e.target.value as any })}
+              >
+                <option value="likely">Likely (skewed towards Yes)</option>
+                <option value="even">Even (50/50 balance)</option>
+                <option value="unlikely">Unlikely (skewed towards No)</option>
+              </select>
+            </label>
+          </div>
+        )}
+
+        {value.kind === 'escalate' && (
+          <div className="form-group" style={{ marginTop: '8px' }}>
+            <div className="small muted">
+              One-press lever: generates an oracle complication, spins up combat music, logs to session note, and opens the combat tracker.
+            </div>
+          </div>
+        )}
+
+        {value.kind === 'quickNpc' && (
+          <div className="form-group" style={{ marginTop: '8px' }}>
+            <div className="small muted">
+              One-press lever: generates an NPC name, voice, quirk, and disposition on the fly, toasts the details, and logs them to the session note.
+            </div>
+          </div>
+        )}
+
+        {value.kind === 'rollTable' && (
+          <div className="form-group" style={{ marginTop: '8px' }}>
+            <label>
+              <span className="small muted">Table Note</span>
+              <select
+                value={value.notePath}
+                onChange={(e) => onChange({ ...value, notePath: e.target.value })}
+              >
+                <option value="">Select a note containing a table…</option>
+                {notes.map((n) => (
+                  <option key={n.path} value={n.path}>
+                    {n.title} ({n.path})
+                  </option>
+                ))}
+              </select>
+            </label>
+            <div className="small muted" style={{ marginTop: '4px' }}>
+              Rolls a random row from the first markdown table in this note and toasts the result.
+            </div>
+          </div>
+        )}
       </div>
+
+      {isSceneEditorOpen && (
+        <SceneEditor
+          scene={editingScene}
+          isOpen={isSceneEditorOpen}
+          onClose={() => setIsSceneEditorOpen(false)}
+          onSave={async (saved) => {
+            const existingIdx = scenes.findIndex((s) => s.id === saved.id);
+            const nextScenes =
+              existingIdx >= 0
+                ? scenes.map((s, i) => (i === existingIdx ? saved : s))
+                : [...scenes, saved];
+            await saveSceneLibrary({ version: 1, scenes: nextScenes });
+            onChange({
+              kind: 'scene',
+              sceneId: saved.id,
+              name: saved.name,
+            });
+            qc.invalidateQueries({ queryKey: ['scenes'] });
+          }}
+          onDelete={async (deletedId) => {
+            const nextScenes = scenes.filter((s) => s.id !== deletedId);
+            await saveSceneLibrary({ version: 1, scenes: nextScenes });
+            if (value.kind === 'scene' && value.sceneId === deletedId) {
+              onChange({ kind: 'scene', sceneId: '', name: 'Scene' });
+            }
+            qc.invalidateQueries({ queryKey: ['scenes'] });
+          }}
+        />
+      )}
     </div>
   );
 }

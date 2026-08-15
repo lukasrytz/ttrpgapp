@@ -7,3 +7,6 @@ dist/
 .DS_Store
 config.local.json
 music-tags.json
+HA_Token.txt
+*.keystore.local
+*.jks

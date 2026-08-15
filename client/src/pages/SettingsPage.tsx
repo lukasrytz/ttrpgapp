@@ -7,6 +7,8 @@ import { syncManager, type SyncState } from '../sync/manager';
 import { backend, getCapacitorBackend } from '../backend';
 import { useSfx } from '../player/SfxProvider';
 import { getSfxFolders, setSfxFolders } from '../music/folders';
+import { isKeepAwakeEnabled, setKeepAwakeEnabled } from '../util/keepAwake';
+import { showToast } from '../toast';
 
 function ago(ts: number): string {
   if (!ts) return 'never';
@@ -30,6 +32,7 @@ export default function SettingsPage() {
   const [currentTheme, setCurrentTheme] = useState<string>(
     () => localStorage.getItem('ttrpg-theme') || 'theme-fantasy',
   );
+  const [keepAwake, setKeepAwake] = useState<boolean>(() => isKeepAwakeEnabled());
   const [state, setState] = useState<SyncState>(syncManager.state);
   const [busy, setBusy] = useState(false);
   const [importMsg, setImportMsg] = useState<string | null>(null);
@@ -125,6 +128,22 @@ export default function SettingsPage() {
       </section>
 
       <section className="settings-section">
+        <h2>Session display</h2>
+        <label className="checkbox-label" style={{ display: 'flex', alignItems: 'center', gap: '10px', cursor: 'pointer', padding: '6px 0' }}>
+          <input
+            type="checkbox"
+            checked={keepAwake}
+            onChange={(e) => {
+              const next = e.target.checked;
+              setKeepAwake(next);
+              void setKeepAwakeEnabled(next);
+            }}
+          />
+          <span>Keep screen on during session (prevents sleep)</span>
+        </label>
+      </section>
+
+      <section className="settings-section">
         <h2>Cross-device sync</h2>
         {!native && (
           <p className="muted">
@@ -206,6 +225,8 @@ export default function SettingsPage() {
       )}
 
       <SfxSettingsSection />
+      <HomeAssistantSettingsSection />
+      <AboutSettingsSection />
     </div>
   );
 }
@@ -282,6 +303,159 @@ function SfxSettingsSection() {
           </button>
         </div>
         {scanMsg && <p className="muted small" style={{ marginTop: '4px' }}>{scanMsg}</p>}
+      </div>
+    </section>
+  );
+}
+
+function HomeAssistantSettingsSection() {
+  const [haUrl, setHaUrl] = useState('');
+  const [haToken, setHaToken] = useState('');
+  const [haStatus, setHaStatus] = useState<string | null>(null);
+  const [haTesting, setHaTesting] = useState(false);
+
+  useEffect(() => {
+    void backend()
+      .kvGet('settings', 'ha')
+      .then((raw) => {
+        if (raw) {
+          try {
+            const parsed = JSON.parse(raw) as { url?: string; token?: string };
+            if (parsed.url) setHaUrl(parsed.url);
+            if (parsed.token) setHaToken(parsed.token);
+          } catch {
+            // ignore
+          }
+        }
+      });
+  }, []);
+
+  return (
+    <section className="settings-section" style={{ marginTop: '24px' }}>
+      <h2>💡 Home Assistant Lighting Integration</h2>
+      <p className="muted">
+        Connect to your local Home Assistant instance to trigger smart light cues, scene transitions, and immersive battle ambient lighting directly from scenes and Stream Deck buttons.
+      </p>
+
+      <div style={{ display: 'flex', flexDirection: 'column', gap: '14px', marginTop: '12px' }}>
+        <label>
+          <span className="small muted">Home Assistant URL</span>
+          <input
+            value={haUrl}
+            onChange={(e) => setHaUrl(e.target.value)}
+            placeholder="e.g. http://192.168.1.100:8123 or http://homeassistant.local:8123"
+          />
+        </label>
+
+        <label>
+          <span className="small muted">Long-Lived Access Token</span>
+          <input
+            type="password"
+            value={haToken}
+            onChange={(e) => setHaToken(e.target.value)}
+            placeholder="Paste HA Bearer Token"
+          />
+        </label>
+
+        {haStatus && (
+          <div
+            style={{
+              padding: '8px 12px',
+              borderRadius: '6px',
+              fontSize: '13px',
+              background: haStatus.startsWith('✓') ? 'var(--accent-soft)' : 'rgba(239, 68, 68, 0.15)',
+              color: haStatus.startsWith('✓') ? 'var(--accent)' : 'var(--danger)',
+            }}
+          >
+            {haStatus}
+          </div>
+        )}
+
+        <div className="header-actions" style={{ marginTop: '8px', justifyContent: 'flex-end', gap: '8px' }}>
+          <button
+            type="button"
+            disabled={haTesting || !haUrl.trim() || !haToken.trim()}
+            onClick={async () => {
+              setHaTesting(true);
+              setHaStatus('Testing connection…');
+              let normalizedUrl = haUrl.trim();
+              if (!/^https?:\/\//i.test(normalizedUrl)) {
+                normalizedUrl = `http://${normalizedUrl}`;
+                setHaUrl(normalizedUrl);
+              }
+              let normalizedToken = haToken.trim();
+              if (normalizedToken.toLowerCase().startsWith('bearer ')) {
+                normalizedToken = normalizedToken.slice(7).trim();
+                setHaToken(normalizedToken);
+              }
+              try {
+                await backend().testHaConnection(normalizedUrl, normalizedToken);
+                await backend().kvSet(
+                  'settings',
+                  'ha',
+                  JSON.stringify({ url: normalizedUrl, token: normalizedToken }),
+                );
+                setHaStatus('✓ Connected successfully to Home Assistant!');
+                showToast('HA Connected & Saved!', '💡');
+              } catch (err) {
+                const msg = err instanceof Error ? err.message : String(err);
+                setHaStatus(`✗ Connection failed: ${msg}`);
+                showToast('HA Connection Failed', '⚠️');
+              } finally {
+                setHaTesting(false);
+              }
+            }}
+          >
+            {haTesting ? 'Testing…' : 'Test Connection'}
+          </button>
+
+          <button
+            type="button"
+            className="primary"
+            onClick={async () => {
+              let normalizedUrl = haUrl.trim();
+              if (normalizedUrl && !/^https?:\/\//i.test(normalizedUrl)) {
+                normalizedUrl = `http://${normalizedUrl}`;
+                setHaUrl(normalizedUrl);
+              }
+              let normalizedToken = haToken.trim();
+              if (normalizedToken.toLowerCase().startsWith('bearer ')) {
+                normalizedToken = normalizedToken.slice(7).trim();
+                setHaToken(normalizedToken);
+              }
+              await backend().kvSet(
+                'settings',
+                'ha',
+                JSON.stringify({ url: normalizedUrl, token: normalizedToken }),
+              );
+              showToast('Home Assistant settings saved', '💾');
+            }}
+          >
+            Save Settings
+          </button>
+        </div>
+      </div>
+    </section>
+  );
+}
+
+function AboutSettingsSection() {
+  return (
+    <section className="settings-section" style={{ marginTop: '24px', opacity: 0.9 }}>
+      <h2>About & Updates</h2>
+      <div style={{ display: 'flex', flexDirection: 'column', gap: '8px', marginTop: '10px' }}>
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+          <span className="small muted">App Version</span>
+          <span className="small font-mono" style={{ fontWeight: 600 }}>v0.1.0</span>
+        </div>
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+          <span className="small muted">Distribution</span>
+          <span className="small">Private Sideload / GitHub Release</span>
+        </div>
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+          <span className="small muted">Over-the-Air Updates</span>
+          <span className="small">Supported via Obtainium</span>
+        </div>
       </div>
     </section>
   );

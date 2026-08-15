@@ -151,6 +151,118 @@ describe('migrateDeck', () => {
       autoStart: true,
     });
   });
+
+  it('migrates valid pluginAction actions', () => {
+    const raw = {
+      pages: [
+        {
+          id: 'p1',
+          name: 'CombatPage',
+          buttons: [
+            {
+              id: 'p1',
+              label: 'Next Turn',
+              action: { kind: 'pluginAction', pluginId: 'dnd5e', actionId: 'nextTurn', label: 'Next Turn' },
+            },
+          ],
+        },
+      ],
+    };
+
+    const migrated = migrateDeck(raw);
+    const btn = migrated.pages[0]!.buttons[0]!;
+    expect(btn.action).toEqual({
+      kind: 'pluginAction',
+      pluginId: 'dnd5e',
+      actionId: 'nextTurn',
+      label: 'Next Turn',
+    });
+  });
+
+  it('migrates valid scene actions', () => {
+    const raw = {
+      pages: [
+        {
+          id: 'p1',
+          name: 'ScenePage',
+          buttons: [
+            {
+              id: 's1',
+              label: 'Tavern',
+              action: { kind: 'scene', sceneId: 'tavern-1', name: 'Tavern' },
+            },
+          ],
+        },
+      ],
+    };
+
+    const migrated = migrateDeck(raw);
+    const btn = migrated.pages[0]!.buttons[0]!;
+    expect(btn.action).toEqual({
+      kind: 'scene',
+      sceneId: 'tavern-1',
+      name: 'Tavern',
+    });
+  });
+
+  it('migrates valid quickNote actions', () => {
+    const raw = {
+      pages: [
+        {
+          id: 'p1',
+          name: 'NotesPage',
+          buttons: [
+            {
+              id: 'q1',
+              label: 'Capture',
+              action: { kind: 'quickNote', prompt: 'Note:', heading: 'Session Log' },
+            },
+          ],
+        },
+      ],
+    };
+
+    const migrated = migrateDeck(raw);
+    const btn = migrated.pages[0]!.buttons[0]!;
+    expect(btn.action).toEqual({
+      kind: 'quickNote',
+      prompt: 'Note:',
+      heading: 'Session Log',
+    });
+  });
+
+  it('migrates valid oracle, escalate, and quickNpc actions', () => {
+    const raw = {
+      pages: [
+        {
+          id: 'p1',
+          name: 'OraclePage',
+          buttons: [
+            { id: 'o1', label: 'Oracle', action: { kind: 'oracle', odds: 'likely' } },
+            { id: 'e1', label: 'Escalate', action: { kind: 'escalate' } },
+            { id: 'n1', label: 'NPC', action: { kind: 'quickNpc' } },
+            { id: 't1', label: 'Table', action: { kind: 'rollTable', notePath: 'tables/loot.md' } },
+          ],
+        },
+      ],
+    };
+
+    const migrated = migrateDeck(raw);
+    expect(migrated.pages[0]!.buttons[0]!.action).toEqual({
+      kind: 'oracle',
+      odds: 'likely',
+    });
+    expect(migrated.pages[0]!.buttons[1]!.action).toEqual({
+      kind: 'escalate',
+    });
+    expect(migrated.pages[0]!.buttons[2]!.action).toEqual({
+      kind: 'quickNpc',
+    });
+    expect(migrated.pages[0]!.buttons[3]!.action).toEqual({
+      kind: 'rollTable',
+      notePath: 'tables/loot.md',
+    });
+  });
 });
 
 describe('starterDeck', () => {

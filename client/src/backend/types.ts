@@ -53,4 +53,7 @@ export interface Backend {
 
   kvGet(pluginId: string, key: string): Promise<string | null>;
   kvSet(pluginId: string, key: string, value: string): Promise<void>;
+
+  triggerHaScene(sceneId: string, transitionSec?: number, fxScript?: string): Promise<void>;
+  testHaConnection(url?: string, token?: string): Promise<void>;
 }

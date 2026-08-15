@@ -8,6 +8,16 @@ export interface PluginNavItem {
   icon: string;
 }
 
+export interface PluginAction {
+  id: string;
+  label: string;
+  /** Emoji, matching the app's icon convention. */
+  icon: string;
+  /** Optional gate — e.g. hide "next turn" when no combat is running. */
+  isAvailable?(runtime: PluginRuntime): Promise<boolean>;
+  run(runtime: PluginRuntime): void | Promise<void>;
+}
+
 /**
  * Client side of a game-system plugin. Routes are mounted under
  * /p/<plugin id>/... and nav items appear in the sidebar when the plugin
@@ -20,6 +30,7 @@ export interface ClientPlugin {
   routes: { path: string; component: ComponentType }[];
   /** Compendium packs bundled with this plugin (loaded once at startup). */
   loadPacks?: () => Promise<CompendiumPack[]>;
+  actions?: PluginAction[];
 }
 
 /**

@@ -146,4 +146,16 @@ export class HttpBackend implements Backend {
       { value },
     );
   }
+
+  async triggerHaScene(sceneId: string, transitionSec?: number, fxScript?: string): Promise<void> {
+    await send<{ ok: boolean }>('POST', '/api/ha/cue', {
+      scene_id: sceneId,
+      transition_s: transitionSec,
+      fx_script: fxScript,
+    });
+  }
+
+  async testHaConnection(url?: string, token?: string): Promise<void> {
+    await send<{ ok: boolean }>('POST', '/api/ha/test', { url, token });
+  }
 }

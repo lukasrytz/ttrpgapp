@@ -1,5 +1,12 @@
 import type { DeckAction, LeafDeckAction, SfxClip, Track } from '@ttrpgapp/shared';
-import { formatDiceResult, rollDice, trackSignature } from '@ttrpgapp/shared';
+import {
+  formatDiceResult,
+  planTransition,
+  rollDice,
+  rollOnMarkdownTable,
+  rollOracle,
+  trackSignature,
+} from '@ttrpgapp/shared';
 import type { PlayerApi } from '../player/PlayerProvider';
 import { shuffleTracks } from '../player/PlayerProvider';
 import type { SfxApi } from '../player/SfxProvider';
@@ -7,6 +14,10 @@ import { fromSerializable, matches } from '../music/filter';
 import { showToast } from '../toast';
 import { modifyCounter } from './counterStore';
 import { availableClientPlugins } from '../plugins';
+import { getActiveSceneState, loadSceneLibrary, setActiveSceneState } from '../scene/store';
+import { backend } from '../backend';
+import { appendQuickNote } from '../session/quickNote';
+import { generateNameBatch, generateQuirkFlaw } from '../pages/generatorsData';
 
 export interface DeckActionDeps {
   tracks: Track[];
@@ -120,6 +131,160 @@ function runLeafAction(action: LeafDeckAction, deps: DeckActionDeps): void {
       } catch {
         showToast(`Invalid dice formula: ${action.formula}`, '⚠️');
       }
+      break;
+    }
+    case 'pluginAction': {
+      const plugin = availableClientPlugins.find((p) => p.id === action.pluginId);
+      const plugAction = plugin?.actions?.find((a) => a.id === action.actionId);
+      if (!plugin || !plugAction) {
+        showToast(`${action.label || 'Action'} unavailable`, '⚠️');
+        break;
+      }
+      try {
+        const rt = typeof window !== 'undefined' ? window.__ttrpgappRuntime : undefined;
+        if (!rt) {
+          showToast('Plugin runtime not ready', '⚠️');
+          break;
+        }
+        void plugAction.run(rt);
+      } catch {
+        showToast(`${action.label} failed`, '⚠️');
+      }
+      break;
+    }
+    case 'scene': {
+      void (async () => {
+        try {
+          const activeState = await getActiveSceneState();
+          const lib = await loadSceneLibrary();
+          const current = activeState.sceneId
+            ? lib.scenes.find((s) => s.id === activeState.sceneId) ?? null
+            : null;
+          const target = lib.scenes.find((s) => s.id === action.sceneId) ?? null;
+
+          if (!target) {
+            showToast('Scene not found', '⚠️');
+            return;
+          }
+
+          const isCurrentlyActive = activeState.sceneId === action.sceneId;
+          const next = isCurrentlyActive ? null : target;
+          const transition = planTransition(current, next);
+
+          // Stop loops
+          for (const sig of transition.stopLoops) {
+            deps.sfx.stopLoop(sig);
+          }
+
+          // Start loops
+          for (const loop of transition.startLoops) {
+            const clip = deps.clips.find(
+              (c) => trackSignature(c.path, c.durationSec) === loop.sig,
+            );
+            if (clip) {
+              deps.sfx.startLoop(clip, loop.volume);
+            }
+          }
+
+          // Music
+          if (transition.music) {
+            const filter = fromSerializable(transition.music);
+            const filtered = deps.tracks.filter((t) => matches(t, filter));
+            if (filtered.length > 0) {
+              deps.player.playQueue(shuffleTracks(filtered));
+            }
+          }
+
+          // Note Section
+          if (transition.openNote) {
+            deps.navigate(`/notes?path=${encodeURIComponent(transition.openNote.path)}`);
+          }
+
+          // Home Assistant scene
+          if (transition.haScene) {
+            const be = backend();
+            if ('triggerHaScene' in be && typeof (be as any).triggerHaScene === 'function') {
+              void (be as any).triggerHaScene(transition.haScene).catch((err: unknown) => {
+                showToast(
+                  `Lighting failed: ${err instanceof Error ? err.message : String(err)}`,
+                  '💡',
+                );
+              });
+            }
+          }
+
+          await setActiveSceneState(next ? next.id : null);
+          if (next) {
+            showToast(`Scene: ${next.name}`, next.icon || '🎭');
+          } else {
+            showToast(`Exited ${action.name || 'scene'}`, '🎭');
+          }
+        } catch {
+          showToast('Scene transition failed', '⚠️');
+        }
+      })();
+      break;
+    }
+    case 'quickNote': {
+      const promptText = action.prompt || 'Quick capture note:';
+      const heading = action.heading || 'In-session Notes';
+      const text = window.prompt(promptText);
+      if (text && text.trim()) {
+        void appendQuickNote(text.trim(), heading)
+          .then(() => showToast('Note captured', '📝'))
+          .catch(() => showToast('Failed to save note', '⚠️'));
+      }
+      break;
+    }
+    case 'oracle': {
+      const res = rollOracle(action.odds ?? 'even');
+      showToast(`🔮 ${res.answerLabel} (${res.action} / ${res.theme})`, '🔮', 3500);
+      break;
+    }
+    case 'escalate': {
+      const complication = rollOracle('unlikely');
+      const combatFilter = fromSerializable({
+        dims: { theme: ['combat'] },
+        minIntensity: 1,
+        search: '',
+      });
+      const combatTracks = deps.tracks.filter((t) => matches(t, combatFilter));
+      if (combatTracks.length > 0) {
+        deps.player.playQueue(shuffleTracks(combatTracks));
+      }
+      void appendQuickNote(
+        `⚔️ ESCALATION: ${complication.action} / ${complication.theme} (${complication.answerLabel})`,
+        'In-session Notes',
+      );
+      showToast(`⚔️ Escalation! ${complication.action} / ${complication.theme}`, '⚔️', 4000);
+      deps.navigate('/p/dnd5e/tracker');
+      break;
+    }
+    case 'quickNpc': {
+      const nameBatch = generateNameBatch(1, 'Any', 'Any', 'All Styles');
+      const name = nameBatch[0] ?? { fullName: 'Unknown Stranger', race: 'Human' };
+      const quirk = generateQuirkFlaw();
+      void appendQuickNote(
+        `👤 NPC: ${name.fullName} (${name.race}) — Disposition: ${quirk.disposition}, Quirk: ${quirk.quirk}, Flaw: ${quirk.flaw}, Voice: ${quirk.voice}`,
+        'NPCs Met',
+      );
+      showToast(`👤 ${name.fullName} (${name.race}) · ${quirk.voice}`, '👤', 4000);
+      break;
+    }
+    case 'rollTable': {
+      void backend()
+        .readNote(action.notePath)
+        .then((note) => {
+          const res = rollOnMarkdownTable(note.content);
+          if (!res) {
+            showToast('No markdown table found in note', '⚠️');
+            return;
+          }
+          showToast(`🎲 ${res.text}`, '🎲', 4500);
+        })
+        .catch(() => {
+          showToast('Failed to read table note', '⚠️');
+        });
       break;
     }
   }

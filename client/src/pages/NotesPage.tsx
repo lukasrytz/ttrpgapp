@@ -419,15 +419,20 @@ function NoteEditor({
     }, 1200);
   };
 
-  // Flush pending edits when leaving the note (unmount) or backgrounding the
-  // app, so nothing typed in the last second is dropped.
+  // Flush pending edits when leaving the note (unmount), backgrounding the
+  // app, or when a quickNote one-press capture is triggered.
   useEffect(() => {
     const onHide = () => {
       if (document.visibilityState === 'hidden') flush();
     };
+    const onFlushEvent = () => {
+      flush();
+    };
     document.addEventListener('visibilitychange', onHide);
+    window.addEventListener('ttrpg-flush-notes', onFlushEvent);
     return () => {
       document.removeEventListener('visibilitychange', onHide);
+      window.removeEventListener('ttrpg-flush-notes', onFlushEvent);
       flush();
     };
   }, [flush]);

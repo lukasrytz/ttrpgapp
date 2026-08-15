@@ -97,6 +97,41 @@ export type Monster = Named & {
   reactions?: { name: string; desc: string }[];
 };
 
+export interface MonsterAbility {
+  name: string;
+  text: string;
+  /** Parsed from "(Recharge 5-6)" in the name. */
+  recharge?: { min: number };
+  /** Parsed from "(1/Day)", "(3/Day)". */
+  usesPerDay?: number;
+}
+
+export function parseMonsterAbility(item: { name: string; desc: string }): MonsterAbility {
+  let name = item.name.trim();
+  let recharge: { min: number } | undefined;
+  let usesPerDay: number | undefined;
+
+  const rechargeMatch = name.match(/\(Recharge\s+(\d+)(?:-\d+)?\)/i);
+  if (rechargeMatch && rechargeMatch[1]) {
+    recharge = { min: parseInt(rechargeMatch[1], 10) };
+    name = name.replace(/\(Recharge\s+\d+(?:-\d+)?\)/i, '').trim();
+  }
+
+  const perDayMatch = name.match(/\((\d+)\/[Dd]ay\)/i);
+  if (perDayMatch && perDayMatch[1]) {
+    usesPerDay = parseInt(perDayMatch[1], 10);
+    name = name.replace(/\(\d+\/[Dd]ay\)/i, '').trim();
+  }
+
+  const ability: MonsterAbility = {
+    name,
+    text: item.desc,
+  };
+  if (recharge) ability.recharge = recharge;
+  if (usesPerDay != null) ability.usesPerDay = usesPerDay;
+  return ability;
+}
+
 export function convertMonsters(monsters: Monster[]): CompendiumEntry[] {
   return monsters.map((m) => {
     const ac = m.armor_class[0];
@@ -139,6 +174,10 @@ export function convertMonsters(monsters: Monster[]): CompendiumEntry[] {
     section('Reactions', m.reactions);
     section('Legendary actions', m.legendary_actions);
 
+    const traits = (m.special_abilities ?? []).map(parseMonsterAbility);
+    const actions = (m.actions ?? []).map(parseMonsterAbility);
+    const legendary = (m.legendary_actions ?? []).map(parseMonsterAbility);
+
     return {
       id: `monster:${m.index}`,
       type: 'monster',
@@ -151,6 +190,9 @@ export function convertMonsters(monsters: Monster[]): CompendiumEntry[] {
         cr: m.challenge_rating,
         size: m.size,
         monsterType: m.type,
+        traits,
+        actions,
+        legendary,
       },
       source: SOURCE,
     };

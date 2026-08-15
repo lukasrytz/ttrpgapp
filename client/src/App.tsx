@@ -13,6 +13,9 @@ import NotesPage from './pages/NotesPage';
 import SettingsPage, { SyncBadge } from './pages/SettingsPage';
 import GeneratorsPage from './pages/GeneratorsPage';
 import { syncManager, type SyncState } from './sync/manager';
+import SessionClockPill from './components/SessionClockPill';
+import PartyPassivesChip from './components/PartyPassivesChip';
+import { applyKeepAwake } from './util/keepAwake';
 
 const CORE_NAV = [
   { path: '/', label: 'Deck', iconFantasy: '🎛️', iconHorror: '🎛️', iconScifi: '🎛️' },
@@ -68,6 +71,10 @@ export default function App({ config }: { config: ClientConfig }) {
     return () => window.removeEventListener('ttrpg-theme-change', onThemeChange);
   }, []);
 
+  useEffect(() => {
+    void applyKeepAwake();
+  }, []);
+
   // Close the mobile drawer whenever the route changes.
   useEffect(() => setDrawerOpen(false), [location.pathname]);
 
@@ -80,12 +87,21 @@ export default function App({ config }: { config: ClientConfig }) {
               ☰
             </button>
             <span className="topbar-title">TTRPG Companion</span>
-            <div style={{ width: 44 }}></div> {/* Spacer to keep title centered */}
+            <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+              <PartyPassivesChip />
+              <SessionClockPill />
+            </div>
           </div>
 
           {drawerOpen && <div className="drawer-backdrop" onClick={() => setDrawerOpen(false)} />}
           <nav className={`sidebar ${drawerOpen ? 'sidebar-open' : ''}`}>
-            <div className="sidebar-title">TTRPG Companion</div>
+            <div className="sidebar-header" style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '0 8px 12px 8px' }}>
+              <div className="sidebar-title" style={{ margin: 0 }}>TTRPG Companion</div>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+                <PartyPassivesChip />
+                <SessionClockPill />
+              </div>
+            </div>
             {CORE_NAV.map((item) => (
               <NavLink
                 key={item.path}

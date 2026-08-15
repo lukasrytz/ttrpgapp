@@ -3,6 +3,7 @@ import { useSortable } from '@dnd-kit/sortable';
 import { CSS } from '@dnd-kit/utilities';
 import type { DeckButton, LeafDeckAction } from '@ttrpgapp/shared';
 import { getCounter } from './counterStore';
+import { triggerHaptic } from '../util/haptics';
 
 interface DeckButtonViewProps {
   button: DeckButton;
@@ -58,6 +59,7 @@ export default function DeckButtonView({
     if (editMode) {
       onEdit(button);
     } else if (!isMissing) {
+      void triggerHaptic();
       onPress(button);
     }
   };

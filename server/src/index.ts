@@ -6,6 +6,7 @@ import { availablePlugins } from './pluginHost.js';
 import { registerMusicRoutes } from './music.js';
 import { registerSfxRoutes } from './sfx.js';
 import { registerNotesRoutes } from './notes.js';
+import { registerHaRoutes } from './ha.js';
 
 const config = loadConfig();
 const db = openDb(resolvePath(config.dataDir));
@@ -47,6 +48,7 @@ app.put<{ Params: { pluginId: string; key: string }; Body: { value: string } }>(
 registerMusicRoutes(app, db, config);
 registerSfxRoutes(app, db, config);
 registerNotesRoutes(app, config);
+registerHaRoutes(app, db);
 
 const port = Number(process.env.PORT ?? 8787);
 await app.listen({ port, host: '127.0.0.1' });

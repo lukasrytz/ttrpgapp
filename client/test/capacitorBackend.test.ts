@@ -26,6 +26,11 @@ vi.mock('@capacitor/core', () => ({
     isNativePlatform: () => true,
     convertFileSrc: (p: string) => `file-src://${p}`,
   },
+  CapacitorHttp: {
+    get: vi.fn(async () => ({ status: 200, data: { message: 'API running.' } })),
+    post: vi.fn(async () => ({ status: 200, data: { ok: true } })),
+    request: vi.fn(async () => ({ status: 200, data: { ok: true } })),
+  },
   registerPlugin: () => ({ list: musicListMock }),
 }));
 
@@ -263,5 +268,51 @@ describe('CapacitorBackend plugin KV', () => {
     await b.kvSet('dnd5e', 'encounter', '{"round":2}');
     expect(await b.kvGet('dnd5e', 'encounter')).toBe('{"round":2}');
     expect(await b.kvGet('other', 'encounter')).toBeNull();
+  });
+});
+
+describe('CapacitorBackend Home Assistant', () => {
+  it('fails gracefully when HA settings are missing', async () => {
+    const b = new CapacitorBackend();
+    await expect(b.triggerHaScene('scene.test')).rejects.toThrow('Home Assistant not configured');
+  });
+
+  it('triggers HA scene when configured', async () => {
+    const b = new CapacitorBackend();
+    await b.kvSet('settings', 'ha', JSON.stringify({ url: 'http://127.0.0.1:8123', token: 'secret' }));
+
+    const { CapacitorHttp } = await import('@capacitor/core');
+    await b.triggerHaScene('scene.ttrpg_dnd5e_dungeon_tense', 3, 'script.ttrpg_fx_torch_flicker');
+
+    expect(CapacitorHttp.post).toHaveBeenCalledWith(
+      expect.objectContaining({
+        url: 'http://127.0.0.1:8123/api/services/script/ttrpg_cue',
+        headers: {
+          Authorization: 'Bearer secret',
+          'Content-Type': 'application/json',
+        },
+        data: {
+          scene_id: 'scene.ttrpg_dnd5e_dungeon_tense',
+          fx_script: 'script.ttrpg_fx_torch_flicker',
+          transition_s: 3,
+        },
+      }),
+    );
+  });
+
+  it('tests HA connection successfully', async () => {
+    const b = new CapacitorBackend();
+    const { CapacitorHttp } = await import('@capacitor/core');
+    await b.testHaConnection('http://192.168.1.100:8123', 'Bearer mytoken');
+
+    expect(CapacitorHttp.get).toHaveBeenCalledWith(
+      expect.objectContaining({
+        url: 'http://192.168.1.100:8123/api/',
+        headers: {
+          Authorization: 'Bearer mytoken',
+          'Content-Type': 'application/json',
+        },
+      }),
+    );
   });
 });

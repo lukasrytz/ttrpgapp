@@ -27,7 +27,14 @@ export type LeafDeckAction =
   | { kind: 'openEntry'; packId: string; entryId: string }
   | { kind: 'counter'; counterId: string; name: string; max?: number; delta: number }
   | { kind: 'roll'; formula: string; label?: string }
-  | { kind: 'openEncounter'; encounterId: string; autoStart?: boolean };
+  | { kind: 'openEncounter'; encounterId: string; autoStart?: boolean }
+  | { kind: 'pluginAction'; pluginId: string; actionId: string; label: string }
+  | { kind: 'scene'; sceneId: string; name: string }
+  | { kind: 'quickNote'; prompt?: string; heading?: string }
+  | { kind: 'oracle'; odds?: 'likely' | 'even' | 'unlikely' }
+  | { kind: 'escalate' }
+  | { kind: 'quickNpc' }
+  | { kind: 'rollTable'; notePath: string };
 
 export type DeckAction = LeafDeckAction | { kind: 'macro'; actions: LeafDeckAction[] };
 
@@ -128,6 +135,60 @@ function migrateLeafAction(raw: unknown): LeafDeckAction | null {
     if (typeof a['encounterId'] !== 'string') return null;
     const autoStart = typeof a['autoStart'] === 'boolean' ? a['autoStart'] : undefined;
     return { kind: 'openEncounter', encounterId: a['encounterId'], autoStart };
+  }
+
+  if (kind === 'pluginAction') {
+    if (
+      typeof a['pluginId'] !== 'string' ||
+      typeof a['actionId'] !== 'string' ||
+      typeof a['label'] !== 'string'
+    )
+      return null;
+    return {
+      kind: 'pluginAction',
+      pluginId: a['pluginId'],
+      actionId: a['actionId'],
+      label: a['label'],
+    };
+  }
+
+  if (kind === 'scene') {
+    if (typeof a['sceneId'] !== 'string' || typeof a['name'] !== 'string') return null;
+    return {
+      kind: 'scene',
+      sceneId: a['sceneId'],
+      name: a['name'],
+    };
+  }
+
+  if (kind === 'quickNote') {
+    const prompt = typeof a['prompt'] === 'string' ? a['prompt'] : undefined;
+    const heading = typeof a['heading'] === 'string' ? a['heading'] : undefined;
+    return {
+      kind: 'quickNote',
+      prompt,
+      heading,
+    };
+  }
+
+  if (kind === 'oracle') {
+    const rawOdds = a['odds'];
+    const odds =
+      rawOdds === 'likely' || rawOdds === 'unlikely' || rawOdds === 'even' ? rawOdds : 'even';
+    return { kind: 'oracle', odds };
+  }
+
+  if (kind === 'escalate') {
+    return { kind: 'escalate' };
+  }
+
+  if (kind === 'quickNpc') {
+    return { kind: 'quickNpc' };
+  }
+
+  if (kind === 'rollTable') {
+    if (typeof a['notePath'] !== 'string') return null;
+    return { kind: 'rollTable', notePath: a['notePath'] };
   }
 
   return null;
