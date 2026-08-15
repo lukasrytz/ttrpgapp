@@ -280,7 +280,20 @@ export default function SceneEditor({
           })()}
         </div>
 
-        <div className="header-actions" style={{ marginTop: '12px', justifyContent: 'space-between' }}>
+        <div
+          className="header-actions"
+          style={{
+            marginTop: '20px',
+            paddingTop: '12px',
+            paddingBottom: 'max(8px, calc(env(safe-area-inset-bottom, 0px) + 8px))',
+            borderTop: '1px solid var(--border)',
+            justifyContent: 'space-between',
+            position: 'sticky',
+            bottom: 0,
+            background: 'var(--bg-panel)',
+            zIndex: 10,
+          }}
+        >
           {scene && onDelete ? (
             <button
               type="button"

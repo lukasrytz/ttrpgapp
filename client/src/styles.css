@@ -1377,7 +1377,7 @@ a {
   }
 
   .page {
-    padding: 14px 14px 20px;
+    padding: 14px 14px max(28px, calc(env(safe-area-inset-bottom, 0px) + 28px));
   }
 
   /* Bigger tap targets and no iOS focus-zoom. */
@@ -1712,13 +1712,13 @@ a {
 .bottom-sheet-content {
   width: 100%;
   max-width: 600px;
-  max-height: 85vh;
+  max-height: 88vh;
   background: var(--bg-panel, #1e1e24);
   border-top-left-radius: 16px;
   border-top-right-radius: 16px;
   border: 1px solid var(--border, #333);
   border-bottom: none;
-  padding: 12px 18px 24px;
+  padding: 12px 18px max(28px, calc(env(safe-area-inset-bottom, 0px) + 28px));
   box-shadow: 0 -8px 32px rgba(0, 0, 0, 0.7);
   display: flex;
   flex-direction: column;
@@ -1764,6 +1764,7 @@ a {
   overflow-y: auto;
   flex: 1;
   min-height: 0;
+  padding-bottom: 12px;
 }
 
 /* Touch Action Bar */
@@ -1774,7 +1775,7 @@ a {
   right: 0;
   background: var(--bg-panel, #1e1e24);
   border-top: 1px solid var(--border, #333);
-  padding: 10px 16px;
+  padding: 10px 16px max(14px, calc(env(safe-area-inset-bottom, 0px) + 14px));
   display: flex;
   align-items: center;
   justify-content: space-between;
