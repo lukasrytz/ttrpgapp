@@ -103,7 +103,9 @@ jobs:
         run: |
           APK=client/android/app/build/outputs/apk/release/app-release.apk
           test -f "$APK" || { echo "::error::$APK not found"; exit 1; }
-          "$ANDROID_HOME"/build-tools/*/apksigner verify --print-certs "$APK"
+          APKSIGNER=$(find "${ANDROID_HOME:-$ANDROID_SDK_ROOT}/build-tools" -name apksigner -type f | sort -V | tail -n 1)
+          echo "Using apksigner at: $APKSIGNER"
+          "$APKSIGNER" verify --print-certs "$APK"
           cp "$APK" "ttrpg-companion-${{ steps.version.outputs.name }}.apk"
           cp "$APK" "ttrpg-companion-latest.apk"
 
