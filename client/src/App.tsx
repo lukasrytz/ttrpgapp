@@ -95,12 +95,14 @@ export default function App({ config }: { config: ClientConfig }) {
 
           {drawerOpen && <div className="drawer-backdrop" onClick={() => setDrawerOpen(false)} />}
           <nav className={`sidebar ${drawerOpen ? 'sidebar-open' : ''}`}>
-            <div className="sidebar-header" style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '0 8px 12px 8px' }}>
-              <div className="sidebar-title" style={{ margin: 0 }}>TTRPG Companion</div>
-              <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
-                <PartyPassivesChip />
-                <SessionClockPill />
-              </div>
+            <div className="sidebar-brand">
+              <img src="/favicon.png" alt="logo" className="sidebar-logo" />
+              <span className="sidebar-title">TTRPG Companion</span>
+            </div>
+
+            <div className="sidebar-widgets">
+              <SessionClockPill />
+              <PartyPassivesChip />
             </div>
             {CORE_NAV.map((item) => (
               <NavLink
