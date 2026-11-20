@@ -83,3 +83,38 @@ export function previousTurn(e: Encounter): Encounter {
 export function endCombat(_e?: Encounter): Encounter {
   return EMPTY_ENCOUNTER;
 }
+
+export interface HpChangeResult {
+  combatant: Combatant;
+  concentrationDropped: boolean;
+  concentrationDc: number | null;
+}
+
+export function applyCombatantHp(prev: Combatant, nextHp: number): HpChangeResult {
+  const hp = Math.max(0, Math.min(prev.maxHp, nextHp));
+  const damageTaken = prev.hp - hp;
+  const dropped = hp === 0 && prev.hp > 0;
+  let concentration = prev.concentration;
+  let concentrationDropped = false;
+  let concentrationDc: number | null = null;
+
+  if (prev.concentration && damageTaken > 0) {
+    if (hp === 0) {
+      concentration = false;
+      concentrationDropped = true;
+    } else {
+      concentrationDc = Math.max(10, Math.floor(damageTaken / 2));
+    }
+  }
+
+  return {
+    combatant: {
+      ...prev,
+      hp,
+      concentration,
+      deathSaves: dropped ? { successes: 0, failures: 0 } : prev.deathSaves,
+    },
+    concentrationDropped,
+    concentrationDc,
+  };
+}

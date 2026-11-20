@@ -66,6 +66,19 @@ const SYNC_STATE_INDEX = 'sync.state.index'; // id -> updatedAt for plugin state
 const SYNC_META = 'sync.meta';
 const SYNC_TOMB = 'sync.tombstones';
 
+/** Known synced Preferences keys so any un-indexed pre-existing state self-heals into sync. */
+const KNOWN_SYNC_STATE_KEYS: readonly [string, string][] = [
+  ['deck', 'layout'],
+  ['deck', 'scenes'],
+  ['deck', 'counters'],
+  ['deck', 'audio'],
+  ['dnd5e', 'encounter'],
+  ['dnd5e', 'party'],
+  ['dnd5e', 'encounters'],
+  ['music', 'tags'],
+  ['settings', 'ha'],
+];
+
 async function prefGet<T>(key: string, fallback: T): Promise<T> {
   const { value } = await Preferences.get({ key });
   return value ? (JSON.parse(value) as T) : fallback;
@@ -122,6 +135,17 @@ export class CapacitorBackend implements Backend {
   private idToPath = new Map<number, string>();
   /** id -> device-independent signature (the tag catalog key) for the same result. */
   private idToSig = new Map<number, string>();
+  /** Serializes SYNC_STATE_INDEX updates so concurrent kvSet/delete calls never clobber keys. */
+  private stateIndexQueue: Promise<void> = Promise.resolve();
+
+  private withStateIndexLock<T>(fn: () => Promise<T>): Promise<T> {
+    const run = this.stateIndexQueue.then(fn, fn);
+    this.stateIndexQueue = run.then(
+      () => undefined,
+      () => undefined,
+    );
+    return run;
+  }
 
   async getConfig(): Promise<ClientConfig> {
     // No config file on device; every compiled-in plugin is enabled.
@@ -517,30 +541,50 @@ export class CapacitorBackend implements Backend {
 
   /** Write plugin state with an explicit updatedAt (sync uses the remote's stamp). */
   async setStateRaw(pluginId: string, key: string, value: string, updatedAt: number): Promise<void> {
-    await Preferences.set({ key: `${pluginId}:${key}`, value });
-    const idx = await prefGet<Record<string, number>>(SYNC_STATE_INDEX, {});
-    idx[`state/${pluginId}/${key}`] = updatedAt;
-    await prefSet(SYNC_STATE_INDEX, idx);
+    return this.withStateIndexLock(async () => {
+      await Preferences.set({ key: `${pluginId}:${key}`, value });
+      const idx = await prefGet<Record<string, number>>(SYNC_STATE_INDEX, {});
+      idx[`state/${pluginId}/${key}`] = updatedAt;
+      await prefSet(SYNC_STATE_INDEX, idx);
+    });
   }
 
   /** Enumerate plugin-state docs with their content and updatedAt. */
   async listStateDocs(): Promise<{ id: string; value: string; updatedAt: number }[]> {
-    const idx = await prefGet<Record<string, number>>(SYNC_STATE_INDEX, {});
-    const out: { id: string; value: string; updatedAt: number }[] = [];
-    for (const [id, updatedAt] of Object.entries(idx)) {
-      const [, pluginId, ...rest] = id.split('/');
-      const { value } = await Preferences.get({ key: `${pluginId}:${rest.join('/')}` });
-      if (value != null) out.push({ id, value, updatedAt });
-    }
-    return out;
+    return this.withStateIndexLock(async () => {
+      const idx = await prefGet<Record<string, number>>(SYNC_STATE_INDEX, {});
+      let idxDirty = false;
+      for (const [pluginId, key] of KNOWN_SYNC_STATE_KEYS) {
+        const id = `state/${pluginId}/${key}`;
+        if (idx[id] !== undefined) continue;
+        const { value } = await Preferences.get({ key: `${pluginId}:${key}` });
+        if (value != null) {
+          idx[id] = 1;
+          idxDirty = true;
+        }
+      }
+      if (idxDirty) {
+        await prefSet(SYNC_STATE_INDEX, idx);
+      }
+
+      const out: { id: string; value: string; updatedAt: number }[] = [];
+      for (const [id, updatedAt] of Object.entries(idx)) {
+        const [, pluginId, ...rest] = id.split('/');
+        const { value } = await Preferences.get({ key: `${pluginId}:${rest.join('/')}` });
+        if (value != null) out.push({ id, value, updatedAt });
+      }
+      return out;
+    });
   }
 
   async deleteStateRaw(id: string): Promise<void> {
-    const [, pluginId, ...rest] = id.split('/');
-    await Preferences.remove({ key: `${pluginId}:${rest.join('/')}` });
-    const idx = await prefGet<Record<string, number>>(SYNC_STATE_INDEX, {});
-    delete idx[id];
-    await prefSet(SYNC_STATE_INDEX, idx);
+    return this.withStateIndexLock(async () => {
+      const [, pluginId, ...rest] = id.split('/');
+      await Preferences.remove({ key: `${pluginId}:${rest.join('/')}` });
+      const idx = await prefGet<Record<string, number>>(SYNC_STATE_INDEX, {});
+      delete idx[id];
+      await prefSet(SYNC_STATE_INDEX, idx);
+    });
   }
 
   getSyncMeta() {

@@ -196,6 +196,8 @@ export class SfxEngine {
   }
 
   activeLoops(): string[] {
-    return Array.from(this.loops.keys());
+    return Array.from(this.loops.entries())
+      .filter(([, entry]) => !entry.fadingOut)
+      .map(([key]) => key);
   }
 }

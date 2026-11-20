@@ -8,6 +8,7 @@ import type { MonsterAbility } from '../scripts/convert';
 import {
   CONDITIONS,
   EMPTY_ENCOUNTER,
+  applyCombatantHp,
   sortedCombatants,
   nextTurn as advanceTurn,
   previousTurn as rewindTurn,
@@ -64,7 +65,21 @@ export default function TrackerPage() {
   const [activeCondition, setActiveCondition] = useState<string | null>(null);
   const [hpSheetCombatant, setHpSheetCombatant] = useState<Combatant | null>(null);
   const [inspectedAbility, setInspectedAbility] = useState<MonsterAbility | null>(null);
+  const [showAddCombatant, setShowAddCombatant] = useState(false);
   const lastTurnRef = useRef<string | null>(null);
+
+  const emitToast = (message: string, icon: string) => {
+    if (typeof window === 'undefined') return;
+    window.dispatchEvent(
+      new CustomEvent('ttrpg-toast', {
+        detail: {
+          id: `tracker-${Date.now()}-${Math.random().toString(36).slice(2, 6)}`,
+          message,
+          icon,
+        },
+      }),
+    );
+  };
 
   const load = () =>
     void getPluginRuntime()
@@ -141,17 +156,7 @@ export default function TrackerPage() {
       const roll = rollDice('1d6');
       if (roll.total >= a.recharge.min) {
         recovered.push(a.name);
-        if (typeof window !== 'undefined') {
-          window.dispatchEvent(
-            new CustomEvent('ttrpg-toast', {
-              detail: {
-                id: `recharge-${Date.now()}-${Math.random().toString(36).slice(2, 6)}`,
-                message: `${active.name}: ${a.name} recharged! (rolled ${roll.total})`,
-                icon: '⚡',
-              },
-            }),
-          );
-        }
+        emitToast(`${active.name}: ${a.name} recharged! (rolled ${roll.total})`, '⚡');
       }
     }
 
@@ -165,7 +170,29 @@ export default function TrackerPage() {
 
   if (!enc) return <div className="page muted">Loading…</div>;
 
+  const combatActive = enc.round > 0;
   const nextTurn = () => update(advanceTurn);
+  const prevTurn = () => update(rewindTurn);
+  const atFirstTurn = enc.round <= 1 && enc.turnIndex === 0;
+
+  const toggleAbilityUsed = (combatantId: string, name: string) => {
+    updateCombatant(combatantId, (prev) => {
+      const current = new Set(prev.usedAbilities ?? []);
+      if (current.has(name)) current.delete(name);
+      else current.add(name);
+      return { ...prev, usedAbilities: Array.from(current) };
+    });
+  };
+
+  const applyHpTarget = (c: Combatant, targetHp: number) => {
+    const res = applyCombatantHp(c, targetHp);
+    updateCombatant(c.id, (prev) => applyCombatantHp(prev, targetHp).combatant);
+    if (res.concentrationDropped) {
+      emitToast(`${c.name} lost concentration (0 HP)`, '⚠️');
+    } else if (res.concentrationDc !== null) {
+      emitToast(`${c.name}: Concentration save DC ${res.concentrationDc}`, '⌛');
+    }
+  };
 
   const rollMonsterHp = (c: Combatant) => {
     const rolled = rollHitDice(c.hitDice, c.maxHp);
@@ -177,11 +204,20 @@ export default function TrackerPage() {
       <div className="page-header">
         <h1>Combat Tracker</h1>
         <div className="header-actions">
-          {enc.round > 0 && (
+          {combatActive && (
             <span className="round-badge">
               Round {enc.round}
               {active ? ` · ${active.name}` : ''}
             </span>
+          )}
+          {combatActive && (
+            <button
+              type="button"
+              className={showAddCombatant ? 'chip chip-on' : 'chip'}
+              onClick={() => setShowAddCombatant((v) => !v)}
+            >
+              {showAddCombatant ? '✕ Hide Add' : '+ Add Combatant'}
+            </button>
           )}
           <button className="primary" onClick={nextTurn} disabled={order.length === 0}>
             {enc.turnIndex < 0 ? '▶ Start combat' : '⏭ Next turn'}
@@ -194,6 +230,7 @@ export default function TrackerPage() {
                     new CustomEvent('ttrpg-combat-ended', { detail: { rounds: enc.round } }),
                   );
                 }
+                setShowAddCombatant(false);
                 update(finishCombat);
               }
             }}
@@ -204,19 +241,17 @@ export default function TrackerPage() {
         </div>
       </div>
 
-      <AddCombatant onAdd={(c) => update((e) => ({ ...e, combatants: [...e.combatants, c] }))} existing={enc.combatants} />
+      {(!combatActive || showAddCombatant) && (
+        <AddCombatant
+          onAdd={(c) => update((e) => ({ ...e, combatants: [...e.combatants, c] }))}
+          existing={enc.combatants}
+        />
+      )}
 
       {active && active.monsterRef && (
         <TurnCard
           combatant={active}
-          onToggleUsed={(name) => {
-            updateCombatant(active.id, (prev) => {
-              const current = new Set(prev.usedAbilities ?? []);
-              if (current.has(name)) current.delete(name);
-              else current.add(name);
-              return { ...prev, usedAbilities: Array.from(current) };
-            });
-          }}
+          onToggleUsed={(name) => toggleAbilityUsed(active.id, name)}
           onInspectAbility={(ability) => setInspectedAbility(ability)}
         />
       )}
@@ -248,6 +283,7 @@ export default function TrackerPage() {
                 onInspectCondition={(cond) => setActiveCondition(cond)}
                 onOpenHpSheet={() => setHpSheetCombatant(c)}
                 onRollHp={() => rollMonsterHp(c)}
+                onApplyHp={(targetHp) => applyHpTarget(c, targetHp)}
                 onChange={(fn) => updateCombatant(c.id, fn)}
                 onRemove={() =>
                   update((e) => ({ ...e, combatants: e.combatants.filter((x) => x.id !== c.id) }))
@@ -262,15 +298,29 @@ export default function TrackerPage() {
       {order.length > 0 && (
         <div className="touch-action-bar">
           <div className="touch-bar-info">
-            {enc.round > 0 ? (
+            {combatActive ? (
               <span>Round {enc.round} · <strong>{active?.name}</strong></span>
             ) : (
               <span>Combat ready</span>
             )}
           </div>
-          <button className="primary touch-bar-btn" onClick={nextTurn}>
-            {enc.turnIndex < 0 ? '▶ Start Combat' : '⏭ Next Turn'}
-          </button>
+          <div style={{ display: 'flex', gap: '8px', alignItems: 'center' }}>
+            {enc.turnIndex >= 0 && (
+              <button
+                type="button"
+                className="secondary touch-bar-btn"
+                onClick={prevTurn}
+                disabled={atFirstTurn}
+                title="Previous turn"
+                aria-label="Previous turn"
+              >
+                ⏮
+              </button>
+            )}
+            <button className="primary touch-bar-btn" onClick={nextTurn}>
+              {enc.turnIndex < 0 ? '▶ Start Combat' : '⏭ Next Turn'}
+            </button>
+          </div>
         </div>
       )}
 
@@ -292,21 +342,43 @@ export default function TrackerPage() {
               ⏳ Uses: {inspectedAbility.usesPerDay} per day.
             </p>
           )}
-          {active?.monsterRef && (
-            <div className="header-actions" style={{ marginTop: 16 }}>
-              <button
-                className="primary"
-                onClick={() => {
-                  if (active.monsterRef) {
-                    openEntry(active.monsterRef.packId, active.monsterRef.entryId);
-                    setInspectedAbility(null);
-                  }
-                }}
-              >
-                Open Full Stat Block
-              </button>
-            </div>
-          )}
+          {(() => {
+            const isLimited = Boolean(inspectedAbility?.recharge || inspectedAbility?.usesPerDay);
+            const isUsed = Boolean(
+              inspectedAbility && active?.usedAbilities?.includes(inspectedAbility.name),
+            );
+            if (!active) return null;
+            return (
+              <div className="header-actions" style={{ marginTop: 16, flexWrap: 'wrap' }}>
+                {inspectedAbility && isLimited && (
+                  <button
+                    type="button"
+                    className="primary"
+                    onClick={() => {
+                      toggleAbilityUsed(active.id, inspectedAbility.name);
+                      setInspectedAbility(null);
+                    }}
+                  >
+                    {isUsed ? '↺ Mark Unused' : '✓ Mark Used'}
+                  </button>
+                )}
+                {active.monsterRef && (
+                  <button
+                    type="button"
+                    className={isLimited ? 'secondary' : 'primary'}
+                    onClick={() => {
+                      if (active.monsterRef) {
+                        openEntry(active.monsterRef.packId, active.monsterRef.entryId);
+                        setInspectedAbility(null);
+                      }
+                    }}
+                  >
+                    Open Full Stat Block
+                  </button>
+                )}
+              </div>
+            );
+          })()}
         </div>
       </BottomSheet>
 
@@ -340,11 +412,7 @@ export default function TrackerPage() {
           c={hpSheetCombatant}
           onClose={() => setHpSheetCombatant(null)}
           onApply={(newHp) => {
-            updateCombatant(hpSheetCombatant.id, (prev) => ({
-              ...prev,
-              hp: newHp,
-              deathSaves: newHp === 0 && prev.hp > 0 ? { successes: 0, failures: 0 } : prev.deathSaves,
-            }));
+            applyHpTarget(hpSheetCombatant, newHp);
             setHpSheetCombatant(null);
           }}
         />
@@ -361,6 +429,7 @@ function CombatantRow({
   onInspectCondition,
   onOpenHpSheet,
   onRollHp,
+  onApplyHp,
   onChange,
   onRemove,
 }: {
@@ -371,6 +440,7 @@ function CombatantRow({
   onInspectCondition: (cond: string) => void;
   onOpenHpSheet: () => void;
   onRollHp: () => void;
+  onApplyHp: (targetHp: number) => void;
   onChange: (fn: (c: Combatant) => Combatant) => void;
   onRemove: () => void;
 }) {
@@ -379,15 +449,7 @@ function CombatantRow({
   const applyHp = (sign: 1 | -1) => {
     const n = Number(amount);
     if (!Number.isFinite(n) || n <= 0) return;
-    onChange((prev) => {
-      const hp = Math.max(0, Math.min(prev.maxHp, prev.hp + sign * n));
-      const dropped = hp === 0 && prev.hp > 0;
-      return {
-        ...prev,
-        hp,
-        deathSaves: dropped ? { successes: 0, failures: 0 } : prev.deathSaves,
-      };
-    });
+    onApplyHp(c.hp + sign * n);
     setAmount('');
   };
 

@@ -68,4 +68,35 @@ describe('appendQuickNote', () => {
     expect(note.content).toContain('## Loot and Rewards');
     expect(note.content).toContain('Gained 500 XP');
   });
+
+  it('awaits async flush promises pushed into ttrpg-flush-notes before reading/writing', async () => {
+    const target = new EventTarget();
+    const prevWindow = (globalThis as Record<string, unknown>)['window'];
+    (globalThis as Record<string, unknown>)['window'] = target;
+
+    target.addEventListener('ttrpg-flush-notes', (e) => {
+      const promises = (e as CustomEvent<{ promises?: Promise<void>[] }>).detail?.promises;
+      if (Array.isArray(promises)) {
+        promises.push(
+          (async () => {
+            await new Promise((r) => setTimeout(r, 25));
+            const existing = await backend().readNote('sessions/Session 1.md');
+            await backend().writeNote(
+              'sessions/Session 1.md',
+              `${existing.content}\nUnsaved editor paragraph`,
+            );
+          })(),
+        );
+      }
+    });
+
+    try {
+      const res = await appendQuickNote('Captured after slow flush', 'In-session Notes');
+      const note = await backend().readNote(res.path);
+      expect(note.content).toContain('Unsaved editor paragraph');
+      expect(note.content).toContain('Captured after slow flush');
+    } finally {
+      (globalThis as Record<string, unknown>)['window'] = prevWindow;
+    }
+  });
 });

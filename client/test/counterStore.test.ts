@@ -1,5 +1,5 @@
-import { beforeEach, describe, expect, it } from 'vitest';
-import { getCounter, modifyCounter } from '../src/deck/counterStore';
+import { afterEach, beforeEach, describe, expect, it } from 'vitest';
+import { getCounter, initCounters, modifyCounter } from '../src/deck/counterStore';
 import { setBackend, type Backend } from '../src/backend';
 
 const mockKv: Record<string, string> = {};
@@ -11,8 +11,19 @@ const fakeBackend = {
   },
 } as unknown as Backend;
 
+const originalWindow = (globalThis as unknown as { window?: unknown }).window;
+
 beforeEach(() => {
+  for (const k of Object.keys(mockKv)) delete mockKv[k];
   setBackend(fakeBackend);
+});
+
+afterEach(() => {
+  if (originalWindow === undefined) {
+    delete (globalThis as unknown as { window?: unknown }).window;
+  } else {
+    (globalThis as unknown as { window?: unknown }).window = originalWindow;
+  }
 });
 
 describe('counterStore', () => {
@@ -68,5 +79,30 @@ describe('counterStore', () => {
 
     modifyCounter('event-test', 1);
     expect(fired).toBe(true);
+  });
+
+  it('initCounters hydrates from backend and modifyCounter emits ttrpg-local-changed', async () => {
+    const events: string[] = [];
+    (globalThis as unknown as { window: unknown }).window = {
+      dispatchEvent: (e: { type: string }) => {
+        events.push(e.type);
+        return true;
+      },
+      addEventListener: () => {},
+      removeEventListener: () => {},
+    };
+
+    mockKv['deck:counters'] = JSON.stringify({ tension: 4 });
+    const loaded = await initCounters();
+    expect(loaded).toEqual({ tension: 4 });
+    expect(getCounter('tension')).toBe(4);
+    expect(events).toContain('ttrpg-counters-changed');
+
+    events.length = 0;
+    modifyCounter('tension', 1, 6);
+    expect(getCounter('tension')).toBe(5);
+    await new Promise((r) => setTimeout(r, 0));
+    expect(mockKv['deck:counters']).toBe(JSON.stringify({ tension: 5 }));
+    expect(events).toEqual(['ttrpg-counters-changed', 'ttrpg-local-changed']);
   });
 });

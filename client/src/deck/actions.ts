@@ -18,6 +18,7 @@ import { getActiveSceneState, loadSceneLibrary, setActiveSceneState } from '../s
 import { backend } from '../backend';
 import { appendQuickNote } from '../session/quickNote';
 import { generateNameBatch, generateQuirkFlaw } from '../pages/generatorsData';
+import { openQuickCapture } from '../components/QuickCaptureSheet';
 
 export interface DeckActionDeps {
   tracks: Track[];
@@ -226,14 +227,7 @@ function runLeafAction(action: LeafDeckAction, deps: DeckActionDeps): void {
       break;
     }
     case 'quickNote': {
-      const promptText = action.prompt || 'Quick capture note:';
-      const heading = action.heading || 'In-session Notes';
-      const text = window.prompt(promptText);
-      if (text && text.trim()) {
-        void appendQuickNote(text.trim(), heading)
-          .then(() => showToast('Note captured', '📝'))
-          .catch(() => showToast('Failed to save note', '⚠️'));
-      }
+      openQuickCapture({ prompt: action.prompt, heading: action.heading });
       break;
     }
     case 'oracle': {

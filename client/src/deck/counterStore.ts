@@ -4,7 +4,6 @@ const DECK_NS = 'deck';
 const COUNTERS_KEY = 'counters';
 
 let countersCache: Record<string, number> = {};
-let loaded = false;
 
 export async function initCounters(): Promise<Record<string, number>> {
   try {
@@ -17,7 +16,9 @@ export async function initCounters(): Promise<Record<string, number>> {
   } catch {
     countersCache = {};
   }
-  loaded = true;
+  if (typeof window !== 'undefined') {
+    window.dispatchEvent(new Event('ttrpg-counters-changed'));
+  }
   return { ...countersCache };
 }
 
@@ -44,7 +45,13 @@ export function modifyCounter(id: string, delta: number, max?: number): number {
     window.dispatchEvent(new Event('ttrpg-counters-changed'));
   }
 
-  void backend().kvSet(DECK_NS, COUNTERS_KEY, JSON.stringify(countersCache));
+  void backend()
+    .kvSet(DECK_NS, COUNTERS_KEY, JSON.stringify(countersCache))
+    .then(() => {
+      if (typeof window !== 'undefined') {
+        window.dispatchEvent(new Event('ttrpg-local-changed'));
+      }
+    });
 
   return next;
 }

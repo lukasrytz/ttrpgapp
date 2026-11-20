@@ -1,15 +1,20 @@
 import { backend } from '../backend';
 
+export async function flushOpenNotes(): Promise<void> {
+  if (typeof window === 'undefined') return;
+  const promises: Promise<void>[] = [];
+  window.dispatchEvent(new CustomEvent('ttrpg-flush-notes', { detail: { promises } }));
+  if (promises.length > 0) {
+    await Promise.all(promises);
+  }
+}
+
 export async function appendQuickNote(
   text: string,
   heading = 'In-session Notes',
 ): Promise<{ path: string }> {
-  // 1. Flush any in-flight unsaved keystrokes in NotesPage
-  if (typeof window !== 'undefined') {
-    window.dispatchEvent(new CustomEvent('ttrpg-flush-notes'));
-  }
-  // Brief delay to allow pending flush async handlers to land
-  await new Promise((resolve) => setTimeout(resolve, 60));
+  // 1. Flush any in-flight unsaved keystrokes in NotesPage and await completion
+  await flushOpenNotes();
 
   // 2. Find the most recently active session note, or create one
   const notes = await backend().listNotes();

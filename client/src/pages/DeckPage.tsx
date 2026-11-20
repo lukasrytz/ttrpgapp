@@ -29,7 +29,6 @@ import ButtonEditor from '../deck/ButtonEditor';
 import { getActiveSceneState } from '../scene/store';
 import RunningOrderDrawer from '../session/RunningOrderDrawer';
 import SceneLibraryManager from '../scene/SceneLibraryManager';
-import BottomSheet from '../components/BottomSheet';
 
 export default function DeckPage() {
   const navigate = useNavigate();
@@ -66,16 +65,17 @@ export default function DeckPage() {
       void loadDeck().then((loaded) => {
         if (!cancelled) {
           setLayout(loaded);
+          setActivePageIndex((prev) => Math.min(prev, Math.max(0, loaded.pages.length - 1)));
         }
       });
     };
 
     window.addEventListener('ttrpg-sync-updated', onSyncUpdated);
-    window.addEventListener('ttrpg-local-changed', onSyncUpdated);
+    window.addEventListener('ttrpg-deck-updated', onSyncUpdated);
     return () => {
       cancelled = true;
       window.removeEventListener('ttrpg-sync-updated', onSyncUpdated);
-      window.removeEventListener('ttrpg-local-changed', onSyncUpdated);
+      window.removeEventListener('ttrpg-deck-updated', onSyncUpdated);
     };
   }, []);
 
@@ -105,7 +105,7 @@ export default function DeckPage() {
 
   const updateLayout = (nextLayout: DeckLayout) => {
     setLayout(nextLayout);
-    saveDeck(nextLayout);
+    void saveDeck(nextLayout);
   };
 
   const sensors = useSensors(
@@ -255,90 +255,103 @@ export default function DeckPage() {
         <h1>Stream Deck</h1>
         <div className="header-actions">
           <button
-            className="chip"
-            onClick={() => setIsScenesModalOpen(true)}
-            title="Open Scenes Library"
+            className={`chip ${isScenesModalOpen ? 'chip-on' : ''}`}
+            onClick={() => setIsScenesModalOpen(!isScenesModalOpen)}
+            title="Toggle Scenes Library"
           >
             🎭 Scenes
           </button>
-          <button
-            className={`chip ${editMode ? 'chip-on' : ''}`}
-            onClick={() => setEditMode(!editMode)}
-          >
-            {editMode ? '✓ Done' : '✎ Edit'}
-          </button>
+          {!isScenesModalOpen && (
+            <button
+              className={`chip ${editMode ? 'chip-on' : ''}`}
+              onClick={() => setEditMode(!editMode)}
+            >
+              {editMode ? '✓ Done' : '✎ Edit'}
+            </button>
+          )}
         </div>
       </div>
 
-      <div className="deck-tabs">
-        {layout.pages.map((p, i) => (
-          <button
-            key={p.id}
-            className={`deck-tab ${i === activePageIndex ? 'active' : ''}`}
-            onClick={() => setActivePageIndex(i)}
-          >
-            {p.name}
-          </button>
-        ))}
+      {isScenesModalOpen ? (
+        <div style={{ marginTop: '12px' }}>
+          <SceneLibraryManager
+            activePageIndex={activePageIndex}
+            onClose={() => setIsScenesModalOpen(false)}
+          />
+        </div>
+      ) : (
+        <>
+          <div className="deck-tabs">
+            {layout.pages.map((p, i) => (
+              <button
+                key={p.id}
+                className={`deck-tab ${i === activePageIndex ? 'active' : ''}`}
+                onClick={() => setActivePageIndex(i)}
+              >
+                {p.name}
+              </button>
+            ))}
 
-        {editMode && (
-          <>
-            <button className="chip" onClick={handleAddPage} title="Add new page">
-              + Page
-            </button>
-            <button className="chip" onClick={handleRenamePage} title="Rename active page">
-              ✏️ Rename
-            </button>
-            <button className="chip danger" onClick={handleDeletePage} title="Delete active page">
-              🗑️ Delete
-            </button>
-          </>
-        )}
-      </div>
-
-      <RunningOrderDrawer
-        isOpen={isRunningOrderOpen}
-        onToggle={() => setIsRunningOrderOpen(!isRunningOrderOpen)}
-        onNavigateNotes={(path) => navigate(`/notes?path=${encodeURIComponent(path)}`)}
-      />
-
-      <div className="deck-grid-container" style={{ marginTop: '16px' }}>
-        <DndContext
-          sensors={sensors}
-          collisionDetection={closestCenter}
-          onDragEnd={handleDragEnd}
-        >
-          <SortableContext
-            items={activePage.buttons.map((b) => b.id)}
-            strategy={rectSortingStrategy}
-          >
-            <div className="deck-grid">
-              {activePage.buttons.map((btn) => (
-                <DeckButtonView
-                  key={btn.id}
-                  button={btn}
-                  editMode={editMode}
-                  isLit={checkIsLit(btn)}
-                  isMissing={checkIsMissing(btn)}
-                  onPress={handlePressButton}
-                  onEdit={setEditingButton}
-                />
-              ))}
-
-              {editMode && (
-                <button
-                  type="button"
-                  className="deck-btn deck-btn-add"
-                  onClick={handleAddButton}
-                >
-                  <div className="deck-btn-icon">+</div>
-                  <div className="deck-btn-label">Add Button</div>
+            {editMode && (
+              <>
+                <button className="chip" onClick={handleAddPage} title="Add new page">
+                  + Page
                 </button>
-              )}
-            </div>
-          </SortableContext>
-        </DndContext>
-      </div>
+                <button className="chip" onClick={handleRenamePage} title="Rename active page">
+                  ✏️ Rename
+                </button>
+                <button className="chip danger" onClick={handleDeletePage} title="Delete active page">
+                  🗑️ Delete
+                </button>
+              </>
+            )}
+          </div>
+
+          <RunningOrderDrawer
+            isOpen={isRunningOrderOpen}
+            onToggle={() => setIsRunningOrderOpen(!isRunningOrderOpen)}
+            onNavigateNotes={(path) => navigate(`/notes?path=${encodeURIComponent(path)}`)}
+          />
+
+          <div className="deck-grid-container" style={{ marginTop: '16px' }}>
+            <DndContext
+              sensors={sensors}
+              collisionDetection={closestCenter}
+              onDragEnd={handleDragEnd}
+            >
+              <SortableContext
+                items={activePage.buttons.map((b) => b.id)}
+                strategy={rectSortingStrategy}
+              >
+                <div className="deck-grid">
+                  {activePage.buttons.map((btn) => (
+                    <DeckButtonView
+                      key={btn.id}
+                      button={btn}
+                      editMode={editMode}
+                      isLit={checkIsLit(btn)}
+                      isMissing={checkIsMissing(btn)}
+                      onPress={handlePressButton}
+                      onEdit={setEditingButton}
+                    />
+                  ))}
+
+                  {editMode && (
+                    <button
+                      type="button"
+                      className="deck-btn deck-btn-add"
+                      onClick={handleAddButton}
+                    >
+                      <div className="deck-btn-icon">+</div>
+                      <div className="deck-btn-label">Add Button</div>
+                    </button>
+                  )}
+                </div>
+              </SortableContext>
+            </DndContext>
+          </div>
+        </>
+      )}
 
       {editingButton && (
         <ButtonEditor
@@ -347,18 +360,6 @@ export default function DeckPage() {
           onDelete={handleDeleteButton}
           onClose={() => setEditingButton(null)}
         />
-      )}
-
-      {isScenesModalOpen && (
-        <BottomSheet
-          isOpen={isScenesModalOpen}
-          onClose={() => setIsScenesModalOpen(false)}
-          title="Scenes Library"
-        >
-          <div style={{ padding: '8px 0' }}>
-            <SceneLibraryManager onClose={() => setIsScenesModalOpen(false)} />
-          </div>
-        </BottomSheet>
       )}
     </div>
   );

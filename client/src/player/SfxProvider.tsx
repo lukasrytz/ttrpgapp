@@ -14,9 +14,16 @@ import { backend } from '../backend';
 import { usePlayer } from './PlayerProvider';
 import { SfxEngine } from './sfx';
 
+export interface SfxLoopItem {
+  sig: string;
+  name: string;
+}
+
 export interface SfxApi {
   /** Clip signatures currently looping, for lighting up deck buttons. */
   activeLoops: string[];
+  /** Currently active loops with human-readable names for UI strips. */
+  activeLoopItems: SfxLoopItem[];
   fire(clip: SfxClip, volume: number): void;
   /** Explicit start/stop as well as toggle — macros need to force a loop on or off
    *  rather than flip it (see `sfxLoop.mode` in commit 4). */
@@ -43,6 +50,7 @@ export function SfxProvider({ children }: { children: ReactNode }) {
 
   const duckAmountRef = useRef(duckAmount);
   duckAmountRef.current = duckAmount;
+  const loopNamesRef = useRef<Map<string, string>>(new Map());
 
   if (!engineRef.current) {
     const e = new SfxEngine();
@@ -61,30 +69,41 @@ export function SfxProvider({ children }: { children: ReactNode }) {
 
   useEffect(() => {
     let cancelled = false;
-    void backend()
-      .kvGet('deck', 'audio')
-      .then((raw) => {
-        if (cancelled || !raw) return;
-        try {
-          const parsed = JSON.parse(raw) as { masterVolume?: number; duckAmount?: number };
-          if (typeof parsed.masterVolume === 'number') {
-            setMasterVolumeState(parsed.masterVolume);
-            engine.setMasterVolume(parsed.masterVolume);
+    const loadAudioConfig = () => {
+      void backend()
+        .kvGet('deck', 'audio')
+        .then((raw) => {
+          if (cancelled || !raw) return;
+          try {
+            const parsed = JSON.parse(raw) as { masterVolume?: number; duckAmount?: number };
+            if (typeof parsed.masterVolume === 'number') {
+              setMasterVolumeState(parsed.masterVolume);
+              engine.setMasterVolume(parsed.masterVolume);
+            }
+            if (typeof parsed.duckAmount === 'number') {
+              setDuckAmountState(parsed.duckAmount);
+            }
+          } catch {
+            // ignore
           }
-          if (typeof parsed.duckAmount === 'number') {
-            setDuckAmountState(parsed.duckAmount);
-          }
-        } catch {
-          // ignore
-        }
-      });
+        });
+    };
+    loadAudioConfig();
+    window.addEventListener('ttrpg-sync-updated', loadAudioConfig);
     return () => {
       cancelled = true;
+      window.removeEventListener('ttrpg-sync-updated', loadAudioConfig);
     };
   }, [engine]);
 
   const saveAudioConfig = useCallback((mv: number, da: number) => {
-    void backend().kvSet('deck', 'audio', JSON.stringify({ masterVolume: mv, duckAmount: da }));
+    void backend()
+      .kvSet('deck', 'audio', JSON.stringify({ masterVolume: mv, duckAmount: da }))
+      .then(() => {
+        if (typeof window !== 'undefined') {
+          window.dispatchEvent(new Event('ttrpg-local-changed'));
+        }
+      });
   }, []);
 
   const setMasterVolume = useCallback(
@@ -114,6 +133,7 @@ export function SfxProvider({ children }: { children: ReactNode }) {
   const startLoop = useCallback(
     (clip: SfxClip, volume: number) => {
       const sig = trackSignature(clip.path, clip.durationSec);
+      loopNamesRef.current.set(sig, clip.name);
       engine.startLoop(sig, backend().sfxUrl(clip), volume);
       setActiveLoops(engine.activeLoops());
     },
@@ -146,9 +166,19 @@ export function SfxProvider({ children }: { children: ReactNode }) {
     setActiveLoops(engine.activeLoops());
   }, [engine]);
 
+  const activeLoopItems = useMemo<SfxLoopItem[]>(
+    () =>
+      activeLoops.map((sig) => ({
+        sig,
+        name: loopNamesRef.current.get(sig) ?? sig.split('|')[0] ?? sig,
+      })),
+    [activeLoops],
+  );
+
   const api = useMemo<SfxApi>(
     () => ({
       activeLoops,
+      activeLoopItems,
       fire,
       toggleLoop,
       startLoop,
@@ -161,6 +191,7 @@ export function SfxProvider({ children }: { children: ReactNode }) {
     }),
     [
       activeLoops,
+      activeLoopItems,
       fire,
       toggleLoop,
       startLoop,

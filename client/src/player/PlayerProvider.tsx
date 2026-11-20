@@ -10,6 +10,7 @@ import {
 import type { Track } from '@ttrpgapp/shared';
 import { backend } from '../backend';
 import { CrossfadeEngine } from './crossfade';
+import { popHistory, pushHistory, type PlaybackSnapshot } from './history';
 import { rampValue, type RampHandle } from './ramp';
 
 interface PlayerState {
@@ -27,6 +28,8 @@ export interface PlayerApi extends PlayerState {
   playQueue: (tracks: Track[], index?: number) => void;
   playTrack: (track: Track) => void;
   next: () => void;
+  previous: () => void;
+  canGoBack: boolean;
   toggle: () => void;
   setVolume: (v: number) => void;
   /** Temporarily scale playback level without changing the user's volume setting. */
@@ -53,6 +56,8 @@ export function PlayerProvider({ children }: { children: ReactNode }) {
   const duckRampRef = useRef<RampHandle | null>(null);
   const duckFactorRef = useRef(1);
   const userVolumeRef = useRef(1);
+  const historyRef = useRef<PlaybackSnapshot[]>([]);
+  const [historyLen, setHistoryLen] = useState(0);
   const [state, setState] = useState<PlayerState>({
     current: null,
     queue: [],
@@ -98,19 +103,21 @@ export function PlayerProvider({ children }: { children: ReactNode }) {
     void engine().play(backend().trackUrl(track));
   }, []);
 
-  const startTrack = useCallback(
-    (track: Track) => {
-      playOn(track);
-      setState((s) => ({ ...s, current: track, playing: true, position: 0, duration: 0 }));
-    },
-    [playOn],
-  );
+  const recordCurrentInHistory = useCallback((nextTrackId: number, queueChanged = false) => {
+    const s = stateRef.current;
+    if (!s.current) return;
+    if (s.current.id === nextTrackId && !queueChanged) return;
+    const nextHist = pushHistory(historyRef.current, s.current, s.queue, s.queueIndex);
+    historyRef.current = nextHist;
+    setHistoryLen(nextHist.length);
+  }, []);
 
   const advance = useCallback(() => {
     const s = stateRef.current;
     if (s.queue.length === 0) return;
     const nextIndex = (s.queueIndex + 1) % s.queue.length;
     const track = s.queue[nextIndex]!;
+    recordCurrentInHistory(track.id);
     playOn(track);
     setState((prev) => ({
       ...prev,
@@ -120,22 +127,75 @@ export function PlayerProvider({ children }: { children: ReactNode }) {
       position: 0,
       duration: 0,
     }));
+  }, [playOn, recordCurrentInHistory]);
+
+  const previous = useCallback(() => {
+    const { previous: snap, rest } = popHistory(historyRef.current);
+    if (snap) {
+      historyRef.current = rest;
+      setHistoryLen(rest.length);
+      playOn(snap.track);
+      setState((prev) => ({
+        ...prev,
+        current: snap.track,
+        queue: snap.queue,
+        queueIndex: snap.queueIndex,
+        playing: true,
+        position: 0,
+        duration: 0,
+      }));
+      return;
+    }
+    const s = stateRef.current;
+    if (s.queue.length > 1) {
+      const prevIndex = (s.queueIndex - 1 + s.queue.length) % s.queue.length;
+      const track = s.queue[prevIndex]!;
+      playOn(track);
+      setState((prev) => ({
+        ...prev,
+        current: track,
+        queueIndex: prevIndex,
+        playing: true,
+        position: 0,
+        duration: 0,
+      }));
+    }
   }, [playOn]);
 
   const api = useMemo<PlayerApi>(
     () => ({
       ...state,
+      canGoBack: historyLen > 0 || state.queue.length > 1,
       playQueue: (tracks, index = 0) => {
         if (tracks.length === 0) return;
-        setState((s) => ({ ...s, queue: tracks, queueIndex: index }));
-        startTrack(tracks[index]!);
-        setState((s) => ({ ...s, queue: tracks, queueIndex: index }));
+        const track = tracks[index]!;
+        recordCurrentInHistory(track.id, true);
+        playOn(track);
+        setState((s) => ({
+          ...s,
+          current: track,
+          queue: tracks,
+          queueIndex: index,
+          playing: true,
+          position: 0,
+          duration: 0,
+        }));
       },
       playTrack: (track) => {
-        setState((s) => ({ ...s, queue: [track], queueIndex: 0 }));
-        startTrack(track);
+        recordCurrentInHistory(track.id, true);
+        playOn(track);
+        setState((s) => ({
+          ...s,
+          current: track,
+          queue: [track],
+          queueIndex: 0,
+          playing: true,
+          position: 0,
+          duration: 0,
+        }));
       },
       next: advance,
+      previous,
       toggle: () => {
         const s = stateRef.current;
         if (!s.current) return;
@@ -154,7 +214,7 @@ export function PlayerProvider({ children }: { children: ReactNode }) {
       },
       setDuck,
     }),
-    [state, advance, startTrack, setDuck],
+    [state, historyLen, advance, previous, playOn, recordCurrentInHistory, setDuck],
   );
 
   return <PlayerContext.Provider value={api}>{children}</PlayerContext.Provider>;

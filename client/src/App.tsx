@@ -6,6 +6,7 @@ import { PlayerProvider } from './player/PlayerProvider';
 import { SfxProvider } from './player/SfxProvider';
 import PlayerBar from './player/PlayerBar';
 import CommandPalette from './components/CommandPalette';
+import QuickCaptureSheet, { openQuickCapture } from './components/QuickCaptureSheet';
 import ToastHost from './components/ToastHost';
 import DeckPage from './pages/DeckPage';
 import MusicPage from './pages/MusicPage';
@@ -72,6 +73,13 @@ export default function App({ config }: { config: ClientConfig }) {
   }, []);
 
   useEffect(() => {
+    const ALL_THEMES = ['theme-fantasy', 'theme-horror', 'theme-scifi', 'theme-universal'];
+    const root = document.documentElement;
+    root.classList.remove(...ALL_THEMES);
+    root.classList.add(theme);
+  }, [theme]);
+
+  useEffect(() => {
     void applyKeepAwake();
   }, []);
 
@@ -88,6 +96,24 @@ export default function App({ config }: { config: ClientConfig }) {
             </button>
             <span className="topbar-title">TTRPG Companion</span>
             <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+              <button
+                type="button"
+                className="icon-btn"
+                aria-label="Quick Note"
+                title="Quick capture note"
+                onClick={() => openQuickCapture()}
+              >
+                📝
+              </button>
+              <button
+                type="button"
+                className="icon-btn"
+                aria-label="Quick Search"
+                title="Search rules, spells, monsters"
+                onClick={openPalette}
+              >
+                🔍
+              </button>
               <PartyPassivesChip />
               <SessionClockPill />
             </div>
@@ -103,7 +129,30 @@ export default function App({ config }: { config: ClientConfig }) {
             <div className="sidebar-widgets">
               <SessionClockPill />
               <PartyPassivesChip />
+              <button
+                type="button"
+                className="chip"
+                onClick={() => {
+                  setDrawerOpen(false);
+                  openQuickCapture();
+                }}
+                title="Capture a quick note into the active session"
+              >
+                📝 Quick Note
+              </button>
             </div>
+            <button
+              type="button"
+              className="nav-item nav-search"
+              onClick={() => {
+                setDrawerOpen(false);
+                openPalette();
+              }}
+            >
+              <span className="nav-icon">🔍</span>
+              <span style={{ flex: 1 }}>Quick Search</span>
+              <span className="kbd-hint muted small">⌘K</span>
+            </button>
             {CORE_NAV.map((item) => (
               <NavLink
                 key={item.path}
@@ -155,6 +204,7 @@ export default function App({ config }: { config: ClientConfig }) {
             <PlayerBar />
           </main>
           <CommandPalette />
+          <QuickCaptureSheet />
           <ToastHost />
         </div>
       </SfxProvider>

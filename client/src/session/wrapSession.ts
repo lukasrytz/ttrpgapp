@@ -1,13 +1,11 @@
 import { backend } from '../backend';
 import { computeTotalElapsed, formatClock, getClockState, resetClock } from './clock';
+import { flushOpenNotes } from './quickNote';
 import { deriveBeats } from './runningOrder';
 
 export async function wrapSession(): Promise<{ path: string; summary: string }> {
   // 1. Flush any editor notes
-  if (typeof window !== 'undefined') {
-    window.dispatchEvent(new CustomEvent('ttrpg-flush-notes'));
-  }
-  await new Promise((r) => setTimeout(r, 60));
+  await flushOpenNotes();
 
   const clock = getClockState();
   const totalSeconds = computeTotalElapsed(clock);

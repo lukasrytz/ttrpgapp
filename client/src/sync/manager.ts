@@ -121,6 +121,9 @@ class SyncManager {
         this.qc?.invalidateQueries({ queryKey: ['notes'] });
         this.qc?.invalidateQueries({ queryKey: ['note'] });
         this.qc?.invalidateQueries({ queryKey: ['tracks'] });
+        this.qc?.invalidateQueries({ queryKey: ['scenes'] });
+        this.qc?.invalidateQueries({ queryKey: ['encounters'] });
+        this.qc?.invalidateQueries({ queryKey: ['sfxClips'] });
         window.dispatchEvent(new CustomEvent('ttrpg-sync-updated'));
       }
     } catch (e) {

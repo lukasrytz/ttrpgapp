@@ -1,6 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import {
   EMPTY_ENCOUNTER,
+  applyCombatantHp,
   endCombat,
   nextTurn,
   previousTurn,
@@ -99,6 +100,55 @@ describe('trackerTypes pure reducers', () => {
   describe('endCombat', () => {
     it('resets encounter to EMPTY_ENCOUNTER', () => {
       expect(endCombat(testEncounter)).toEqual(EMPTY_ENCOUNTER);
+    });
+  });
+
+  describe('applyCombatantHp', () => {
+    it('computes DC 10 minimum or half damage on non-lethal damage while concentrating', () => {
+      const conc: Combatant = { ...makeCombatant('4', 'Mage', 14), hp: 40, maxHp: 40, concentration: true };
+
+      const small = applyCombatantHp(conc, 35); // 5 dmg -> DC 10
+      expect(small.combatant.hp).toBe(35);
+      expect(small.combatant.concentration).toBe(true);
+      expect(small.concentrationDropped).toBe(false);
+      expect(small.concentrationDc).toBe(10);
+
+      const big = applyCombatantHp(conc, 14); // 26 dmg -> DC 13
+      expect(big.combatant.hp).toBe(14);
+      expect(big.combatant.concentration).toBe(true);
+      expect(big.concentrationDropped).toBe(false);
+      expect(big.concentrationDc).toBe(13);
+    });
+
+    it('drops concentration and resets death saves when reduced to 0 HP', () => {
+      const conc: Combatant = {
+        ...makeCombatant('4', 'Mage', 14),
+        hp: 12,
+        maxHp: 40,
+        concentration: true,
+        deathSaves: { successes: 2, failures: 1 },
+      };
+
+      const lethal = applyCombatantHp(conc, -4);
+      expect(lethal.combatant.hp).toBe(0);
+      expect(lethal.combatant.concentration).toBe(false);
+      expect(lethal.combatant.deathSaves).toEqual({ successes: 0, failures: 0 });
+      expect(lethal.concentrationDropped).toBe(true);
+      expect(lethal.concentrationDc).toBeNull();
+    });
+
+    it('does not prompt concentration check when healing or when not concentrating', () => {
+      const conc: Combatant = { ...makeCombatant('4', 'Mage', 14), hp: 20, maxHp: 40, concentration: true };
+      const healed = applyCombatantHp(conc, 30);
+      expect(healed.combatant.hp).toBe(30);
+      expect(healed.combatant.concentration).toBe(true);
+      expect(healed.concentrationDropped).toBe(false);
+      expect(healed.concentrationDc).toBeNull();
+
+      const nonConc: Combatant = { ...makeCombatant('5', 'Fighter', 12), hp: 30, maxHp: 40, concentration: false };
+      const hurt = applyCombatantHp(nonConc, 10);
+      expect(hurt.concentrationDropped).toBe(false);
+      expect(hurt.concentrationDc).toBeNull();
     });
   });
 });

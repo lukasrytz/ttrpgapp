@@ -55,77 +55,79 @@ export default function PartyPage() {
       {party.length === 0 ? (
         <p className="muted">No characters yet.</p>
       ) : (
-        <table className="roster-table">
-          <thead>
-            <tr>
-              <th>Name</th>
-              <th>Max HP</th>
-              <th>AC</th>
-              <th>Init bonus</th>
-              <th>Passive Perc.</th>
-              <th></th>
-            </tr>
-          </thead>
-          <tbody>
-            {party.map((m) => (
-              <tr key={m.id}>
-                <td>
-                  <input
-                    value={m.name}
-                    placeholder="Character name"
-                    onChange={(e) => setMember(m.id, { name: e.target.value })}
-                  />
-                </td>
-                <td>
-                  <input
-                    className="w-narrow"
-                    type="number"
-                    inputMode="numeric"
-                    value={m.maxHp}
-                    onChange={(e) => setMember(m.id, { maxHp: Math.max(1, Number(e.target.value) || 1) })}
-                  />
-                </td>
-                <td>
-                  <input
-                    className="w-narrow"
-                    type="number"
-                    inputMode="numeric"
-                    value={m.ac ?? ''}
-                    onChange={(e) => setMember(m.id, { ac: num(e.target.value) })}
-                  />
-                </td>
-                <td>
-                  <input
-                    className="w-narrow"
-                    type="number"
-                    inputMode="numeric"
-                    value={m.initiativeBonus}
-                    onChange={(e) => setMember(m.id, { initiativeBonus: Number(e.target.value) || 0 })}
-                  />
-                </td>
-                <td>
-                  <input
-                    className="w-narrow"
-                    type="number"
-                    inputMode="numeric"
-                    value={m.passivePerception ?? ''}
-                    onChange={(e) => setMember(m.id, { passivePerception: num(e.target.value) })}
-                  />
-                </td>
-                <td>
-                  <button
-                    onClick={() => {
-                      if (window.confirm(`Remove ${m.name || 'this character'}?`))
-                        persist(party.filter((x) => x.id !== m.id));
-                    }}
-                  >
-                    ✕
-                  </button>
-                </td>
+        <div className="table-scroll">
+          <table className="roster-table">
+            <thead>
+              <tr>
+                <th>Name</th>
+                <th>Max HP</th>
+                <th>AC</th>
+                <th>Init bonus</th>
+                <th>Passive Perc.</th>
+                <th></th>
               </tr>
-            ))}
-          </tbody>
-        </table>
+            </thead>
+            <tbody>
+              {party.map((m) => (
+                <tr key={m.id}>
+                  <td data-label="Name">
+                    <input
+                      value={m.name}
+                      placeholder="Character name"
+                      onChange={(e) => setMember(m.id, { name: e.target.value })}
+                    />
+                  </td>
+                  <td data-label="Max HP">
+                    <input
+                      className="w-narrow"
+                      type="number"
+                      inputMode="numeric"
+                      value={m.maxHp}
+                      onChange={(e) => setMember(m.id, { maxHp: Math.max(1, Number(e.target.value) || 1) })}
+                    />
+                  </td>
+                  <td data-label="AC">
+                    <input
+                      className="w-narrow"
+                      type="number"
+                      inputMode="numeric"
+                      value={m.ac ?? ''}
+                      onChange={(e) => setMember(m.id, { ac: num(e.target.value) })}
+                    />
+                  </td>
+                  <td data-label="Init Bonus">
+                    <input
+                      className="w-narrow"
+                      type="number"
+                      inputMode="numeric"
+                      value={m.initiativeBonus}
+                      onChange={(e) => setMember(m.id, { initiativeBonus: Number(e.target.value) || 0 })}
+                    />
+                  </td>
+                  <td data-label="Passive Perc.">
+                    <input
+                      className="w-narrow"
+                      type="number"
+                      inputMode="numeric"
+                      value={m.passivePerception ?? ''}
+                      onChange={(e) => setMember(m.id, { passivePerception: num(e.target.value) })}
+                    />
+                  </td>
+                  <td>
+                    <button
+                      onClick={() => {
+                        if (window.confirm(`Remove ${m.name || 'this character'}?`))
+                          persist(party.filter((x) => x.id !== m.id));
+                      }}
+                    >
+                      ✕
+                    </button>
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
       )}
     </div>
   );

@@ -7,14 +7,21 @@ import SceneEditor from './SceneEditor';
 import { usePlayer } from '../player/PlayerProvider';
 import { useSfx } from '../player/SfxProvider';
 import { runDeckAction } from '../deck/actions';
+import { loadDeck, saveDeck } from '../deck/store';
 import { backend } from '../backend';
 import { showToast } from '../toast';
 
 export interface SceneLibraryManagerProps {
   onClose?: () => void;
+  activePageIndex?: number;
+  onPinned?: () => void;
 }
 
-export default function SceneLibraryManager({ onClose }: SceneLibraryManagerProps) {
+export default function SceneLibraryManager({
+  onClose,
+  activePageIndex = 0,
+  onPinned,
+}: SceneLibraryManagerProps) {
   const qc = useQueryClient();
   const player = usePlayer();
   const sfx = useSfx();
@@ -36,7 +43,7 @@ export default function SceneLibraryManager({ onClose }: SceneLibraryManagerProp
   });
 
   const { data: clips = [] } = useQuery({
-    queryKey: ['sfx-clips'],
+    queryKey: ['sfxClips'],
     queryFn: () => backend().listSfx(),
   });
 
@@ -102,25 +109,66 @@ export default function SceneLibraryManager({ onClose }: SceneLibraryManagerProp
     showToast(`Deleted "${scene.name}"`, '🗑️');
   };
 
+  const handlePinToDeck = async (scene: Scene) => {
+    const deck = await loadDeck();
+    const pages = deck.pages.length > 0 ? deck.pages : [{ id: 'default', name: 'Main', buttons: [] }];
+    const targetIdx = Math.min(activePageIndex, Math.max(0, pages.length - 1));
+    const page = pages[targetIdx]!;
+
+    const alreadyPinned = page.buttons.some(
+      (b) => b.action.kind === 'scene' && b.action.sceneId === scene.id,
+    );
+    if (alreadyPinned) {
+      showToast(`"${scene.name}" is already on ${page.name}`, '📌');
+      return;
+    }
+
+    const newBtn = {
+      id: `btn-${Date.now()}`,
+      label: scene.name,
+      icon: scene.icon || '🎭',
+      color: scene.color,
+      size: '1x1' as const,
+      action: { kind: 'scene' as const, sceneId: scene.id, name: scene.name },
+    };
+
+    const nextPages = pages.map((p, i) =>
+      i === targetIdx ? { ...p, buttons: [...p.buttons, newBtn] } : p,
+    );
+    await saveDeck({ ...deck, pages: nextPages });
+    if (typeof window !== 'undefined') {
+      window.dispatchEvent(new CustomEvent('ttrpg-deck-updated'));
+    }
+    showToast(`Pinned "${scene.name}" to ${page.name}`, '📌');
+    onPinned?.();
+  };
+
   return (
     <div className="scene-library-manager" style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
-      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: '12px', flexWrap: 'wrap' }}>
         <div>
           <h2 style={{ margin: 0 }}>Scenes Library</h2>
           <p className="small muted" style={{ margin: '4px 0 0' }}>
             Preset atmospheres combining lighting, music filters, soundscape loops, and prep notes.
           </p>
         </div>
-        <button
-          type="button"
-          className="primary"
-          onClick={() => {
-            setEditingScene(null);
-            setIsEditorOpen(true);
-          }}
-        >
-          + New Scene
-        </button>
+        <div className="header-actions">
+          {onClose && (
+            <button type="button" onClick={onClose}>
+              ← Back to Deck
+            </button>
+          )}
+          <button
+            type="button"
+            className="primary"
+            onClick={() => {
+              setEditingScene(null);
+              setIsEditorOpen(true);
+            }}
+          >
+            + New Scene
+          </button>
+        </div>
       </div>
 
       {scenes.length === 0 ? (
@@ -246,6 +294,14 @@ export default function SceneLibraryManager({ onClose }: SceneLibraryManagerProp
                       ▶ Trigger Scene
                     </button>
                   )}
+                  <button
+                    type="button"
+                    className="icon-btn"
+                    onClick={() => void handlePinToDeck(s)}
+                    title="Pin to Stream Deck"
+                  >
+                    📌
+                  </button>
                   <button
                     type="button"
                     className="icon-btn"

@@ -1,12 +1,11 @@
-import { useEffect, useRef, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import { Capacitor } from '@capacitor/core';
 import { Preferences } from '@capacitor/preferences';
-import { useQueryClient } from '@tanstack/react-query';
-import type { MusicTagCatalog } from '@ttrpgapp/shared';
+import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
+import type { MusicFolder, MusicTagCatalog } from '@ttrpgapp/shared';
 import { syncManager, type SyncState } from '../sync/manager';
 import { backend, getCapacitorBackend } from '../backend';
 import { useSfx } from '../player/SfxProvider';
-import { getSfxFolders, setSfxFolders } from '../music/folders';
 import { isKeepAwakeEnabled, setKeepAwakeEnabled } from '../util/keepAwake';
 import { showToast } from '../toast';
 
@@ -155,8 +154,9 @@ export default function SettingsPage() {
         {native && (
           <>
             <p className="muted">
-              Syncs prep notes and combat tracker state across your devices via your Google
-              Drive. Files live in a <em>TTRPG Companion</em> folder you can also open in Drive.
+              Syncs your Stream Deck, scenes, prep notes, combat tracker, party, encounters, and
+              music tags across your devices via your Google Drive. Files live in a{' '}
+              <em>TTRPG Companion</em> folder you can also open in Drive.
             </p>
 
             <label className="settings-field">
@@ -232,28 +232,27 @@ export default function SettingsPage() {
 }
 
 function SfxSettingsSection() {
+  const qc = useQueryClient();
   const sfx = useSfx();
-  const [folders, setFolders] = useState<Set<string>>(new Set());
+  const [pickingFolders, setPickingFolders] = useState(false);
   const [scanning, setScanning] = useState(false);
   const [scanMsg, setScanMsg] = useState<string | null>(null);
 
-  useEffect(() => {
-    void getSfxFolders().then(setFolders);
-  }, []);
-
-  const handleToggleFolder = async (folder: string) => {
-    const next = new Set(folders);
-    if (next.has(folder)) next.delete(folder);
-    else next.add(folder);
-    setFolders(next);
-    await setSfxFolders(Array.from(next));
-  };
+  const sfxFolders = useQuery({
+    queryKey: ['sfxFolders'],
+    queryFn: () => backend().listSfxFolders(),
+  });
+  const enabledCount = sfxFolders.data?.filter((f) => f.enabled).length ?? 0;
 
   const handleRescan = async () => {
     setScanning(true);
     setScanMsg(null);
     try {
       const res = await backend().scanSfx();
+      await Promise.all([
+        qc.invalidateQueries({ queryKey: ['sfxClips'] }),
+        qc.invalidateQueries({ queryKey: ['sfxFolders'] }),
+      ]);
       setScanMsg(`SFX scan complete: ${res.added} added, ${res.removed} removed, ${res.total} total.`);
     } catch (e) {
       setScanMsg(`Scan failed: ${e instanceof Error ? e.message : String(e)}`);
@@ -297,14 +296,109 @@ function SfxSettingsSection() {
 
       <div style={{ marginTop: '16px' }}>
         <h3>SFX Library Folders</h3>
-        <div className="header-actions" style={{ marginTop: '8px' }}>
+        <div className="header-actions" style={{ marginTop: '8px', flexWrap: 'wrap' }}>
+          <button
+            type="button"
+            onClick={() => setPickingFolders(true)}
+            disabled={!sfxFolders.data}
+            title="Choose which folders contain sound effects and ambience"
+          >
+            📁 SFX Folders{sfxFolders.data ? ` (${enabledCount}/${sfxFolders.data.length})` : ''}
+          </button>
           <button className="primary" onClick={handleRescan} disabled={scanning}>
             {scanning ? 'Scanning SFX…' : 'Rescan SFX Library'}
           </button>
         </div>
         {scanMsg && <p className="muted small" style={{ marginTop: '4px' }}>{scanMsg}</p>}
       </div>
+
+      {pickingFolders && sfxFolders.data && (
+        <SfxFolderPicker folders={sfxFolders.data} onClose={() => setPickingFolders(false)} />
+      )}
     </section>
+  );
+}
+
+function SfxFolderPicker({ folders, onClose }: { folders: MusicFolder[]; onClose: () => void }) {
+  const qc = useQueryClient();
+  const [enabled, setEnabled] = useState(
+    () => new Set(folders.filter((f) => f.enabled).map((f) => f.path)),
+  );
+  const [search, setSearch] = useState('');
+
+  const shown = useMemo(() => {
+    const q = search.trim().toLowerCase();
+    return q ? folders.filter((f) => f.path.toLowerCase().includes(q)) : folders;
+  }, [folders, search]);
+
+  const save = useMutation({
+    mutationFn: () => backend().setSfxFolders([...enabled]),
+    onSuccess: async () => {
+      await Promise.all([
+        qc.invalidateQueries({ queryKey: ['sfxClips'] }),
+        qc.invalidateQueries({ queryKey: ['sfxFolders'] }),
+      ]);
+      showToast('SFX folders updated', '🔊');
+      onClose();
+    },
+  });
+
+  const toggle = (path: string) =>
+    setEnabled((prev) => {
+      const next = new Set(prev);
+      if (!next.delete(path)) next.add(path);
+      return next;
+    });
+
+  const clipCount = folders
+    .filter((f) => enabled.has(f.path))
+    .reduce((n, f) => n + f.trackCount, 0);
+
+  return (
+    <div className="palette-backdrop" onClick={onClose}>
+      <div className="folder-picker" onClick={(e) => e.stopPropagation()}>
+        <div className="folder-picker-head">
+          <strong>SFX & Ambience folders</strong>
+          <button type="button" onClick={onClose} aria-label="Close">
+            ✕
+          </button>
+        </div>
+        <p className="muted small folder-picker-hint">
+          Selected folders provide SFX one-shots and ambience loops — {clipCount} clip
+          {clipCount === 1 ? '' : 's'} from {enabled.size} folder
+          {enabled.size === 1 ? '' : 's'}.
+        </p>
+        <input
+          placeholder="Filter folders…"
+          value={search}
+          onChange={(e) => setSearch(e.target.value)}
+        />
+        <div className="folder-list">
+          {shown.map((f) => (
+            <label key={f.path} className="folder-row">
+              <input
+                type="checkbox"
+                checked={enabled.has(f.path)}
+                onChange={() => toggle(f.path)}
+              />
+              <span className="folder-name">
+                {f.label}
+                <span className="muted small folder-path">{f.path}</span>
+              </span>
+              <span className="muted small">{f.trackCount}</span>
+            </label>
+          ))}
+          {shown.length === 0 && <p className="muted folder-empty">No folders match.</p>}
+        </div>
+        <div className="folder-picker-foot">
+          <button type="button" onClick={() => setEnabled(new Set(folders.map((f) => f.path)))}>All</button>
+          <button type="button" onClick={() => setEnabled(new Set())}>None</button>
+          <button type="button" className="primary" onClick={() => save.mutate()} disabled={save.isPending}>
+            {save.isPending ? 'Saving…' : 'Save'}
+          </button>
+        </div>
+      </div>
+    </div>
   );
 }
 
@@ -440,13 +534,14 @@ function HomeAssistantSettingsSection() {
 }
 
 function AboutSettingsSection() {
+  const version = (typeof __APP_VERSION__ !== 'undefined' ? __APP_VERSION__ : '0.1.0').replace(/^v/, '');
   return (
     <section className="settings-section" style={{ marginTop: '24px', opacity: 0.9 }}>
       <h2>About & Updates</h2>
       <div style={{ display: 'flex', flexDirection: 'column', gap: '8px', marginTop: '10px' }}>
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
           <span className="small muted">App Version</span>
-          <span className="small font-mono" style={{ fontWeight: 600 }}>v0.1.0</span>
+          <span className="small font-mono" style={{ fontWeight: 600 }}>v{version}</span>
         </div>
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
           <span className="small muted">Distribution</span>

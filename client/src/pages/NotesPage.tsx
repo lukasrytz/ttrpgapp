@@ -82,6 +82,7 @@ export default function NotesPage() {
   );
 
   const [expandedCampaigns, setExpandedCampaigns] = useState<Record<string, boolean>>({});
+  const [listCollapsed, setListCollapsed] = useState(false);
 
   const campaigns = useMemo(() => {
     const groups: Record<string, { sessions: typeof notes; notes: typeof notes; template?: (typeof notes)[0] }> = {
@@ -143,7 +144,7 @@ export default function NotesPage() {
   );
 
   return (
-    <div className={`notes-page ${selectedPath ? 'has-selection' : ''}`}>
+    <div className={`notes-page ${selectedPath ? 'has-selection' : ''} ${listCollapsed ? 'notes-list-collapsed' : ''}`}>
       <aside className="notes-list">
         <div className="notes-list-head" style={{ padding: '12px' }}>
           <button
@@ -274,6 +275,8 @@ export default function NotesPage() {
           onOpenByTitle={handleWikiLink}
           onOpenPath={setSelectedPath}
           onBack={() => setSelectedPath(null)}
+          listCollapsed={listCollapsed}
+          onToggleList={() => setListCollapsed((v) => !v)}
           onDeleted={() => {
             setSelectedPath(null);
             invalidate();
@@ -344,6 +347,8 @@ function NoteEditor({
   onOpenByTitle,
   onOpenPath,
   onBack,
+  listCollapsed,
+  onToggleList,
   onDeleted,
 }: {
   path: string;
@@ -354,6 +359,8 @@ function NoteEditor({
   onOpenByTitle: (title: string) => void;
   onOpenPath: (path: string) => void;
   onBack: () => void;
+  listCollapsed: boolean;
+  onToggleList: () => void;
   onDeleted: () => void;
 }) {
   const qc = useQueryClient();
@@ -363,14 +370,23 @@ function NoteEditor({
   });
   const [draft, setDraft] = useState<string | null>(null);
   const [dirty, setDirty] = useState(false);
+  const dirtyRef = useRef(dirty);
+  dirtyRef.current = dirty;
   const saveTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   const content = draft ?? note?.content ?? '';
+
+  // Keep the latest unsaved text reachable from the unmount/flush handlers,
+  // which can't read the newest render's closure.
+  const unsaved = useRef<string | null>(null);
 
   const save = useMutation({
     mutationFn: (c: string) => backend().writeNote(path, c),
     onSuccess: () => {
       setDirty(false);
+      if (unsaved.current === null) {
+        setDraft(null);
+      }
       void qc.invalidateQueries({ queryKey: ['note', path] });
       void qc.invalidateQueries({ queryKey: ['notes'] });
       window.dispatchEvent(new Event('ttrpg-local-changed'));
@@ -385,11 +401,7 @@ function NoteEditor({
     },
   });
 
-  // Keep the latest unsaved text reachable from the unmount/flush handlers,
-  // which can't read the newest render's closure.
-  const unsaved = useRef<string | null>(null);
-
-  const flush = useCallback(() => {
+  const flush = useCallback(async (): Promise<void> => {
     if (saveTimer.current) {
       clearTimeout(saveTimer.current);
       saveTimer.current = null;
@@ -399,14 +411,16 @@ function NoteEditor({
       unsaved.current = null;
       // Write directly (not via the mutation) so it still lands if we're
       // unmounting — otherwise edits made within the debounce window are lost.
-      void backend()
-        .writeNote(path, c)
-        .then(() => {
-          window.dispatchEvent(new Event('ttrpg-local-changed'));
-          void qc.invalidateQueries({ queryKey: ['notes'] });
-        });
+      await backend().writeNote(path, c);
+      setDirty(false);
+      setDraft(null);
+      window.dispatchEvent(new Event('ttrpg-local-changed'));
+      await Promise.all([
+        qc.invalidateQueries({ queryKey: ['note', path] }),
+        qc.invalidateQueries({ queryKey: ['notes'] }),
+      ]);
     }
-  }, [path]);
+  }, [path, qc]);
 
   const onChange = (value: string) => {
     setDraft(value);
@@ -423,19 +437,29 @@ function NoteEditor({
   // app, or when a quickNote one-press capture is triggered.
   useEffect(() => {
     const onHide = () => {
-      if (document.visibilityState === 'hidden') flush();
+      if (document.visibilityState === 'hidden') void flush();
     };
-    const onFlushEvent = () => {
-      flush();
+    const onFlushEvent = (e: Event) => {
+      const promises = (e as CustomEvent<{ promises?: Promise<void>[] }>).detail?.promises;
+      const p = flush();
+      if (Array.isArray(promises)) promises.push(p);
+    };
+    const onSyncUpdated = () => {
+      if (unsaved.current === null && !dirtyRef.current) {
+        setDraft(null);
+        void qc.invalidateQueries({ queryKey: ['note', path] });
+      }
     };
     document.addEventListener('visibilitychange', onHide);
     window.addEventListener('ttrpg-flush-notes', onFlushEvent);
+    window.addEventListener('ttrpg-sync-updated', onSyncUpdated);
     return () => {
       document.removeEventListener('visibilitychange', onHide);
       window.removeEventListener('ttrpg-flush-notes', onFlushEvent);
-      flush();
+      window.removeEventListener('ttrpg-sync-updated', onSyncUpdated);
+      void flush();
     };
-  }, [flush]);
+  }, [flush, path, qc]);
 
   const titlesRef = useRef(noteTitles);
   titlesRef.current = noteTitles;
@@ -472,6 +496,14 @@ function NoteEditor({
         <button className="icon-btn back-btn" aria-label="Back to list" onClick={onBack}>
           ‹
         </button>
+        <button
+          type="button"
+          className="small-btn notes-toggle-list-btn"
+          onClick={onToggleList}
+          title={listCollapsed ? 'Show notes list' : 'Collapse notes list'}
+        >
+          {listCollapsed ? '☰ Notes' : '◧'}
+        </button>
         <strong className="note-title">{note.title}</strong>
         <span className="muted small">
           {dirty ? 'unsaved…' : save.isPending ? 'saving…' : 'saved'}
@@ -489,7 +521,7 @@ function NoteEditor({
                   : (note.isSession ? `sessions/${note.title}.md` : `${note.title}.md`);
                 renameNote.mutate({ oldPath: path, newPath: rel });
               }}
-              style={{ marginRight: '8px', padding: '4px', background: 'var(--bg-layer-3)', color: 'var(--text-1)', border: '1px solid var(--border-1)', borderRadius: '4px' }}
+              style={{ marginRight: '8px', padding: '4px', background: 'var(--bg-input)', color: 'var(--text)', border: '1px solid var(--border)', borderRadius: '4px' }}
             >
               <option value="Uncategorized">Uncategorized</option>
               {campaigns.filter((c) => c !== 'Uncategorized').map((c) => (

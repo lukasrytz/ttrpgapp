@@ -67,9 +67,6 @@ export default function TurnCard({
               className={chipClass}
               onClick={() => {
                 onInspectAbility(ability);
-                if (isLimited && !isUsed) {
-                  onToggleUsed(ability.name);
-                }
               }}
             >
               <span className="turn-chip-name">{ability.name}</span>

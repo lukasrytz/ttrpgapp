@@ -7,6 +7,7 @@ import App from './App';
 import { backend, initBackend, getCapacitorBackend } from './backend';
 import { availableClientPlugins } from './plugins';
 import { initCompendium, installPluginRuntime } from './compendium';
+import { initCounters } from './deck/counterStore';
 import { syncManager } from './sync/manager';
 import './styles.css';
 
@@ -16,6 +17,10 @@ const queryClient = new QueryClient({
 
 async function bootstrap() {
   await initBackend();
+  void initCounters();
+  window.addEventListener('ttrpg-sync-updated', () => {
+    void initCounters();
+  });
   const config = await backend().getConfig();
   const enabledIds = new Set(config.plugins.filter((p) => p.enabled).map((p) => p.id));
   installPluginRuntime();

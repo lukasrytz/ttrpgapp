@@ -19,18 +19,17 @@ export async function loadDeck(): Promise<DeckLayout> {
   }
 }
 
-let saveTimer: ReturnType<typeof setTimeout> | null = null;
+let writeChain: Promise<void> = Promise.resolve();
 
-export function saveDeck(layout: DeckLayout): void {
-  if (saveTimer !== null) clearTimeout(saveTimer);
-  saveTimer = setTimeout(() => {
-    saveTimer = null;
-    void backend()
-      .kvSet(DECK_NS, LAYOUT_KEY, JSON.stringify(layout))
-      .then(() => {
-        if (typeof window !== 'undefined') {
-          window.dispatchEvent(new Event('ttrpg-local-changed'));
-        }
-      });
-  }, 400);
+export function saveDeck(layout: DeckLayout): Promise<void> {
+  const payload = JSON.stringify(layout);
+  writeChain = writeChain
+    .catch(() => undefined)
+    .then(async () => {
+      await backend().kvSet(DECK_NS, LAYOUT_KEY, payload);
+      if (typeof window !== 'undefined') {
+        window.dispatchEvent(new Event('ttrpg-local-changed'));
+      }
+    });
+  return writeChain;
 }

@@ -108,4 +108,27 @@ describe('SfxEngine', () => {
     expect(engine.activeLoops()).toEqual([]);
     expect(activeStates).toEqual([true, false]);
   });
+
+  it('excludes fading-out loops from activeLoops immediately on stopLoop', () => {
+    const created: FakeAudioElement[] = [];
+    const createAudio = () => {
+      const el = new FakeAudioElement() as unknown as HTMLAudioElement;
+      created.push(el as unknown as FakeAudioElement);
+      return el;
+    };
+
+    const clock = 0;
+    const engine = new SfxEngine(
+      createAudio,
+      () => clock,
+      () => 1,
+      () => {},
+    );
+
+    engine.startLoop('rain|10', 'rain.ogg', 0.5);
+    expect(engine.activeLoops()).toEqual(['rain|10']);
+
+    engine.stopLoop('rain|10', 1.5);
+    expect(engine.activeLoops()).toEqual([]);
+  });
 });

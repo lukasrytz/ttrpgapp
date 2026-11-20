@@ -269,6 +269,37 @@ describe('CapacitorBackend plugin KV', () => {
     expect(await b.kvGet('dnd5e', 'encounter')).toBe('{"round":2}');
     expect(await b.kvGet('other', 'encounter')).toBeNull();
   });
+
+  it('keeps all keys in sync index across concurrent kvSet writes', async () => {
+    const b = new CapacitorBackend();
+    await Promise.all([
+      b.kvSet('deck', 'layout', '{"version":1,"pages":[{"id":"p1","name":"Main","buttons":[]}]}'),
+      b.kvSet('deck', 'scenes', '{"version":1,"scenes":[]}'),
+      b.kvSet('deck', 'counters', '{"clock":3}'),
+    ]);
+    const docs = await b.listStateDocs();
+    expect(docs.map((d) => d.id).sort()).toEqual([
+      'state/deck/counters',
+      'state/deck/layout',
+      'state/deck/scenes',
+    ]);
+    expect(docs.find((d) => d.id === 'state/deck/counters')?.value).toBe('{"clock":3}');
+  });
+
+  it('recovers un-indexed deck state keys from Preferences into listStateDocs', async () => {
+    const b = new CapacitorBackend();
+    prefs.set('deck:layout', '{"version":1,"pages":[{"id":"p1","name":"Custom","buttons":[]}]}');
+    const docs = await b.listStateDocs();
+    expect(docs).toHaveLength(1);
+    expect(docs[0]).toMatchObject({
+      id: 'state/deck/layout',
+      value: '{"version":1,"pages":[{"id":"p1","name":"Custom","buttons":[]}]}',
+      updatedAt: 1,
+    });
+    expect(JSON.parse(prefs.get('sync.state.index')!)).toEqual({
+      'state/deck/layout': 1,
+    });
+  });
 });
 
 describe('CapacitorBackend Home Assistant', () => {
